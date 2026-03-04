@@ -19,18 +19,27 @@ const { Text } = Typography;
 const OrderView = ({ orderId }: { orderId: string }) => {
   const [order, setOrder] = useState<Order | null>(null);
   const [loadingOrder, setLoadingOrder] = useState(true);
+  const [stocks, setStocks] = useState<any[]>([]);
 
   const { currentUser } = useAppSelector((state) => state.authSlice);
 
   useEffect(() => {
-    if (currentUser) fetchOrder();
+    if (currentUser) {
+      fetchOrderAndStocks();
+    }
   }, [currentUser]);
 
-  const fetchOrder = async () => {
+  const fetchOrderAndStocks = async () => {
     try {
       setLoadingOrder(true);
-      const res = await api.get(`/api/v1/erp/orders/${orderId}`);
-      setOrder(res.data || null);
+      const [orderRes, stocksRes] = await Promise.all([
+        api.get(`/api/v1/erp/orders/${orderId}`),
+        api
+          .get("/api/v1/erp/master/stocks/dropdown")
+          .catch(() => ({ data: [] })),
+      ]);
+      setOrder(orderRes.data || null);
+      setStocks(stocksRes.data || []);
     } catch (error: any) {
       console.error(error);
       toast.error(error?.message || "Failed to fetch order");
@@ -301,9 +310,14 @@ const OrderView = ({ orderId }: { orderId: string }) => {
                   {order?.updatedAt ? String(order.updatedAt) : "N/A"}
                 </Text>
               </Descriptions.Item>
-              <Descriptions.Item label="Inventory Source">
-                <Tag color="cyan">
-                  {order?.from || "-"} / {order?.stockId || "-"}
+              <Descriptions.Item label="Order Source">
+                <Tag color="cyan">{order?.from || "-"}</Tag>
+              </Descriptions.Item>
+              <Descriptions.Item label="Inventory Location">
+                <Tag color="geekblue">
+                  {stocks.find((s) => s.id === order?.stockId)?.label ||
+                    "Unknown"}{" "}
+                  ({order?.stockId || "-"})
                 </Tag>
               </Descriptions.Item>
               <Descriptions.Item label="System Check">
@@ -344,6 +358,17 @@ const OrderView = ({ orderId }: { orderId: string }) => {
                   {subtotal.toLocaleString()} LKR
                 </Text>
               </div>
+
+              {(order?.discount || 0) > 0 && (
+                <div className="flex justify-between items-center">
+                  <Text className="text-red-500 text-sm font-medium">
+                    Total Discount
+                  </Text>
+                  <Text className="text-red-500 font-bold">
+                    - {(order?.discount || 0).toLocaleString()} LKR
+                  </Text>
+                </div>
+              )}
 
               {order?.couponCode && (order?.couponDiscount || 0) > 0 && (
                 <div className="flex justify-between items-center">
