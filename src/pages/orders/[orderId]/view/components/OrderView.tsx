@@ -3,17 +3,20 @@ import React, { useEffect, useState } from "react";
 import { Order } from "@/model/Order";
 import toast from "react-hot-toast";
 import { useAppSelector } from "@/lib/hooks";
-import { Card, Descriptions, Table, Tag, Typography, Space, Alert } from "antd";
+import {
+  Card,
+  Descriptions,
+  Table,
+  Tag,
+  Typography,
+  Space,
+  Alert,
+  Spin,
+} from "antd";
 
 const { Text } = Typography;
 
-const OrderView = ({
-  orderId,
-  onLoadingChange,
-}: {
-  orderId: string;
-  onLoadingChange?: (loading: boolean) => void;
-}) => {
+const OrderView = ({ orderId }: { orderId: string }) => {
   const [order, setOrder] = useState<Order | null>(null);
   const [loadingOrder, setLoadingOrder] = useState(true);
 
@@ -26,7 +29,6 @@ const OrderView = ({
   const fetchOrder = async () => {
     try {
       setLoadingOrder(true);
-      onLoadingChange?.(true);
       const res = await api.get(`/api/v1/erp/orders/${orderId}`);
       setOrder(res.data || null);
     } catch (error: any) {
@@ -34,7 +36,6 @@ const OrderView = ({
       toast.error(error?.message || "Failed to fetch order");
     } finally {
       setLoadingOrder(false);
-      onLoadingChange?.(false);
     }
   };
 
@@ -47,7 +48,13 @@ const OrderView = ({
   const fee = order?.fee || 0;
   const shippingFee = order?.shippingFee || 0;
 
-  if (loadingOrder) return null;
+  if (loadingOrder) {
+    return (
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <Spin size="large" />
+      </div>
+    );
+  }
 
   // --- Helpers for Status Colors ---
   const getPaymentStatusColor = (status?: string) => {
