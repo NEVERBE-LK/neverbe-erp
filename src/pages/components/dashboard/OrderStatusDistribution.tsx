@@ -13,7 +13,7 @@ interface StatusData {
   pending: number;
   processing: number;
   shipped: number;
-  delivered: number;
+  completed: number;
   cancelled: number;
   refunded: number;
 }
@@ -108,7 +108,7 @@ const OrderStatusDistribution = () => {
   };
 
   const series = data
-    ? [data.pending, data.delivered, data.cancelled, data.refunded]
+    ? [data.pending, data.completed, data.cancelled, data.refunded]
     : [];
 
   return (
@@ -117,7 +117,6 @@ const OrderStatusDistribution = () => {
         <div className="flex items-center gap-2">
           <IconChartPie size={18} className="text-purple-500" />
           <h4 className="text-lg font-bold text-black m-0">Order Status</h4>
-          
         </div>
         <Tag className="m-0 text-xs font-bold text-gray-500 bg-gray-100 border-none">
           This Month

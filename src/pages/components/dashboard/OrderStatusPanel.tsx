@@ -20,7 +20,7 @@ interface StatusData {
   pending: number;
   processing: number;
   shipped: number;
-  delivered: number;
+  completed: number;
   cancelled: number;
   refunded: number;
 }
@@ -60,7 +60,7 @@ const OrderStatusPanel = () => {
 
   const chartOptions: ApexCharts.ApexOptions = {
     chart: { type: "donut", fontFamily: "inherit" },
-    labels: ["Pending", "Delivered", "Cancelled", "Refunded"],
+    labels: ["Pending", "Completed", "Cancelled", "Refunded"],
     colors: ["#fbbf24", "#10b981", "#ef4444", "#8b5cf6"],
     legend: {
       position: "bottom",
@@ -118,7 +118,7 @@ const OrderStatusPanel = () => {
   const series = statusData
     ? [
         statusData.pending,
-        statusData.delivered,
+        statusData.completed,
         statusData.cancelled,
         statusData.refunded,
       ]
