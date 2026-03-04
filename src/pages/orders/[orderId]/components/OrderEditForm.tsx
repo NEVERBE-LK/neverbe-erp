@@ -126,12 +126,8 @@ export const OrderEditForm: React.FC<OrderEditFormProps> = ({
                           <Select.Option value="Processing">
                             PROCESSING
                           </Select.Option>
-                          <Select.Option value="Shipped">SHIPPED</Select.Option>
                           <Select.Option value="Completed">
                             COMPLETED
-                          </Select.Option>
-                          <Select.Option value="Cancelled">
-                            CANCELLED
                           </Select.Option>
                         </Select>
                       </Form.Item>

@@ -198,8 +198,6 @@ const OrdersPage = () => {
     } else {
       if (s === "completed") return "success";
       if (s === "processing") return "processing";
-      if (s === "cancelled") return "error";
-      if (s === "shipped") return "processing";
     }
     return "default";
   };
@@ -373,8 +371,6 @@ const OrdersPage = () => {
                 <Option value="Pending">Pending</Option>
                 <Option value="Processing">Processing</Option>
                 <Option value="Completed">Completed</Option>
-                <Option value="Cancelled">Cancelled</Option>
-                <Option value="Shipped">Shipped</Option>
               </Select>
             </Form.Item>
             <Form.Item name="dateRange" className="!mb-0 w-64">
