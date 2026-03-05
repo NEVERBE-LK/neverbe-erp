@@ -409,7 +409,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
             </Col>
           </Row>
 
-          <Divider orientation={"left" as any}>Pricing</Divider>
+          <Divider orientation="left">Pricing</Divider>
           <div className="bg-gray-50 p-6 rounded-md border border-gray-100 mb-6">
             <Row gutter={[16, 16]}>
               <Col xs={24} sm={12} md={6}>
@@ -468,7 +468,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
 
           {isEditing && (
             <>
-              <Divider orientation={"left" as any}>Variants</Divider>
+              <Divider orientation="left">Variants</Divider>
               <VariantList
                 variants={variants}
                 onAddVariant={handleOpenAddVariant}

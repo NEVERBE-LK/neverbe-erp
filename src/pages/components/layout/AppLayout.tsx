@@ -5,7 +5,7 @@ import { IconMenu2 } from "@tabler/icons-react";
 import { useState } from "react";
 import AppBreadcrumb from "./AppBreadcrumb";
 import { AIChatProvider } from "@/contexts/AIChatContext";
-import AIChatModal from "@/components/AIChatModal";
+import AIChatModal from "../../../components/AIChatModal";
 
 const { Content } = Layout;
 
