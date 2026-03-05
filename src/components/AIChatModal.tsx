@@ -2,7 +2,8 @@ import React, { useState, useRef, useEffect } from "react";
 import { Input, Spin, Tooltip } from "antd";
 import { IconSparkles, IconX, IconSend, IconTrash } from "@tabler/icons-react";
 import { sendAIChatMessage, type ChatMessage } from "@/actions/aiActions";
-import ReactMarkdown from "react-markdown";
+import ReactMarkdown, { Components } from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { useAIChat } from "@/contexts/AIChatContext";
 
 interface DisplayMessage {
@@ -13,10 +14,67 @@ interface DisplayMessage {
 export default function AIChatModal() {
   const { contextData, contextTitle } = useAIChat();
   const [open, setOpen] = useState(false);
-  const [messages, setMessages] = useState<DisplayMessage[]>([]);
+  const [messages, setMessages] = useState<DisplayMessage[]>(() => {
+    if (typeof window !== "undefined") {
+      const saved = sessionStorage.getItem("ai_chat_history");
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch {
+          console.error("Failed to parse chat history");
+        }
+      }
+    }
+    return [];
+  });
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isMaximized, setIsMaximized] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+
+  // Markdown custom renderers for tables
+  const markdownComponents: Components = {
+    table: ({ children }) => (
+      <div className="overflow-x-auto my-4 border border-gray-200 rounded-lg shadow-sm">
+        <table className="min-w-full divide-y divide-gray-200 text-left text-sm whitespace-nowrap">
+          {children}
+        </table>
+      </div>
+    ),
+    thead: ({ children }) => (
+      <thead className="bg-gray-50 text-gray-700 font-semibold">
+        {children}
+      </thead>
+    ),
+    tbody: ({ children }) => (
+      <tbody className="divide-y divide-gray-200 bg-white text-gray-600">
+        {children}
+      </tbody>
+    ),
+    tr: ({ children }) => (
+      <tr className="hover:bg-gray-50 transition-colors">{children}</tr>
+    ),
+    th: ({ children }) => (
+      <th className="px-4 py-3 font-semibold">{children}</th>
+    ),
+    td: ({ children }) => <td className="px-4 py-3">{children}</td>,
+    a: ({ href, children }) => (
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-blue-600 hover:text-blue-800 underline underline-offset-2"
+      >
+        {children}
+      </a>
+    ),
+  };
+
+  useEffect(() => {
+    if (messages.length > 0) {
+      sessionStorage.setItem("ai_chat_history", JSON.stringify(messages));
+    }
+  }, [messages]);
 
   useEffect(() => {
     if (open) {
@@ -66,6 +124,7 @@ export default function AIChatModal() {
 
   const handleClear = () => {
     setMessages([]);
+    sessionStorage.removeItem("ai_chat_history");
   };
 
   return (
@@ -99,14 +158,14 @@ export default function AIChatModal() {
       {/* Chat Panel */}
       <div
         className={`
-          fixed bottom-24 right-6 z-9998
-          w-[380px] max-w-[calc(100vw-24px)]
-          bg-white rounded-3xl shadow-2xl border border-gray-100
-          flex flex-col overflow-hidden
-          transition-all duration-300 ease-in-out origin-bottom-right
+          fixed z-9998 bg-white shadow-2xl flex flex-col overflow-hidden transition-all duration-300 ease-in-out origin-bottom-right
           ${open ? "opacity-100 scale-100 pointer-events-auto" : "opacity-0 scale-75 pointer-events-none"}
+          ${
+            isMaximized
+              ? "inset-4 rounded-3xl border border-gray-200 max-w-[1200px] mx-auto w-full max-h-[90vh] my-auto"
+              : "bottom-24 right-6 w-[380px] max-w-[calc(100vw-24px)] rounded-3xl border border-gray-100 h-[540px]"
+          }
         `}
-        style={{ height: "540px" }}
       >
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 bg-white shrink-0">
@@ -135,8 +194,38 @@ export default function AIChatModal() {
                 </button>
               </Tooltip>
             )}
+            <Tooltip title={isMaximized ? "Minimize" : "Maximize"}>
+              <button
+                onClick={() => setIsMaximized(!isMaximized)}
+                className="w-8 h-8 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-700 flex items-center justify-center transition-colors"
+              >
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  {isMaximized ? (
+                    <>
+                      <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3" />
+                    </>
+                  ) : (
+                    <>
+                      <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
+                    </>
+                  )}
+                </svg>
+              </button>
+            </Tooltip>
             <button
-              onClick={() => setOpen(false)}
+              onClick={() => {
+                setOpen(false);
+                setIsMaximized(false);
+              }}
               className="w-8 h-8 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-700 flex items-center justify-center transition-colors"
             >
               <IconX size={16} />
@@ -202,9 +291,13 @@ export default function AIChatModal() {
                 }`}
               >
                 {msg.role === "model" ? (
-                  <div className="prose prose-sm max-w-none prose-p:my-1 prose-ul:my-1 prose-li:my-0">
-                    <ReactMarkdown>{msg.text}</ReactMarkdown>
-                  </div>
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm]}
+                    components={markdownComponents}
+                    className="prose prose-sm prose-p:leading-relaxed prose-headings:font-semibold"
+                  >
+                    {msg.text}
+                  </ReactMarkdown>
                 ) : (
                   <span>{msg.text}</span>
                 )}
