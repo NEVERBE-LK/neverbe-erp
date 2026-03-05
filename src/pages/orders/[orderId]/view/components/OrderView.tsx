@@ -14,19 +14,36 @@ import {
   Spin,
 } from "antd";
 
+import { useAIChat } from "@/contexts/AIChatContext";
+
 const { Text } = Typography;
 
 const OrderView = ({ orderId }: { orderId: string }) => {
+  const { setContextData, setContextTitle, clearContext } = useAIChat();
   const [order, setOrder] = useState<Order | null>(null);
   const [loadingOrder, setLoadingOrder] = useState(true);
-  const [stocks, setStocks] = useState<any[]>([]);
+  const [stocks, setStocks] = useState<Record<string, any>[]>([]);
 
-  const { currentUser } = useAppSelector((state) => state.authSlice);
+  const { currentUser } = useAppSelector((state: any) => state.authSlice);
+
+  useEffect(() => {
+    return () => {
+      clearContext();
+    };
+  }, [clearContext]);
+
+  useEffect(() => {
+    if (order) {
+      setContextData(order as any);
+      setContextTitle(`Order #${order.orderId}`);
+    }
+  }, [order, setContextData, setContextTitle]);
 
   useEffect(() => {
     if (currentUser) {
       fetchOrderAndStocks();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser]);
 
   const fetchOrderAndStocks = async () => {
@@ -40,9 +57,10 @@ const OrderView = ({ orderId }: { orderId: string }) => {
       ]);
       setOrder(orderRes.data || null);
       setStocks(stocksRes.data || []);
-    } catch (error: any) {
-      console.error(error);
-      toast.error(error?.message || "Failed to fetch order");
+    } catch (error: unknown) {
+      const err = error as { message?: string };
+      console.error(err);
+      toast.error(err.message || "Failed to fetch order");
     } finally {
       setLoadingOrder(false);
     }
@@ -100,7 +118,7 @@ const OrderView = ({ orderId }: { orderId: string }) => {
       title: "Product",
       dataIndex: "name",
       key: "name",
-      render: (text: string, record: any) => (
+      render: (text: string, record: Record<string, any>) => (
         <div className="flex flex-col">
           <Text strong>{text}</Text>
           {record.isComboItem && (
@@ -135,7 +153,7 @@ const OrderView = ({ orderId }: { orderId: string }) => {
       key: "price",
       align: "right" as const,
       width: 180,
-      render: (price: number, record: any) => {
+      render: (price: number, record: Record<string, any>) => {
         const disc = record.discount || 0;
         const sold = price - disc;
         return (
@@ -178,7 +196,7 @@ const OrderView = ({ orderId }: { orderId: string }) => {
       key: "total",
       align: "right" as const,
       width: 120,
-      render: (_: any, record: any) => (
+      render: (_: unknown, record: Record<string, any>) => (
         <div className="bg-gray-50 px-2 py-1 rounded">
           <Text strong className="text-sm">
             {(

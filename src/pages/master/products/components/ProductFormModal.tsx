@@ -5,6 +5,7 @@ import { ProductVariant } from "@/model/ProductVariant";
 import VariantList from "./VariantList";
 import VariantFormModal from "./VariantFormModal";
 import MarkdownDescriptionEditor from "@/components/MarkdownDescriptionEditor";
+import { useAIChat } from "@/contexts/AIChatContext";
 
 import toast from "react-hot-toast";
 import { IconUpload, IconPackage } from "@tabler/icons-react";
@@ -24,6 +25,8 @@ import {
 
 const { Option } = Select;
 
+// @ts-ignore
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const emptyProduct: Omit<Product, "itemId"> & {
   itemId: string | null;
   productId: string;
@@ -77,6 +80,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
   sizes,
   saving,
 }) => {
+  const { setContextData, setContextTitle, clearContext } = useAIChat();
   const [form] = Form.useForm();
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [isVariantModalOpen, setIsVariantModalOpen] = useState(false);
@@ -92,8 +96,30 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
   const watchedCategory = Form.useWatch("category", form) || "";
   const watchedBrand = Form.useWatch("brand", form) || "";
   const watchedGender = Form.useWatch("gender", form) || [];
+  const allValues = Form.useWatch([], form);
 
   const isEditing = !!product;
+
+  useEffect(() => {
+    if (open) {
+      setContextTitle(
+        isEditing
+          ? `Product: ${watchedName || "Loading..."}`
+          : "New Product Draft",
+      );
+    } else {
+      clearContext();
+    }
+  }, [open, isEditing, watchedName, setContextTitle, clearContext]);
+
+  useEffect(() => {
+    if (open && allValues) {
+      setContextData({
+        ...allValues,
+        variants: variants, // Variants are managed in state, not form directly
+      });
+    }
+  }, [open, allValues, variants, setContextData]);
 
   useEffect(() => {
     if (open) {
@@ -121,7 +147,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
     }
   }, [product, open, form]);
 
-  const handleValidSubmit = async (values: any) => {
+  const handleValidSubmit = async (values: Record<string, any>) => {
     // Manual Validation for Thumbnail
     if (!isEditing && !thumbnailFile) {
       toast.error("Thumbnail is required for new products");
@@ -354,7 +380,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
             </Col>
           </Row>
 
-          <Divider orientation={"left" as any}>Pricing</Divider>
+          <Divider orientation="left">Pricing</Divider>
           <div className="bg-gray-50 p-6 rounded-md border border-gray-100 mb-6">
             <Row gutter={[16, 16]}>
               <Col xs={24} sm={12} md={6}>
@@ -413,7 +439,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
 
           {isEditing && (
             <>
-              <Divider orientation={"left" as any}>Variants</Divider>
+              <Divider orientation="left">Variants</Divider>
               <VariantList
                 variants={variants}
                 onAddVariant={handleOpenAddVariant}

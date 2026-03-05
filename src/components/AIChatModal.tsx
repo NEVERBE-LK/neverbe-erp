@@ -1,27 +1,17 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Button, Input, Spin, Tooltip } from "antd";
+import { Input, Spin, Tooltip } from "antd";
 import { IconSparkles, IconX, IconSend, IconTrash } from "@tabler/icons-react";
 import { sendAIChatMessage, type ChatMessage } from "@/actions/aiActions";
 import ReactMarkdown from "react-markdown";
-
-interface AIChatModalProps {
-  contextData?: Record<string, unknown>;
-}
+import { useAIChat } from "@/contexts/AIChatContext";
 
 interface DisplayMessage {
   role: "user" | "model";
   text: string;
 }
 
-const DEFAULT_CONTEXT: Record<string, unknown> = {
-  system: "NeverBe ERP",
-  description:
-    "You are an intelligent assistant embedded in the NeverBe ERP platform.",
-};
-
-export default function AIChatModal({
-  contextData = DEFAULT_CONTEXT,
-}: AIChatModalProps) {
+export default function AIChatModal() {
+  const { contextData, contextTitle } = useAIChat();
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<DisplayMessage[]>([]);
   const [input, setInput] = useState("");
@@ -86,7 +76,7 @@ export default function AIChatModal({
           id="ai-chat-fab"
           onClick={() => setOpen((prev) => !prev)}
           className={`
-            fixed bottom-6 right-6 z-[9999] 
+            fixed bottom-6 right-6 z-9999 
             w-14 h-14 rounded-full shadow-2xl
             flex items-center justify-center
             transition-all duration-300 ease-in-out
@@ -109,7 +99,7 @@ export default function AIChatModal({
       {/* Chat Panel */}
       <div
         className={`
-          fixed bottom-24 right-6 z-[9998]
+          fixed bottom-24 right-6 z-9998
           w-[380px] max-w-[calc(100vw-24px)]
           bg-white rounded-3xl shadow-2xl border border-gray-100
           flex flex-col overflow-hidden
@@ -119,7 +109,7 @@ export default function AIChatModal({
         style={{ height: "540px" }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 bg-white flex-shrink-0">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 bg-white shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 bg-black rounded-xl flex items-center justify-center">
               <IconSparkles size={18} stroke={1.5} className="text-white" />
@@ -128,8 +118,9 @@ export default function AIChatModal({
               <p className="m-0 font-bold text-gray-900 text-sm leading-tight">
                 NeverBe AI
               </p>
-              <p className="m-0 text-[10px] text-green-600 font-semibold uppercase tracking-wider">
-                Gemini Powered
+              <p className="m-0 text-[10px] text-gray-400 font-medium">
+                Context:{" "}
+                <span className="text-black font-semibold">{contextTitle}</span>
               </p>
             </div>
           </div>
@@ -199,7 +190,7 @@ export default function AIChatModal({
               className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
             >
               {msg.role === "model" && (
-                <div className="w-7 h-7 bg-black rounded-full flex items-center justify-center flex-shrink-0 mr-2 mt-0.5">
+                <div className="w-7 h-7 bg-black rounded-full flex items-center justify-center shrink-0 mr-2 mt-0.5">
                   <IconSparkles size={13} stroke={1.5} className="text-white" />
                 </div>
               )}
@@ -223,7 +214,7 @@ export default function AIChatModal({
 
           {loading && (
             <div className="flex justify-start">
-              <div className="w-7 h-7 bg-black rounded-full flex items-center justify-center flex-shrink-0 mr-2 mt-0.5">
+              <div className="w-7 h-7 bg-black rounded-full flex items-center justify-center shrink-0 mr-2 mt-0.5">
                 <IconSparkles size={13} stroke={1.5} className="text-white" />
               </div>
               <div className="bg-gray-50 border border-gray-100 px-4 py-3 rounded-2xl rounded-bl-sm flex items-center gap-2">
@@ -237,7 +228,7 @@ export default function AIChatModal({
         </div>
 
         {/* Input Area */}
-        <div className="px-4 py-3 border-t border-gray-100 bg-white flex-shrink-0">
+        <div className="px-4 py-3 border-t border-gray-100 bg-white shrink-0">
           <div className="flex items-end gap-2 bg-gray-50 rounded-2xl px-4 py-2 border border-gray-200 focus-within:border-black focus-within:bg-white transition-all">
             <Input.TextArea
               id="ai-chat-input"
@@ -255,7 +246,7 @@ export default function AIChatModal({
               id="ai-chat-send"
               onClick={handleSend}
               disabled={!input.trim() || loading}
-              className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 transition-all mb-0.5 ${
+              className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-all mb-0.5 ${
                 input.trim() && !loading
                   ? "bg-black text-white hover:scale-105"
                   : "bg-gray-200 text-gray-400 cursor-not-allowed"
