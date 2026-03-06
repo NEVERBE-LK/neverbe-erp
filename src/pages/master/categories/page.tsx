@@ -4,7 +4,6 @@ import {
   IconSearch,
   IconEdit,
   IconTrash,
-  IconCategory,
   IconFilter,
   IconX,
 } from "@tabler/icons-react";
@@ -14,6 +13,7 @@ import { useAppSelector } from "@/lib/hooks";
 import { Category } from "@/model/Category";
 import toast from "react-hot-toast";
 import { useConfirmationDialog } from "@/contexts/ConfirmationDialogContext";
+import AIDescriptionTextarea from "@/components/AIDescriptionTextarea";
 import {
   Table,
   Button,
@@ -30,7 +30,7 @@ import {
 } from "antd";
 import { ColumnsType } from "antd/es/table";
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 const { Option } = Select;
 
 const CategoryPage: React.FC = () => {
@@ -340,7 +340,15 @@ const CategoryPage: React.FC = () => {
             </Form.Item>
 
             <Form.Item name="description" label="Description">
-              <Input.TextArea rows={4} placeholder="Enter details..." />
+              <AIDescriptionTextarea
+                aiContext={{
+                  name: form.getFieldValue("name"),
+                  category: "Brand",
+                }}
+                rows={4}
+                placeholder="Enter details..."
+                disabled={saving}
+              />
             </Form.Item>
 
             <Form.Item name="status" label="Status" valuePropName="checked">

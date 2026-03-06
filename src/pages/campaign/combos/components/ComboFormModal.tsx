@@ -12,6 +12,7 @@ import {
 } from "@tabler/icons-react";
 
 import toast from "react-hot-toast";
+import AIDescriptionTextarea from "@/components/AIDescriptionTextarea";
 import { DropdownOption } from "../../../master/products/page";
 import {
   Modal,
@@ -320,7 +321,15 @@ const ComboFormModal: React.FC<Props> = ({ open, onClose, onSave, combo }) => {
               </Form.Item>
 
               <Form.Item name="description" label="Description">
-                <TextArea rows={2} placeholder="Bundle details..." />
+                <AIDescriptionTextarea
+                  aiContext={{
+                    name: form.getFieldValue("name"),
+                    category: "Bundle/Combo",
+                  }}
+                  rows={2}
+                  placeholder="Bundle details..."
+                  disabled={saving}
+                />
               </Form.Item>
             </Card>
 

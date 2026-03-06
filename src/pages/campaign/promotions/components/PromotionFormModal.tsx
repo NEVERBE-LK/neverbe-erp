@@ -10,6 +10,7 @@ import {
   IconCalendarEvent,
 } from "@tabler/icons-react";
 import toast from "react-hot-toast";
+import AIDescriptionTextarea from "@/components/AIDescriptionTextarea";
 import { DropdownOption } from "../../../master/products/page";
 import {
   Modal,
@@ -309,9 +310,14 @@ const PromotionFormModal: React.FC<Props> = ({
               </Form.Item>
 
               <Form.Item name="description" label="Description">
-                <TextArea
+                <AIDescriptionTextarea
+                  aiContext={{
+                    name: form.getFieldValue("name"),
+                    category: "Promotion",
+                  }}
                   rows={2}
                   placeholder="Internal or customer facing notes..."
+                  disabled={saving}
                 />
               </Form.Item>
 

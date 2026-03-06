@@ -4,7 +4,6 @@ import {
   IconSearch,
   IconEdit,
   IconTrash,
-  IconAward,
   IconPhoto,
   IconUpload,
   IconFilter,
@@ -16,6 +15,7 @@ import { useAppSelector } from "@/lib/hooks";
 import { Brand } from "@/model/Brand";
 import toast from "react-hot-toast";
 import { useConfirmationDialog } from "@/contexts/ConfirmationDialogContext";
+import AIDescriptionTextarea from "@/components/AIDescriptionTextarea";
 import {
   Table,
   Button,
@@ -34,7 +34,7 @@ import {
 } from "antd";
 import { ColumnsType } from "antd/es/table";
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 const { Option } = Select;
 
 const BrandPage: React.FC = () => {
@@ -365,7 +365,15 @@ const BrandPage: React.FC = () => {
             </Form.Item>
 
             <Form.Item name="description" label="Description">
-              <Input.TextArea rows={4} placeholder="Enter description..." />
+              <AIDescriptionTextarea
+                aiContext={{
+                  name: form.getFieldValue("name"),
+                  category: "Brand",
+                }}
+                rows={4}
+                placeholder="Enter description..."
+                disabled={saving}
+              />
             </Form.Item>
 
             <Form.Item label="Logo">

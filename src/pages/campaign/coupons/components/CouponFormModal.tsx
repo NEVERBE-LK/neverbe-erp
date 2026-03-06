@@ -9,6 +9,7 @@ import {
   IconUser,
 } from "@tabler/icons-react";
 import toast from "react-hot-toast";
+import AIDescriptionTextarea from "@/components/AIDescriptionTextarea";
 import {
   Modal,
   Form,
@@ -173,7 +174,16 @@ const CouponFormModal: React.FC<Props> = ({
                 name="description"
                 label="Description (Customer Facing)"
               >
-                <TextArea rows={2} placeholder="GET 20% OFF YOUR NEXT ORDER" />
+                <AIDescriptionTextarea
+                  aiContext={{
+                    name:
+                      form.getFieldValue("name") || form.getFieldValue("code"),
+                    category: "Coupon",
+                  }}
+                  rows={2}
+                  placeholder="GET 20% OFF YOUR NEXT ORDER"
+                  disabled={saving}
+                />
               </Form.Item>
 
               <Form.Item name="isActive" label="Status" valuePropName="checked">
