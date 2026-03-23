@@ -3,12 +3,13 @@ import { useAppDispatch } from "@/lib/hooks";
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { IconLock, IconUser } from "@tabler/icons-react";
-import { authenticateUserAction } from "@/actions/authActions";
+import { authenticateUserAction, signInWithGoogleAction } from "@/actions/authActions";
 import { setUser } from "@/lib/authSlice/authSlice";
 import { User } from "@/model/User";
-import { Card, Form, Input, Button, Typography, Spin } from "antd";
+import { Card, Form, Input, Button, Typography, Spin, Divider } from "antd";
 import toast from "react-hot-toast";
 import PageContainer from "../components/container/PageContainer";
+import { FcGoogle } from "react-icons/fc";
 
 const { Text } = Typography;
 
@@ -47,6 +48,26 @@ const Login = () => {
     } catch (e: any) {
       console.log(e);
       toast.error(e.message);
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setIsLoading(true);
+    try {
+      const user: User = await signInWithGoogleAction();
+      dispatch(setUser(user));
+      window.localStorage.setItem("nvrUser", JSON.stringify(user));
+      toast.success("Signed in with Google");
+      handleRedirect(user);
+    } catch (e: any) {
+      console.log(e);
+      // Special handling for 404 (user not in system)
+      if (e.message.includes("404") || e.message.toLowerCase().includes("not found")) {
+        toast.error("ERP account not found. Please contact administration.");
+      } else {
+        toast.error(e.message || "Google sign-in failed");
+      }
       setIsLoading(false);
     }
   };
@@ -155,6 +176,21 @@ const Login = () => {
                   Sign In
                 </Button>
               </Form.Item>
+
+              <Divider plain>
+                <span className="text-[10px] font-black text-gray-400 tracking-widest uppercase">
+                  Or
+                </span>
+              </Divider>
+
+              <Button
+                onClick={handleGoogleLogin}
+                icon={<FcGoogle size={22} />}
+                block
+                className="h-14 rounded-xl border-gray-200 bg-white hover:bg-gray-50 flex items-center justify-center gap-2 text-sm font-bold shadow-sm mb-4"
+              >
+                Continue with Google
+              </Button>
 
               <div className="text-center mt-4">
                 <Link to="/reset-password">
