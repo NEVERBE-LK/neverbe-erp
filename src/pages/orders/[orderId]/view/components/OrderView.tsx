@@ -12,7 +12,11 @@ import {
   Space,
   Alert,
   Spin,
+  Timeline,
+  Input,
+  Button as AntButton,
 } from "antd";
+import { EditOutlined, SaveOutlined } from "@ant-design/icons";
 
 import { useAIChat } from "@/contexts/AIChatContext";
 
@@ -22,6 +26,10 @@ const OrderView = ({ orderId }: { orderId: string }) => {
   const { setContextData, setContextTitle, clearContext } = useAIChat();
   const [order, setOrder] = useState<Order | null>(null);
   const [loadingOrder, setLoadingOrder] = useState(true);
+  const [trackingHistory, setTrackingHistory] = useState<any[]>([]);
+  const [loadingTracking, setLoadingTracking] = useState(false);
+  const [isEditingTracking, setIsEditingTracking] = useState(false);
+  const [tempTracking, setTempTracking] = useState("");
   const [stocks, setStocks] = useState<Record<string, any>[]>([]);
 
   const { currentUser } = useAppSelector((state: any) => state.authSlice);
@@ -36,8 +44,45 @@ const OrderView = ({ orderId }: { orderId: string }) => {
     if (order) {
       setContextData(order as any);
       setContextTitle(`Order #${order.orderId}`);
+      if (order.trackingNumber) {
+        fetchTracking(order.orderId);
+      }
     }
   }, [order, setContextData, setContextTitle]);
+
+  const fetchTracking = async (id: string) => {
+    try {
+      setLoadingTracking(true);
+      const res = await api.get(`/api/v1/erp/orders/${id}/tracking`);
+      setTrackingHistory(res.data.history || []);
+    } catch (error) {
+      console.error("Failed to fetch tracking history", error);
+    } finally {
+      setLoadingTracking(false);
+    }
+  };
+
+  const handleSaveTracking = async () => {
+    if (!order) return;
+    try {
+      const updatedOrder = {
+        ...order,
+        trackingNumber: tempTracking,
+        courier: "Domex",
+      };
+      await api.put(`/api/v1/erp/orders/${order.orderId}`, updatedOrder);
+      setOrder(updatedOrder);
+      setIsEditingTracking(false);
+      toast.success("Tracking number updated");
+      if (tempTracking) {
+        fetchTracking(order.orderId);
+      } else {
+        setTrackingHistory([]);
+      }
+    } catch (error) {
+      toast.error("Failed to update tracking number");
+    }
+  };
 
   useEffect(() => {
     if (currentUser) {
@@ -331,6 +376,39 @@ const OrderView = ({ orderId }: { orderId: string }) => {
               <Descriptions.Item label="Order Source">
                 <Tag color="cyan">{order?.from || "-"}</Tag>
               </Descriptions.Item>
+              <Descriptions.Item label="Tracking Number">
+                <div className="flex items-center gap-2">
+                  {isEditingTracking ? (
+                    <Input
+                      size="small"
+                      value={tempTracking}
+                      onChange={(e) => setTempTracking(e.target.value)}
+                      onPressEnter={handleSaveTracking}
+                      className="w-32"
+                    />
+                  ) : (
+                    <Text strong>{order?.trackingNumber || "Not Linked"}</Text>
+                  )}
+                  {isEditingTracking ? (
+                    <AntButton
+                      type="primary"
+                      size="small"
+                      icon={<SaveOutlined />}
+                      onClick={handleSaveTracking}
+                    />
+                  ) : (
+                    <AntButton
+                      type="text"
+                      size="small"
+                      icon={<EditOutlined />}
+                      onClick={() => {
+                        setIsEditingTracking(true);
+                        setTempTracking(order?.trackingNumber || "");
+                      }}
+                    />
+                  )}
+                </div>
+              </Descriptions.Item>
               <Descriptions.Item label="Inventory Location">
                 <Tag color="geekblue">
                   {stocks.find((s) => s.id === order?.stockId)?.label ||
@@ -350,6 +428,61 @@ const OrderView = ({ orderId }: { orderId: string }) => {
                 )}
               </Descriptions.Item>
             </Descriptions>
+
+            {order?.trackingNumber && (
+              <Card
+                loading={loadingTracking}
+                title={
+                  <span className="text-[10px] uppercase font-bold tracking-widest text-gray-400">
+                    Live Shipping Tracking (Domex)
+                  </span>
+                }
+                className="border border-gray-100 rounded-2xl overflow-hidden bg-white shadow-none mt-8"
+                styles={{
+                  header: {
+                    borderBottom: "1px solid #f1f5f9",
+                    background: "#f8fafc",
+                  },
+                }}
+              >
+                {trackingHistory.length > 0 ? (
+                  <Timeline
+                    className="mt-4"
+                    items={trackingHistory.map((event) => ({
+                      children: (
+                        <div className="flex flex-col">
+                          <Text strong className="text-xs">
+                            {event.status}
+                          </Text>
+                          <Text type="secondary" className="text-[10px]">
+                            {event.date}
+                          </Text>
+                        </div>
+                      ),
+                      color: event.status.toLowerCase().includes("delivered")
+                        ? "green"
+                        : "blue",
+                    }))}
+                  />
+                ) : (
+                  <div className="text-center py-4 flex flex-col items-center gap-3">
+                    <Text className="text-gray-400 text-xs italic">
+                      No live tracking history available for waybill #
+                      {order.trackingNumber} yet.
+                    </Text>
+                    <AntButton 
+                      href={`https://domex.lk/Order-Details.php?wbno=${order.trackingNumber}`}
+                      target="_blank"
+                      type="dashed"
+                      size="small"
+                      className="text-[10px] uppercase font-bold"
+                    >
+                      View on Domex Website
+                    </AntButton>
+                  </div>
+                )}
+              </Card>
+            )}
           </Card>
         </div>
 

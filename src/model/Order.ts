@@ -33,6 +33,7 @@ export interface Order {
 
   // Order Tracking
   trackingNumber?: string;
+  courier?: string; // e.g. "Domex"
   estimatedDelivery?: Timestamp | string;
   statusHistory?: { status: string; date: Timestamp | string }[];
 
