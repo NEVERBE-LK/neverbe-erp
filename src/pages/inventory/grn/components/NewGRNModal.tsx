@@ -218,26 +218,32 @@ const NewGRNModal: React.FC<NewGRNModalProps> = ({
       onSuccess: async () => {
         setSaving(true);
         try {
-          await api.post("/api/v1/erp/inventory/grn", {
-            purchaseOrderId: selectedPO.id,
-            poNumber: selectedPO.poNumber,
-            supplierId: selectedPO.supplierId,
-            supplierName: selectedPO.supplierName,
-            receivedDate,
-            notes,
-            items: validItems.map((item) => ({
-              productId: item.productId,
-              productName: item.productName,
-              variantId: item.variantId,
-              variantName: item.variantName,
-              size: item.size,
-              orderedQuantity: item.orderedQuantity,
-              receivedQuantity: item.receivedQuantity,
-              unitCost: item.unitCost,
-              totalCost: item.receivedQuantity * item.unitCost,
-              stockId: item.stockId,
-            })),
-          });
+          const fd = new FormData();
+          fd.append(
+            "data",
+            JSON.stringify({
+              purchaseOrderId: selectedPO.id,
+              poNumber: selectedPO.poNumber,
+              supplierId: selectedPO.supplierId,
+              supplierName: selectedPO.supplierName,
+              receivedDate,
+              notes,
+              items: validItems.map((item) => ({
+                productId: item.productId,
+                productName: item.productName,
+                variantId: item.variantId,
+                variantName: item.variantName,
+                size: item.size,
+                orderedQuantity: item.orderedQuantity,
+                receivedQuantity: item.receivedQuantity,
+                unitCost: item.unitCost,
+                totalCost: item.receivedQuantity * item.unitCost,
+                stockId: item.stockId,
+              })),
+            }),
+          );
+
+          await api.post("/api/v1/erp/inventory/grn", fd);
 
           toast.success("GRN CREATED SUCCESSFULLY");
           onSuccess();

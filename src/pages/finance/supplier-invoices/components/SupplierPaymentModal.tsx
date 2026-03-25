@@ -76,13 +76,18 @@ const SupplierPaymentModal: React.FC<SupplierPaymentModalProps> = ({
 
     setProcessing(true);
     try {
-      await api.post(
-        `/api/v1/erp/finance/supplier-invoices/${invoice?.id}/payment`,
-        {
+      const fd = new FormData();
+      fd.append(
+        "data",
+        JSON.stringify({
           amount: Number(amount),
           bankAccountId: bankAccountId || undefined,
           notes,
-        },
+        }),
+      );
+      await api.post(
+        `/api/v1/erp/finance/supplier-invoices/${invoice?.id}/payment`,
+        fd,
       );
 
       toast.success("Payment recorded");

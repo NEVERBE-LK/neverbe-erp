@@ -147,9 +147,16 @@ const SupplierInvoiceFormModal: React.FC<SupplierInvoiceFormModalProps> = ({
     setSaving(true);
     try {
       const formPayload = new FormData();
-      Object.entries(formData).forEach(([key, value]) => {
-        formPayload.append(key, value);
-      });
+
+      // Convert amount and paidAmount to numbers
+      const processedData = {
+        ...formData,
+        amount: Number(formData.amount),
+        paidAmount: Number(formData.paidAmount),
+      };
+
+      formPayload.append("data", JSON.stringify(processedData));
+
       if (file) {
         formPayload.append("attachment", file);
       }

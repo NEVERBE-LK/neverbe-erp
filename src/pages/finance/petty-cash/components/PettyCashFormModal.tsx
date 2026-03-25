@@ -118,21 +118,27 @@ const PettyCashFormModal: React.FC<PettyCashFormModalProps> = ({
     setSaving(true);
     try {
       const formPayload = new FormData();
-      formPayload.append("amount", String(values.amount));
-      formPayload.append("date", values.date.format("YYYY-MM-DD"));
-      formPayload.append("category", values.category);
-      formPayload.append("note", values.note);
-      formPayload.append("paymentMethod", values.paymentMethod);
+
+      const data: any = {
+        amount: Number(values.amount),
+        date: values.date.format("YYYY-MM-DD"),
+        category: values.category,
+        note: values.note,
+        paymentMethod: values.paymentMethod,
+        type: values.type,
+      };
+
       if (values.bankAccountId) {
-        formPayload.append("bankAccountId", values.bankAccountId);
+        data.bankAccountId = values.bankAccountId;
         const bank = bankAccounts.find((b) => b.id === values.bankAccountId);
-        if (bank) formPayload.append("bankAccountName", bank.label);
+        if (bank) data.bankAccountName = bank.label;
       }
-      formPayload.append("type", values.type);
 
       if (!isEditing) {
-        formPayload.append("status", "PENDING");
+        data.status = "PENDING";
       }
+
+      formPayload.append("data", JSON.stringify(data));
 
       if (file) {
         formPayload.append("attachment", file);

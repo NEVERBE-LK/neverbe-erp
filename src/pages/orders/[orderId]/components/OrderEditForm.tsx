@@ -71,7 +71,9 @@ export const OrderEditForm: React.FC<OrderEditFormProps> = ({
             ];
           }
 
-          await api.put(`/api/v1/erp/orders/${order.orderId}`, payload);
+          const fd = new FormData();
+          fd.append("data", JSON.stringify(payload));
+          await api.put(`/api/v1/erp/orders/${order.orderId}`, fd);
           toast.success(`ORDER #${order.orderId} UPDATED`);
           onRefresh?.();
         } catch (error: any) {

@@ -121,14 +121,14 @@ const BankAccountsPage = () => {
 
     setSaving(true);
     try {
+      const fd = new FormData();
+      fd.append("data", JSON.stringify(formData));
+
       if (editingId) {
-        await api.put(
-          `/api/v1/erp/finance/bank-accounts/${editingId}`,
-          formData,
-        );
+        await api.put(`/api/v1/erp/finance/bank-accounts/${editingId}`, fd);
         toast.success("Account updated");
       } else {
-        await api.post("/api/v1/erp/finance/bank-accounts", formData);
+        await api.post("/api/v1/erp/finance/bank-accounts", fd);
         toast.success("Account created");
       }
 

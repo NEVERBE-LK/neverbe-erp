@@ -69,9 +69,9 @@ const ViewPurchaseOrderPage = () => {
       onSuccess: async () => {
         setUpdating(true);
         try {
-          await api.put(`/api/v1/erp/procurement/purchase-orders/${poId}`, {
-            status,
-          });
+          const fd = new FormData();
+          fd.append("data", JSON.stringify({ status }));
+          await api.put(`/api/v1/erp/procurement/purchase-orders/${poId}`, fd);
           toast.success(
             `Order ${status === "SUBMITTED" ? "Submitted" : "Cancelled"}`,
           );

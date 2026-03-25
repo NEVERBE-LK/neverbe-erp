@@ -116,14 +116,17 @@ const ExpenseCategoriesPage = () => {
 
     setSaving(true);
     try {
+      const fd = new FormData();
+      fd.append("data", JSON.stringify(formData));
+
       if (editingId) {
         await api.put(
           `/api/v1/erp/finance/expense-categories/${editingId}`,
-          formData,
+          fd,
         );
         toast.success("Category updated");
       } else {
-        await api.post("/api/v1/erp/finance/expense-categories", formData);
+        await api.post("/api/v1/erp/finance/expense-categories", fd);
         toast.success("Category created");
       }
 

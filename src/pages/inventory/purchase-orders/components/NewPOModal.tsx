@@ -256,15 +256,21 @@ const NewPOModal: React.FC<NewPOModalProps> = ({
       onSuccess: async () => {
         setSaving(true);
         try {
-          await api.post("/api/v1/erp/procurement/purchase-orders", {
-            supplierId,
-            supplierName,
-            stockId,
-            expectedDate,
-            notes,
-            items,
-            status,
-          });
+          const fd = new FormData();
+          fd.append(
+            "data",
+            JSON.stringify({
+              supplierId,
+              supplierName,
+              stockId,
+              expectedDate,
+              notes,
+              items,
+              status,
+            }),
+          );
+
+          await api.post("/api/v1/erp/procurement/purchase-orders", fd);
           toast.success(
             status === "DRAFT" ? "PO SAVED AS DRAFT" : "PO SUBMITTED",
           );

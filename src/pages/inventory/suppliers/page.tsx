@@ -109,14 +109,17 @@ const SuppliersPage = () => {
     }
     setSaving(true);
     try {
+      const fd = new FormData();
+      fd.append("data", JSON.stringify(formData));
+
       if (editingSupplier?.id) {
         await api.put(
           `/api/v1/erp/procurement/suppliers/${editingSupplier.id}`,
-          formData,
+          fd,
         );
         toast.success("Supplier updated");
       } else {
-        await api.post("/api/v1/erp/procurement/suppliers", formData);
+        await api.post("/api/v1/erp/procurement/suppliers", fd);
         toast.success("Supplier created");
       }
       setIsModalOpen(false);

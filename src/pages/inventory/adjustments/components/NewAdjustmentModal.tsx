@@ -193,13 +193,18 @@ const NewAdjustmentModal: React.FC<NewAdjustmentModalProps> = ({
       onSuccess: async () => {
         setSaving(true);
         try {
-          await api.post("/api/v1/erp/inventory/adjustments", {
-            type,
-            reason,
-            notes,
-            items,
-            status,
-          });
+          const fd = new FormData();
+          fd.append(
+            "data",
+            JSON.stringify({
+              type,
+              reason,
+              notes,
+              items,
+              status,
+            }),
+          );
+          await api.post("/api/v1/erp/inventory/adjustments", fd);
           toast.success(
             `Adjustment ${status === "DRAFT" ? "saved as draft" : "submitted"}`,
           );
