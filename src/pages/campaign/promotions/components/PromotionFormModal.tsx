@@ -41,7 +41,7 @@ const { TextArea } = Input;
 interface Props {
   open: boolean;
   onClose: () => void;
-  onSave: () => void;
+  onSave: (promotion: Promotion) => void;
   promotion: Promotion | null;
 }
 
@@ -238,17 +238,20 @@ const PromotionFormModal: React.FC<Props> = ({
         }
       }
 
+      let savedPromotion: Promotion;
       if (isEditing && promotion) {
-        await api.put(
+        const res = await api.put(
           `/api/v1/erp/master/promotions/${promotion.id}`,
           formDataToSend,
         );
+        savedPromotion = res.data;
         toast.success("PROMOTION UPDATED");
       } else {
-        await api.post("/api/v1/erp/master/promotions", formDataToSend);
+        const res = await api.post("/api/v1/erp/master/promotions", formDataToSend);
+        savedPromotion = res.data;
         toast.success("PROMOTION CREATED");
       }
-      onSave();
+      onSave(savedPromotion);
     } catch (e: any) {
       console.error("Save failed", e);
       toast.error(e.response?.data?.message || "FAILED TO SAVE");

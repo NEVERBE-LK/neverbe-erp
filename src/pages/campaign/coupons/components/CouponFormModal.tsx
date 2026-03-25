@@ -34,7 +34,7 @@ const { TextArea } = Input;
 interface Props {
   open: boolean;
   onClose: () => void;
-  onSave: () => void;
+  onSave: (coupon: Coupon) => void;
   coupon: Coupon | null;
 }
 
@@ -111,14 +111,17 @@ const CouponFormModal: React.FC<Props> = ({
           : undefined,
       };
 
+      let savedCoupon;
       if (isEditing && coupon) {
-        await api.put(`/api/v1/erp/master/coupons/${coupon.id}`, payload);
+        const response = await api.put(`/api/v1/erp/master/coupons/${coupon.id}`, payload);
         toast.success("COUPON UPDATED");
+        savedCoupon = response.data;
       } else {
-        await api.post("/api/v1/erp/master/coupons", payload);
+        const response = await api.post("/api/v1/erp/master/coupons", payload);
         toast.success("COUPON CREATED");
+        savedCoupon = response.data;
       }
-      onSave();
+      onSave(savedCoupon);
     } catch (e: any) {
       console.error("Save failed", e);
       toast.error(e.response?.data?.message || "Failed to save");

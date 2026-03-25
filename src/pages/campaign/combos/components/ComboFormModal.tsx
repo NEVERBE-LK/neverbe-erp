@@ -44,7 +44,7 @@ const { TextArea } = Input;
 interface Props {
   open: boolean;
   onClose: () => void;
-  onSave: () => void;
+  onSave: (combo: ComboProduct) => void;
   combo: ComboProduct | null;
 }
 
@@ -223,7 +223,7 @@ const ComboFormModal: React.FC<Props> = ({ open, onClose, onSave, combo }) => {
           : "/api/v1/erp/master/combos";
       const method = isEditing && combo ? "PUT" : "POST";
 
-      await api({
+      const res = await api({
         method,
         url,
         data: payload,
@@ -232,8 +232,8 @@ const ComboFormModal: React.FC<Props> = ({ open, onClose, onSave, combo }) => {
         },
       });
 
-      toast.error(isEditing ? "COMBO UPDATED" : "COMBO CREATED");
-      onSave();
+      toast.success(isEditing ? "COMBO UPDATED" : "COMBO CREATED");
+      onSave(res.data);
     } catch (e: any) {
       console.error("Save failed", e);
       toast(e.response?.data?.message || "FAILED TO SAVE");

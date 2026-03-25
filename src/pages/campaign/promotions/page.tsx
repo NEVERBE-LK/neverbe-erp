@@ -92,9 +92,22 @@ const PromotionsPage = () => {
     setEditingItem(null);
   };
 
-  const handleSave = () => {
+  const handleSave = (item: Promotion) => {
     handleCloseModal();
-    fetchPromotions();
+    setPromotions((prev) => {
+      const index = prev.findIndex((p) => p.id === item.id);
+      if (index > -1) {
+        const newArr = [...prev];
+        newArr[index] = item;
+        return newArr;
+      } else {
+        return [item, ...prev];
+      }
+    });
+    // Optional: We can still fetch in background or just update total
+    if (!editingItem) {
+      setPagination((prev) => ({ ...prev, total: prev.total + 1 }));
+    }
   };
 
   const handleDelete = async (item: Promotion) => {
@@ -107,7 +120,8 @@ const PromotionsPage = () => {
         try {
           await api.delete(`/api/v1/erp/master/promotions/${item.id}`);
           toast.success("Promotion deleted");
-          fetchPromotions();
+          setPromotions((prev) => prev.filter((p) => p.id !== item.id));
+          setPagination((prev) => ({ ...prev, total: prev.total - 1 }));
         } catch (e) {
           console.error("Delete failed", e);
           toast.error("Failed to delete");

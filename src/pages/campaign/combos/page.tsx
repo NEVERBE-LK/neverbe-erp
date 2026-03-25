@@ -64,9 +64,21 @@ const CombosPage = () => {
     setEditingItem(null);
   };
 
-  const handleSave = () => {
+  const handleSave = (item: ComboProduct) => {
     handleCloseModal();
-    fetchCombos();
+    setCombos((prev) => {
+      const index = prev.findIndex((p) => p.id === item.id);
+      if (index > -1) {
+        const newArr = [...prev];
+        newArr[index] = item;
+        return newArr;
+      } else {
+        return [item, ...prev];
+      }
+    });
+    if (!editingItem) {
+      setPagination((prev) => ({ ...prev, total: prev.total + 1 }));
+    }
   };
 
   const handleDelete = async (item: ComboProduct) => {
@@ -77,9 +89,10 @@ const CombosPage = () => {
       confirmText: "Delete",
       onSuccess: async () => {
         try {
-          await api.delete(`/api/v1/erp/master/combos/${item.id}`);
+          const result = await api.delete(`/api/v1/erp/master/combos/${item.id}`);
           toast.success("Combo deleted");
-          fetchCombos();
+          setCombos((prev) => prev.filter((p) => p.id !== result.data.id));
+          setPagination((prev) => ({ ...prev, total: prev.total - 1 }));
         } catch (e) {
           console.error("Delete failed", e);
           toast.error("Failed to delete");

@@ -69,7 +69,7 @@ const BannerCard = ({
 };
 
 // ============ BANNER FORM ============
-const BannerForm = ({ onSuccess }: { onSuccess: () => void }) => {
+const BannerForm = ({ onSuccess }: { onSuccess: (newBanner: any) => void }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -128,13 +128,13 @@ const BannerForm = ({ onSuccess }: { onSuccess: () => void }) => {
       }
       formData.append("path", "sliders");
 
-      await addBannerAction(formData);
+      const res = await addBannerAction(formData);
       setSelectedFile(null);
       setImagePreview(null);
       // @ts-ignore
       e.target.reset();
       toast.success("BANNER UPLOADED");
-      onSuccess();
+      onSuccess(res);
     } catch (e: any) {
       toast.error(e.message);
     } finally {
@@ -256,7 +256,7 @@ const BannerPage = () => {
     try {
       await deleteBannerAction(bannerId);
       toast.success("ASSET DELETED");
-      fetchBanners();
+      setBanners((prev) => prev.filter((b) => b.id !== bannerId));
     } catch (e: any) {
       toast.error(e.message);
     }
@@ -306,7 +306,11 @@ const BannerPage = () => {
           <Title level={4} className="mb-4">
             Upload New Asset
           </Title>
-          <BannerForm onSuccess={fetchBanners} />
+          <BannerForm
+            onSuccess={(newBanner) =>
+              setBanners((prev) => [newBanner, ...prev])
+            }
+          />
         </div>
       </div>
     </PageContainer>
