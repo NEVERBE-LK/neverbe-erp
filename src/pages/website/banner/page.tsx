@@ -19,7 +19,7 @@ const BannerCard = ({
   banner,
   onDelete,
 }: {
-  banner: { file: string; url: string; id: string };
+  banner: { file?: string; fileName?: string; url: string; id: string };
   onDelete: (id: string) => void;
 }) => {
   const { showConfirmation } = useConfirmationDialog();
@@ -60,7 +60,7 @@ const BannerCard = ({
       <Card.Meta
         title={
           <Text className="text-xs font-mono">
-            {banner.file || "UNTITLED_ASSET"}
+            {banner.fileName || banner.file || "UNTITLED_ASSET"}
           </Text>
         }
       />
@@ -286,7 +286,7 @@ const BannerPage = () => {
           {!isLoading && banners.length > 0 && (
             <Row gutter={[24, 24]}>
               {banners.map(
-                (banner: { file: string; url: string; id: string }) => (
+                  (banner: { file?: string; fileName?: string; url: string; id: string }) => (
                   <Col
                     xs={24}
                     sm={12}
