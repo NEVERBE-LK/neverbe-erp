@@ -44,6 +44,8 @@ interface ForecastPoint {
 
 interface HybridData {
   forecast: {
+    success?: boolean;
+    message?: string;
     predictions: ForecastPoint[];
     metrics: {
       dataPoints: number;
@@ -99,13 +101,13 @@ const HybridIntelligencePanel = () => {
       <div className="flex justify-between items-start mb-6">
         <div className="flex flex-col">
           <div className="flex items-center gap-2 mb-1">
-            <div className="p-1.5 bg-blue-600 rounded-lg shadow-lg shadow-blue-200">
+            <div className="p-1.5 bg-emerald-600 rounded-lg shadow-lg shadow-emerald-200">
               <IconBrain size={18} className="text-white" />
             </div>
             <h4 className="text-lg font-black text-gray-900 m-0 tracking-tight">Intelligence Hub</h4>
           </div>
           <div className="flex items-center gap-2">
-            <Tag color="cyan" bordered={false} className="m-0 text-[10px] font-black uppercase tracking-wider rounded-full py-0 px-2 bg-cyan-50 text-cyan-600">
+            <Tag color="emerald" bordered={false} className="m-0 text-[10px] font-black uppercase tracking-wider rounded-full py-0 px-2 bg-emerald-50 text-emerald-600">
               Real-time Neural Engine
             </Tag>
             {data?.isAdvisoryFromCache && (
@@ -118,7 +120,7 @@ const HybridIntelligencePanel = () => {
         
         <Button 
           type="text" 
-          icon={<IconRefresh size={18} className={`${refreshing ? 'animate-spin text-blue-600' : 'text-gray-400'}`} />} 
+          icon={<IconRefresh size={18} className={`${refreshing ? 'animate-spin text-emerald-600' : 'text-gray-400'}`} />} 
           onClick={() => fetchIntelligence(true)}
           disabled={refreshing}
           className="hover:bg-gray-50 rounded-xl"
@@ -127,18 +129,27 @@ const HybridIntelligencePanel = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* CHART SECTION */}
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-2 relative">
+          {!chartData.length && (
+            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-gray-50/50 rounded-2xl border border-dashed border-gray-200">
+              <IconBrain size={48} className="text-gray-300 mb-2" stroke={1} />
+              <Text className="text-xs font-bold text-gray-400 uppercase tracking-widest">
+                {data?.forecast.success === false ? "Insufficient Data for Neural Forecast" : "Analyzing Trajectory..."}
+              </Text>
+              <Text className="text-[10px] text-gray-400 mt-1">Need at least 7 days of historical sales records</Text>
+            </div>
+          )}
           <div className="h-[220px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#2563eb" stopOpacity={0.1}/>
-                    <stop offset="95%" stopColor="#2563eb" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="#059669" stopOpacity={0.1}/>
+                    <stop offset="95%" stopColor="#059669" stopOpacity={0}/>
                   </linearGradient>
                   <linearGradient id="colorForecast" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.1}/>
-                    <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.1}/>
+                    <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
@@ -167,19 +178,19 @@ const HybridIntelligencePanel = () => {
                 <Area 
                   type="monotone" 
                   dataKey="netSales" 
-                  stroke="#2563eb" 
+                  stroke="#059669" 
                   strokeWidth={3} 
                   fillOpacity={1} 
                   fill="url(#colorSales)" 
                   data={chartData.slice(0, forecastStartIndex + 1)}
-                  dot={{ r: 4, fill: '#2563eb', strokeWidth: 2, stroke: '#fff' }}
+                  dot={{ r: 4, fill: '#059669', strokeWidth: 2, stroke: '#fff' }}
                   activeDot={{ r: 6, strokeWidth: 0 }}
                 />
                 {/* Forecast Area */}
                 <Area 
                   type="monotone" 
                   dataKey="netSales" 
-                  stroke="#8b5cf6" 
+                  stroke="#10b981" 
                   strokeWidth={3} 
                   strokeDasharray="5 5"
                   fillOpacity={1} 
@@ -194,11 +205,11 @@ const HybridIntelligencePanel = () => {
           </div>
           <div className="flex items-center gap-4 mt-2 px-2">
             <div className="flex items-center gap-1.5">
-              <div className="w-2 h-2 rounded-full bg-blue-600" />
+              <div className="w-2 h-2 rounded-full bg-emerald-600" />
               <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Historical</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <div className="w-2 h-2 rounded-full bg-purple-500" />
+              <div className="w-2 h-2 rounded-full bg-emerald-400" />
               <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Neural Forecast</span>
             </div>
           </div>
@@ -212,14 +223,14 @@ const HybridIntelligencePanel = () => {
             className="bg-gray-50/50 rounded-2xl border border-gray-100 flex-1 relative overflow-hidden"
           >
             <div className="flex items-center gap-2 mb-3">
-              <IconRobot size={18} className="text-blue-600" />
+              <IconRobot size={18} className="text-emerald-600" />
               <span className="text-xs font-black text-gray-900 uppercase tracking-widest">AI Strategic Advisor</span>
             </div>
             <Paragraph className="text-xs leading-relaxed text-gray-600 font-bold m-0 italic line-clamp-6">
               "{data?.advisory}"
             </Paragraph>
             <div className="mt-4 flex items-center justify-between">
-              <div className="flex items-center gap-1 text-blue-600">
+              <div className="flex items-center gap-1 text-emerald-600">
                 <IconTrendingUp size={14} />
                 <span className="text-[10px] font-black tracking-widest uppercase">Action Advised</span>
               </div>
