@@ -31,12 +31,13 @@ export const useNotifications = () => {
 
         // Explicitly register service worker to prevent AbortError
         if ('serviceWorker' in navigator) {
-          const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
-          console.log("[useNotifications] Service Worker registered with scope:", registration.scope);
+          await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+          const registration = await navigator.serviceWorker.ready; // Wait for it to be ready
+          console.log("[useNotifications] Service Worker ready with scope:", registration.scope);
           
           const token = await fcmGetToken(messaging, {
             vapidKey: vapidKey,
-            serviceWorkerRegistration: registration, // pass the registration explicitly
+            serviceWorkerRegistration: registration,
           });
           
           if (token) {
@@ -89,23 +90,37 @@ export const useNotifications = () => {
 
   // 4. Live Firestore Notifications Listener
   useEffect(() => {
-    const q = query(
-      collection(db, "erp_notifications"),
-      orderBy("createdAt", "desc"),
-      limit(20)
-    );
+    // Only listen if user is authenticated to avoid permission-denied
+    const unsubscribeAuth = auth.onAuthStateChanged((user) => {
+      if (!user) {
+        setNotifications([]);
+        return;
+      }
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const docs = snapshot.docs.map((d) => ({
-        id: d.id,
-        ...d.data(),
-      })) as Notification[];
-      
-      setNotifications(docs);
-      setUnreadCount(docs.filter(n => !n.read).length);
+      const q = query(
+        collection(db, "erp_notifications"),
+        orderBy("createdAt", "desc"),
+        limit(20)
+      );
+
+      const unsubscribeSnapshot = onSnapshot(q, (snapshot) => {
+        const docs = snapshot.docs.map((d) => ({
+          id: d.id,
+          ...d.data(),
+        })) as Notification[];
+        
+        setNotifications(docs);
+        setUnreadCount(docs.filter(n => !n.read).length);
+      }, (error) => {
+        if (error.code === 'permission-denied') {
+          console.warn("[useNotifications] Firestore permission denied. Check your security rules.");
+        }
+      });
+
+      return () => unsubscribeSnapshot();
     });
 
-    return () => unsubscribe();
+    return () => unsubscribeAuth();
   }, []);
 
   return {

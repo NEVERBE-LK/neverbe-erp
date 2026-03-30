@@ -247,7 +247,7 @@ const HybridIntelligencePanel = () => {
             </div>
             <div className="flex items-center gap-1 text-gray-400">
               <span className="text-[9px] font-black uppercase tracking-widest">
-                 {data?.forecast.metrics.dataPoints} Data Points
+                 {data?.forecast?.metrics?.dataPoints || 0} Data Points
               </span>
             </div>
           </div>
