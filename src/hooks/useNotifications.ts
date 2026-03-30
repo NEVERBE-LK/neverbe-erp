@@ -17,62 +17,95 @@ export const useNotifications = () => {
   const [fcmToken, setFcmToken] = useState<string | null>(null);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [isRegistering, setIsRegistering] = useState(false);
 
-  // 1. Request Permission and Get Token
+  // 1. Robust Service Worker Registration and Token Retrieval
+  const registerAndGetToken = async (vapidKey: string, isRetry = false): Promise<string | null> => {
+    if (!('serviceWorker' in navigator) || isRegistering) return null;
+    
+    setIsRegistering(true);
+    try {
+      // Nuclear Cleanup: Unsubscribe from push AND unregister worker
+      const existingRegs = await navigator.serviceWorker.getRegistrations();
+      for (const reg of existingRegs) {
+        try {
+          const sub = await reg.pushManager.getSubscription();
+          if (sub) {
+            await sub.unsubscribe();
+            console.log("[useNotifications] Cleared stale push subscription");
+          }
+        } catch (e) {
+          // Ignore unsub errors
+        }
+        await reg.unregister();
+      }
+
+      // Wait for the browser to release the push channel slot
+      await new Promise(resolve => setTimeout(resolve, isRetry ? 1500 : 800));
+
+      // Fresh registration
+      const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js', {
+        updateViaCache: 'none'
+      });
+
+      // Wait specifically for this registration to be ACTIVE
+      await new Promise<void>((resolve, reject) => {
+        if (registration.active) return resolve();
+        
+        const timeout = setTimeout(() => reject(new Error("SW activation timeout")), 10000);
+        const worker = registration.installing || registration.waiting;
+        
+        if (!worker) {
+          clearTimeout(timeout);
+          return resolve();
+        }
+
+        worker.addEventListener('statechange', (e) => {
+          if ((e.target as ServiceWorker).state === 'activated') {
+            clearTimeout(timeout);
+            resolve();
+          }
+        });
+      });
+
+      try {
+        const token = await fcmGetToken(messaging, {
+          vapidKey: vapidKey.trim(),
+          serviceWorkerRegistration: registration,
+        });
+        return token;
+      } catch (error: any) {
+        if (error.name === 'AbortError' && !isRetry) {
+          console.warn("[useNotifications] Retrying push registration...");
+          setIsRegistering(false); // Reset to allow retry
+          return registerAndGetToken(vapidKey, true);
+        }
+        throw error;
+      }
+    } finally {
+      setIsRegistering(false);
+    }
+  };
+
   const requestPermission = async () => {
-    let vapidKey: string | undefined;
     try {
       const permission = await Notification.requestPermission();
       if (permission === "granted") {
-        vapidKey = import.meta.env.VITE_FIREBASE_VAPID_KEY;
-        if (!vapidKey) {
-          console.warn("[useNotifications] Missing VITE_FIREBASE_VAPID_KEY. Push notifications will not work.");
-          return;
-        }
+        const vapidKey = import.meta.env.VITE_FIREBASE_VAPID_KEY;
+        if (!vapidKey) return;
 
-        // 0. Debug log to verify key (first 10 chars)
-        console.log("[useNotifications] Attempting registration with VAPID:", vapidKey.substring(0, 10) + "...");
-
-        // 1. Clean up any existing broken registrations for this scope
-        if ('serviceWorker' in navigator) {
-          const registrations = await navigator.serviceWorker.getRegistrations();
-          for (let reg of registrations) {
-            if (reg.active?.scriptURL.includes('firebase-messaging-sw.js')) {
-              console.log("[useNotifications] Cleaning up old worker:", reg.active.scriptURL);
-              await reg.unregister();
-            }
-          }
-
-          // 2. Fresh registration
-          const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
-          await navigator.serviceWorker.ready;
-          
-          console.log("[useNotifications] Fresh SW Active. Scope:", registration.scope);
-          
-          // 3. Small delay to let the Push Manager settle (resolves AbortErrors on localhost)
-          await new Promise(resolve => setTimeout(resolve, 500));
-          
-          const token = await fcmGetToken(messaging, {
-            vapidKey: vapidKey.trim(),
-            serviceWorkerRegistration: registration,
-          });
-          
-          if (token) {
-            setFcmToken(token);
-            saveTokenToUser(token);
-            toast.success("Push notifications enabled!");
-          }
+        const token = await registerAndGetToken(vapidKey);
+        
+        if (token) {
+          setFcmToken(token);
+          saveTokenToUser(token);
+          // SILENT: No success toast as requested
         }
       }
     } catch (error: any) {
-      console.error("[useNotifications] Token Error Details:", {
-        message: error.message,
-        name: error.name,
-        code: error.code,
-        vapidPrefix: vapidKey?.substring(0, 5)
-      });
+      console.error("[useNotifications] Registration failed:", error.name);
       if (error.name === 'AbortError') {
-        toast.error("Notification registration failed. Please refresh and try again.");
+        toast.error("Push registration connection failed. Please refresh.");
       }
     }
   };
@@ -80,7 +113,7 @@ export const useNotifications = () => {
   // 2. Save Token to User Profile
   const saveTokenToUser = async (token: string) => {
     const user = auth.currentUser;
-    if (user) {
+    if (user && token) {
       try {
         const userRef = doc(db, "users", user.uid);
         await updateDoc(userRef, {
@@ -88,9 +121,8 @@ export const useNotifications = () => {
           notificationsEnabled: true,
           updatedAt: new Date()
         });
-        console.log("[useNotifications] FCM Token saved to user profile.");
       } catch (error) {
-        console.warn("[useNotifications] Failed to save token (user doc might not exist yet):", error);
+        // Fail silently for user doc existence
       }
     }
   };
@@ -100,7 +132,7 @@ export const useNotifications = () => {
     if (!messaging) return;
 
     const unsubscribe = onMessage(messaging, (payload) => {
-      console.log("[useNotifications] Foreground message received:", payload);
+      console.log("[useNotifications] Message received");
       toast.success(`${payload.notification?.title}: ${payload.notification?.body}`, {
         icon: "🔔",
         duration: 5000,
