@@ -99,7 +99,7 @@ const FinancialHealthPanel = () => {
                 <Progress
                   percent={margins.grossMargin}
                   showInfo={false}
-                  strokeColor="#9ca3af"
+                  strokeColor="#10b981"
                   trailColor="#f3f4f6"
                   size="small"
                 />
@@ -266,25 +266,26 @@ const FinancialHealthPanel = () => {
               <Card
                 size="small"
                 bordered={false}
-                className="bg-linear-to-bl from-green-500 to-green-600 rounded-2xl shadow-sm border border-gray-200"
+                className="bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-2xl shadow-sm border-none overflow-hidden"
               >
                 <Statistic
                   title={
-                    <span className="text-[10px] font-bold text-green-100 uppercase tracking-widest">
+                    <span className="text-[10px] font-bold text-emerald-50/90 uppercase tracking-widest">
                       Total Stock Value
                     </span>
                   }
                   value={inventory.totalValue}
                   precision={2}
                   prefix={
-                    <span className="text-sm font-bold text-green-200 mr-1">
+                    <span className="text-sm font-bold text-emerald-100/90 mr-1">
                       LKR
                     </span>
                   }
                   valueStyle={{
-                    color: "#fff",
+                    color: "#ffffff",
                     fontWeight: "900",
                     fontSize: "1.5rem",
+                    textShadow: "0 1px 2px rgba(0,0,0,0.1)",
                   }}
                 />
               </Card>

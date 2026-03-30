@@ -79,7 +79,7 @@ const FinanceDashboard = () => {
   // Chart Configs
   const cashFlowOptions = {
     chart: { type: "bar", toolbar: { show: false }, fontFamily: "inherit" },
-    colors: ["#000000", "#E5E7EB"],
+    colors: ["#16a34a", "#E5E7EB"],
     plotOptions: {
       bar: { borderRadius: 2, columnWidth: "50%" },
     },

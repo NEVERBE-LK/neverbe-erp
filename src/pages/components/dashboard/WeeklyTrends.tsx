@@ -46,7 +46,7 @@ const WeeklyTrends = () => {
       toolbar: { show: false },
       animations: { enabled: true, easing: "easeinout", speed: 500 },
     },
-    colors: ["#000000", "#e5e7eb"],
+    colors: ["#16a34a", "#60a5fa"],
     fill: {
       type: "gradient",
       gradient: {
