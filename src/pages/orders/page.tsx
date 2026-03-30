@@ -93,11 +93,11 @@ const OrdersPage = () => {
           { format: (f: string) => string },
           { format: (f: string) => string },
         ];
-        if (range[0]) params.append("from", range[0].format("YYYY-MM-DD"));
-        if (range[1]) params.append("to", range[1].format("YYYY-MM-DD"));
+        if (range[0]) params.append("startDate", range[0].format("YYYY-MM-DD"));
+        if (range[1]) params.append("endDate", range[1].format("YYYY-MM-DD"));
       }
-      if (filters.source && filters.source !== "all")
-        params.append("source", filters.source as string);
+      if (filters.from && filters.from !== "all")
+        params.append("from", filters.from as string);
       if (filters.stockId && filters.stockId !== "all")
         params.append("stockId", filters.stockId as string);
       if (filters.paymentMethod && filters.paymentMethod !== "all")
@@ -343,7 +343,7 @@ const OrdersPage = () => {
             initialValues={{
               payment: "all",
               status: "all",
-              source: "all",
+              from: "all",
               stockId: "all",
               paymentMethod: "all",
             }}
@@ -376,7 +376,7 @@ const OrdersPage = () => {
             <Form.Item name="dateRange" className="!mb-0 w-64">
               <RangePicker className="w-full" />
             </Form.Item>
-            <Form.Item name="source" className="!mb-0 w-36">
+            <Form.Item name="from" className="!mb-0 w-36">
               <Select>
                 <Option value="all">All Sources</Option>
                 <Option value="Store">Store</Option>
