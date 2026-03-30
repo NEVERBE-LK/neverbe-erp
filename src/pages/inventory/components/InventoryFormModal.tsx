@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { DropdownOption } from "@/pages/master/products/page";
 import api from "@/lib/api";
 import { InventoryItem } from "@/model/InventoryItem";
-import { Modal, Form, Select, InputNumber, Button, Spin, Row, Col } from "antd";
+import { Modal, Form, Select, InputNumber, Button, Spin, Row, Col, Badge } from "antd";
 
 const { Option } = Select;
 
@@ -53,6 +53,24 @@ const InventoryFormModal: React.FC<StockFormModalProps> = ({
   const variantIdValue = Form.useWatch("variantId", form);
   const sizeValue = Form.useWatch("size", form);
   const stockIdValue = Form.useWatch("stockId", form);
+  const [neuralData, setNeuralData] = useState<any>(null);
+
+  const fetchNeuralPulse = async () => {
+    try {
+      const resp = await api.get('/api/v1/erp/ai/neural');
+      if (resp.data.success) {
+        setNeuralData(resp.data.data);
+      }
+    } catch (err) {
+      console.error("Neural Fetch Err", err);
+    }
+  };
+
+  useEffect(() => {
+    if (open) {
+      fetchNeuralPulse();
+    }
+  }, [open]);
 
   useEffect(() => {
     if (open) {
@@ -302,6 +320,29 @@ const InventoryFormModal: React.FC<StockFormModalProps> = ({
             disabled={loadingQuantity}
           />
         </Form.Item>
+
+        {productIdValue && neuralData?.reality?.neuralRisks?.find((r: any) => r.productId === productIdValue) && (
+          <div className="p-5 bg-emerald-50 border border-emerald-100 rounded-2xl mb-6 shadow-sm">
+             <div className="flex items-center gap-2 mb-2">
+               <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+               <span className="text-[10px] font-black uppercase tracking-widest text-emerald-800">Neural Forecasting Active</span>
+             </div>
+             <div className="text-sm font-black text-emerald-950 mb-1">
+               Projected Shortfall Detected
+             </div>
+             <p className="text-xs text-emerald-800/60 leading-relaxed mb-4">
+                This SKU is predicted to sell <strong>{neuralData.reality.neuralRisks.find((r: any) => r.productId === productIdValue).projectedDemand} units</strong> within the next 14 days. Your current stock is insufficient.
+             </p>
+             <div className="flex justify-between items-center py-2 border-t border-emerald-100/50">
+                <span className="text-[10px] font-bold text-emerald-700 uppercase">Demand Spike Risk:</span>
+                <Badge 
+                  className="font-black" 
+                  color={neuralData.reality.neuralRisks.find((r: any) => r.productId === productIdValue).riskLevel === 'CRITICAL' ? 'red' : 'orange'} 
+                  text={neuralData.reality.neuralRisks.find((r: any) => r.productId === productIdValue).riskLevel} 
+                />
+             </div>
+          </div>
+        )}
         {loadingQuantity && (
           <div className="text-xs text-gray-500 mb-4">
             <Spin size="small" /> Checking existing stock...

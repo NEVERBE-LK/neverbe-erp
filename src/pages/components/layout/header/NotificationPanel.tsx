@@ -3,8 +3,11 @@ import { Drawer, List, Badge, Button, Space, Typography, Tag, Empty, Tooltip } f
 import { IconBell, IconCheck, IconExternalLink, IconTrash } from "@tabler/icons-react";
 import { useNotifications, Notification } from "@/hooks/useNotifications";
 import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
 import { useNavigate } from "react-router-dom";
 import api from "@/lib/api";
+
+dayjs.extend(relativeTime);
 import toast from "react-hot-toast";
 
 const { Text, Title } = Typography;

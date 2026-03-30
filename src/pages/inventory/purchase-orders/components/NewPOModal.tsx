@@ -94,11 +94,13 @@ const NewPOModal: React.FC<NewPOModalProps> = ({
 
   const { currentUser } = useAppSelector((state: RootState) => state.authSlice);
 
+  const [neuralData, setNeuralData] = useState<any>(null);
+
   const fetchData = useCallback(async () => {
     if (!open) return;
     setLoading(true);
     try {
-      const [suppliersRes, productsRes, stocksRes, sizesRes] =
+      const [suppliersRes, productsRes, stocksRes, sizesRes, neuralRes] =
         await Promise.all([
           api.get<Supplier[]>(
             "/api/v1/erp/procurement/suppliers?dropdown=true",
@@ -108,10 +110,12 @@ const NewPOModal: React.FC<NewPOModalProps> = ({
           api.get<{ id: string; label: string }[]>(
             "/api/v1/erp/master/sizes/dropdown",
           ),
+          api.get("/api/v1/erp/ai/neural"),
         ]);
       setSuppliers(suppliersRes.data);
       setProducts(productsRes.data);
       setStocks(stocksRes.data);
+      if (neuralRes.data.success) setNeuralData(neuralRes.data.data);
 
       const allSizes = sizesRes.data.map((s) => s.label);
       setGlobalSizes(allSizes);
@@ -487,7 +491,26 @@ const NewPOModal: React.FC<NewPOModalProps> = ({
                     />
                   </div>
                   <div>
-                    <label className={labelClass}>Quantity</label>
+                    <div className="flex justify-between items-center mb-2">
+                       <label className={labelClass + " mb-0"}>Quantity</label>
+                       {selectedProduct && neuralData?.reality?.neuralRisks?.find((r: any) => r.productId === selectedProduct) && (
+                         <Button 
+                           type="link" 
+                           size="small" 
+                           className="p-0 h-auto text-[9px] font-black text-emerald-600 flex items-center gap-1 animate-pulse"
+                           onClick={() => {
+                             const risk = neuralData.reality.neuralRisks.find((r: any) => r.productId === selectedProduct);
+                             if (risk) {
+                               const suggested = Math.max(1, risk.projectedDemand - risk.currentStock);
+                               setQuantity(suggested);
+                               toast.success(`Neural Suggestion Applied: +${suggested} units for expected demand`);
+                             }
+                           }}
+                         >
+                           💡 SUGGEST NEURAL QUANTITY
+                         </Button>
+                       )}
+                    </div>
                     <InputNumber
                       className="w-full"
                       min={1}
@@ -495,6 +518,11 @@ const NewPOModal: React.FC<NewPOModalProps> = ({
                       onChange={(val) => setQuantity(Math.max(1, val || 0))}
                       size="small"
                     />
+                    {selectedProduct && neuralData?.reality?.neuralRisks?.find((r: any) => r.productId === selectedProduct) && (
+                      <div className="mt-1 text-[9px] text-emerald-800 font-bold uppercase opacity-60">
+                        * Intelligence Spike: {neuralData.reality.neuralRisks.find((r: any) => r.productId === selectedProduct).projectedDemand} units needed within {neuralData.projections?.forecastWindow || 14} days.
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

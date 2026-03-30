@@ -15,6 +15,7 @@ import React, { useState, useEffect } from "react";
 import { Order } from "@/model/Order";
 import toast from "react-hot-toast";
 import { useConfirmationDialog } from "@/contexts/ConfirmationDialogContext";
+import NeuralOrderInsight from "./NeuralOrderInsight";
 
 interface OrderEditFormProps {
   order: Order;
@@ -89,8 +90,10 @@ export const OrderEditForm: React.FC<OrderEditFormProps> = ({
   };
 
   return (
-    <div className="w-full animate-in fade-in duration-500">
-      <Space direction="vertical" size={48} className="w-full">
+    <div className="w-full animate-in fade-in duration-500 space-y-12">
+        {/* 🧠 Neural Strategy Hub */}
+        <NeuralOrderInsight order={order} />
+
         {/* ⚠️ Security Alert */}
         {order.integrity === false && (
           <Alert
@@ -364,7 +367,6 @@ export const OrderEditForm: React.FC<OrderEditFormProps> = ({
             </Col>
           </Row>
         </Form>
-      </Space>
     </div>
   );
 };
