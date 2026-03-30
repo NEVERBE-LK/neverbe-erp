@@ -90,7 +90,7 @@ const HybridIntelligencePanel = () => {
     );
   }
 
-  const chartData = data?.forecast.predictions || [];
+  const chartData = data?.forecast?.predictions || [];
   const forecastStartIndex = chartData.findIndex(p => p.isForecast);
 
   return (

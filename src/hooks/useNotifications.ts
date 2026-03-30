@@ -23,8 +23,14 @@ export const useNotifications = () => {
     try {
       const permission = await Notification.requestPermission();
       if (permission === "granted") {
+        const vapidKey = import.meta.env.VITE_FIREBASE_VAPID_KEY;
+        if (!vapidKey) {
+          console.warn("[useNotifications] Missing VITE_FIREBASE_VAPID_KEY. Push notifications will not work.");
+          return;
+        }
+
         const token = await fcmGetToken(messaging, {
-          vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY, // This should be set in .env
+          vapidKey: vapidKey,
         });
         
         if (token) {
