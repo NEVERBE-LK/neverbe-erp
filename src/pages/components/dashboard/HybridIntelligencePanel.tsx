@@ -27,7 +27,7 @@ import {
   IconClock
 } from "@tabler/icons-react";
 import DashboardCard from "../shared/DashboardCard";
-import axios from "axios";
+import api from "@/lib/api";
 import toast from "react-hot-toast";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
@@ -64,7 +64,7 @@ const HybridIntelligencePanel = () => {
     else setLoading(true);
 
     try {
-      const response = await axios.get(`/api/v1/erp/ai/hybrid?refresh=${refresh}`);
+      const response = await api.get(`/api/v1/erp/ai/hybrid?refresh=${refresh}`);
       if (response.data.success) {
         setData(response.data.data);
       }
