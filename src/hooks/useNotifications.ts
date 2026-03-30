@@ -29,17 +29,28 @@ export const useNotifications = () => {
           return;
         }
 
-        const token = await fcmGetToken(messaging, {
-          vapidKey: vapidKey,
-        });
-        
-        if (token) {
-          setFcmToken(token);
-          saveTokenToUser(token);
+        // Explicitly register service worker to prevent AbortError
+        if ('serviceWorker' in navigator) {
+          const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+          console.log("[useNotifications] Service Worker registered with scope:", registration.scope);
+          
+          const token = await fcmGetToken(messaging, {
+            vapidKey: vapidKey,
+            serviceWorkerRegistration: registration, // pass the registration explicitly
+          });
+          
+          if (token) {
+            setFcmToken(token);
+            saveTokenToUser(token);
+            toast.success("Push notifications enabled!");
+          }
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("[useNotifications] Error requesting permission:", error);
+      if (error.name === 'AbortError') {
+        toast.error("Notification registration failed. Please refresh and try again.");
+      }
     }
   };
 

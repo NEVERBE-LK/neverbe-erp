@@ -134,7 +134,7 @@ const HybridIntelligencePanel = () => {
             <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-gray-50/50 rounded-2xl border border-dashed border-gray-200">
               <IconBrain size={48} className="text-gray-300 mb-2" stroke={1} />
               <Text className="text-xs font-bold text-gray-400 uppercase tracking-widest">
-                {data?.forecast.success === false ? "Insufficient Data for Neural Forecast" : "Analyzing Trajectory..."}
+                {data?.forecast?.success === false ? "Insufficient Data for Neural Forecast" : "Analyzing Trajectory..."}
               </Text>
               <Text className="text-[10px] text-gray-400 mt-1">Need at least 7 days of historical sales records</Text>
             </div>
