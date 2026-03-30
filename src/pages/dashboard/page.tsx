@@ -9,24 +9,16 @@ import OrderStatusPanel from "../components/dashboard/OrderStatusPanel";
 import WeeklyTrends from "../components/dashboard/WeeklyTrends";
 import FinancialHealthPanel from "../components/dashboard/FinancialHealthPanel";
 import RevenueByCategory from "../components/dashboard/RevenueByCategory";
-import NeuroCommandCenter from "../components/dashboard/NeuroCommandCenter";
+import NeuralStrategicHub from "../components/dashboard/NeuralStrategicHub";
 import ErrorBoundary from "../../components/common/ErrorBoundary";
+import { useNeural } from "@/contexts/NeuralContext";
 
 const Dashboard = () => {
   return (
     <PageContainer title="Neural Dashboard" description="Propulsion Hub & Predictive Analytics">
       <div className="space-y-10">
-        {/* 🧠 NEURAL CORE: THE SYSTEM PROPULSION HUB */}
-        <div className="mb-0">
-          <ErrorBoundary fallbackTitle="NeuroCenter Syncing">
-            <NeuroCommandCenter />
-          </ErrorBoundary>
-        </div>
-
-        <div className="w-full h-px bg-gradient-to-r from-transparent via-emerald-100 to-transparent opacity-50" />
-
         {/* PREMIUM HEADER */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 gap-4">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-0 gap-4">
           <div className="flex items-center gap-3">
             <div className="w-1.5 h-10 bg-green-600 rounded-full" />
             <div className="flex flex-col">
@@ -39,41 +31,42 @@ const Dashboard = () => {
             </div>
           </div>
         </div>
-        {/* Row 1: Daily Earnings (wide) + Monthly Comparison */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="md:col-span-2">
-            <DailyEarnings />
-          </div>
-          <div>
-            <MonthlyComparison />
-          </div>
+
+        <div className="w-full h-px bg-gradient-to-r from-transparent via-gray-100 to-transparent opacity-50 my-4" />
+
+        {/* layer 0: The Neural Strategy Command */}
+        <div className="grid grid-cols-1 gap-10">
+          <ErrorBoundary fallbackTitle="Strategic Hub Syncing">
+             <NeuralStrategicHub />
+          </ErrorBoundary>
         </div>
 
-        {/* Row 2: Sales Overview + Order Status (donut + attention merged) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <SalesOverview />
+        {/* Layer 1: High-Density Pulse Stat Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <DailyEarnings />
+          <MonthlyComparison />
           <OrderStatusPanel />
         </div>
 
-        {/* Row 3: Weekly Trends + Financial Health (tabbed: margins / expenses / inventory) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <WeeklyTrends />
+        {/* Layer 2: Strategic Deep Dive (Charts & Resilience) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+          <SalesOverview />
           <FinancialHealthPanel />
         </div>
 
-        {/* Row 4: Revenue by Category + Low Stock side-by-side */}
+        {/* Layer 3: Inventory Intelligence (Risks & Performance) */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <RevenueByCategory />
           <LowStockAlerts />
+          <RevenueByCategory />
         </div>
 
-        {/* Row 5: Trending Products — full width, horizontal scroll */}
+        {/* 🏆 Spotlight Row */}
         <div>
           <PopularItems />
         </div>
 
-        {/* Row 6: Recent Orders — full width */}
-        <div>
+        {/* 📜 The Audit Trail */}
+        <div className="pt-8 border-t border-gray-100/50">
           <RecentTransactions />
         </div>
       </div>
