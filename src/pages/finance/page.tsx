@@ -25,14 +25,26 @@ import {
   Spin,
 } from "antd";
 import DashboardCard from "@/pages/components/shared/DashboardCard";
+import NeuralFinanceInsight from "./components/NeuralFinanceInsight";
 
 const { Option } = Select;
 
 const FinanceDashboard = () => {
   const [data, setData] = useState<FinanceDashboardData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [neuralData, setNeuralData] = useState<any>(null);
 
   useEffect(() => {
+    const fetchNeural = async () => {
+       try {
+          const resp = await api.get('/api/v1/erp/ai/neural');
+          if (resp.data.success) setNeuralData(resp.data.data);
+       } catch (err) {
+          console.error("Neural Finance Err", err);
+       }
+    };
+    fetchNeural();
+
     const fetchData = async () => {
       try {
         const res = await api.get("/api/v1/erp/finance/dashboard");
@@ -184,6 +196,9 @@ const FinanceDashboard = () => {
             Generate Report
           </Button>
         </div>
+
+        {/* 🧠 Neural Strategy Hub */}
+        <NeuralFinanceInsight neuralData={neuralData} />
 
         {/* Stats Grid */}
         <Row gutter={[16, 16]}>
