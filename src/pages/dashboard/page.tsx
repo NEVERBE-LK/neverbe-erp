@@ -41,13 +41,6 @@ const Dashboard = () => {
           </ErrorBoundary>
         </div>
 
-        {/* Layer 1: High-Density Pulse Stat Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <DailyEarnings />
-          <MonthlyComparison />
-          <OrderStatusPanel />
-        </div>
-
         {/* Layer 2: Strategic Deep Dive (Charts & Resilience) */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
           <SalesOverview />
@@ -55,13 +48,8 @@ const Dashboard = () => {
         </div>
 
         {/* Layer 3: Inventory Intelligence (Risks & Performance) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <LowStockAlerts />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
           <RevenueByCategory />
-        </div>
-
-        {/* 🏆 Spotlight Row */}
-        <div>
           <PopularItems />
         </div>
 

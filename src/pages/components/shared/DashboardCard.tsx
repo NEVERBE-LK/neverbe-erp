@@ -44,7 +44,7 @@ const DashboardCard = ({
         ) : null
       }
       extra={action}
-      className={`h-full shadow-2xl shadow-emerald-900/5 rounded-[2.5rem] border border-gray-100/50 transition-all duration-500 hover:shadow-emerald-950/10 hover:border-emerald-100 bg-white/80 backdrop-blur-md ${className || ""}`}
+      className={`h-full shadow-2xl shadow-emerald-900/5 rounded-[2.5rem] border border-gray-100/50 transition-all duration-500 hover:shadow-emerald-950/10 hover:border-emerald-100 ${className?.includes('bg-') ? '' : 'bg-white/80 backdrop-blur-md'} ${className || ""}`}
       style={{ borderRadius: "2rem" }}
       bodyStyle={{ padding: "2rem", height: "100%" }}
       bordered={false}

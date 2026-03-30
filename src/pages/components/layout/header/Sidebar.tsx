@@ -146,7 +146,7 @@ const Sidebar = ({
         {/* Sidebar Header / Logo */}
         <div className="h-20 flex items-center justify-between px-6 border-b border-gray-100 flex-shrink-0 relative gap-3">
           {!collapsed ? (
-            <div className="flex items-center gap-4 flex-1">
+            <div className="flex items-center justify-start w-full px-4">
               <Link
                 to="/dashboard"
                 className="block transform scale-75 origin-left w-20"
@@ -157,7 +157,6 @@ const Sidebar = ({
                   className="w-full h-auto object-contain"
                 />
               </Link>
-              <NeuralPulse collapsed={false} />
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center w-full gap-2">
@@ -166,7 +165,6 @@ const Sidebar = ({
                 alt="NeverBe Logo"
                 className="w-10 h-auto object-contain"
               />
-              <NeuralPulse collapsed={true} />
             </div>
           )}
         </div>

@@ -7,6 +7,7 @@ import AppBreadcrumb from "./AppBreadcrumb";
 import { AIChatProvider } from "@/contexts/AIChatContext";
 import AIChatModal from "../../../components/AIChatModal";
 import NotificationPanel from "./header/NotificationPanel";
+import NeuralPulse from "./header/NeuralPulse";
 import { useNotifications } from "@/hooks/useNotifications";
 import api from "@/lib/api";
 
@@ -101,6 +102,8 @@ export default function AppLayout() {
             </div>
 
             <div className="flex items-center gap-4">
+              <NeuralPulse />
+              
               <Tooltip title="Notifications">
                 <div 
                   className="p-2 hover:bg-gray-100 rounded-full cursor-pointer transition-colors"
@@ -111,7 +114,6 @@ export default function AppLayout() {
                   </Badge>
                 </div>
               </Tooltip>
-
             </div>
           </header>
 
