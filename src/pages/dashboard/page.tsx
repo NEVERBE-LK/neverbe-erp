@@ -9,11 +9,17 @@ import OrderStatusPanel from "../components/dashboard/OrderStatusPanel";
 import WeeklyTrends from "../components/dashboard/WeeklyTrends";
 import FinancialHealthPanel from "../components/dashboard/FinancialHealthPanel";
 import RevenueByCategory from "../components/dashboard/RevenueByCategory";
+import HybridIntelligencePanel from "../components/dashboard/HybridIntelligencePanel";
 
 const Dashboard = () => {
   return (
     <PageContainer title="Dashboard" description="System Overview & Analytics">
       <div className="space-y-6">
+        {/* HYBRID INTELLIGENCE HUB (ML + LLM) */}
+        <div>
+          <HybridIntelligencePanel />
+        </div>
+
         {/* PREMIUM HEADER */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 gap-4">
           <div className="flex items-center gap-3">
