@@ -320,25 +320,39 @@ const NeuralStrategicHub = () => {
                                  const routes: any = { REVENUE: "/reports", FINANCE: "/finance", INVENTORY: "/inventory/purchase-orders", PROMOTION: "/campaign/promotions" };
                                  if (routes[item.type]) navigate(routes[item.type]);
                               }}
-                              className="rounded-[2.5rem] p-8 border border-gray-100 bg-white/80 backdrop-blur-md cursor-pointer hover:translate-y-[-4px] transition-all hover:shadow-xl hover:shadow-emerald-950/5 group"
+                              className="rounded-[2rem] p-6 border border-gray-100 bg-white shadow-sm cursor-pointer hover:translate-y-[-4px] transition-all hover:shadow-xl hover:shadow-emerald-950/5 group"
                            >
-                              <div className="flex gap-6">
-                                 {item.imageUrl && (
-                                    <div className="w-16 h-16 rounded-2xl overflow-hidden border border-gray-100 shrink-0 bg-white">
+                              <div className="flex gap-5">
+                                 <div className="w-20 h-20 rounded-2xl overflow-hidden border border-gray-100 shrink-0 bg-gray-50 flex items-center justify-center">
+                                    {item.imageUrl ? (
                                        <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover" />
-                                    </div>
-                                 )}
-                                 <div className="flex flex-col gap-4 flex-1">
+                                    ) : (
+                                       <IconBrain size={32} className="text-gray-200" />
+                                    )}
+                                 </div>
+                                 <div className="flex flex-col gap-3 flex-1 min-w-0">
                                     <div className="flex items-center justify-between">
-                                       <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 opacity-60 group-hover:opacity-100 transition-opacity">{item.type}</span>
+                                       <span className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-400 group-hover:text-emerald-600 transition-colors">{item.type}</span>
                                        <Tag color={item.priority === 'CRITICAL' ? 'red' : 'processing'} bordered={false} className="m-0 text-[8px] font-black rounded-full px-2">
                                           {item.priority}
                                        </Tag>
                                     </div>
-                                    <h4 className="m-0 font-black text-emerald-950 leading-tight tracking-tight text-lg">{item.title}</h4>
-                                    <p className="m-0 text-xs text-gray-500 leading-relaxed font-bold">
+                                    <h4 className="m-0 font-black text-emerald-950 leading-tight tracking-tight text-base truncate">{item.title}</h4>
+                                    <p className="m-0 text-[11px] text-gray-500 leading-relaxed font-bold">
                                        {item.desc}
                                     </p>
+                                    
+                                    <div className="mt-2 pt-3 border-t border-gray-50 flex items-center gap-3">
+                                       <div className="flex flex-col">
+                                          <span className="text-[7px] font-black text-gray-300 uppercase tracking-widest">Product ID</span>
+                                          <span className="text-[9px] font-black text-gray-500 font-mono">{item.productId || 'N/A'}</span>
+                                       </div>
+                                       <div className="w-px h-6 bg-gray-100" />
+                                       <div className="flex flex-col">
+                                          <span className="text-[7px] font-black text-gray-300 uppercase tracking-widest">Master SKU</span>
+                                          <span className="text-[9px] font-black text-gray-500 font-mono">{item.sku || 'N/A'}</span>
+                                       </div>
+                                    </div>
                                  </div>
                               </div>
                            </div>
