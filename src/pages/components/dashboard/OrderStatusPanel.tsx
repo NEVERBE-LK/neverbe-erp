@@ -91,7 +91,7 @@ const OrderStatusPanel = () => {
               fontSize: "18px",
               fontFamily: "inherit",
               fontWeight: 900,
-              color: "#000000",
+              color: "#064e3b", // Emerald 900
             },
             total: {
               show: true,

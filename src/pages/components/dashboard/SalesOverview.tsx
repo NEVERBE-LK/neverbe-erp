@@ -24,8 +24,8 @@ const SalesOverview = () => {
 
   const { currentUser } = useAppSelector((state) => state.authSlice);
 
-  const primaryColor = "#000000";
-  const secondaryColor = "#e5e7eb";
+  const primaryColor = "#10b981"; // Emerald 500
+  const secondaryColor = "#d1fae5"; // Emerald 100
 
   // REDUCED HEIGHT HERE
   const chartHeight = 300;

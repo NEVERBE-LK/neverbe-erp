@@ -25,23 +25,24 @@ export const useNotifications = () => {
     
     setIsRegistering(true);
     try {
-      // Nuclear Cleanup: Unsubscribe from push AND unregister worker
-      const existingRegs = await navigator.serviceWorker.getRegistrations();
-      for (const reg of existingRegs) {
-        try {
-          const sub = await reg.pushManager.getSubscription();
-          if (sub) {
-            await sub.unsubscribe();
-            console.log("[useNotifications] Cleared stale push subscription");
+      // Robust registration: Only clear if requested via retry or if no registration found
+      if (isRetry) {
+        const existingRegs = await navigator.serviceWorker.getRegistrations();
+        for (const reg of existingRegs) {
+          try {
+            const sub = await reg.pushManager.getSubscription();
+            if (sub) {
+              await sub.unsubscribe();
+              console.log("[useNotifications] Cleared stale push subscription");
+            }
+          } catch (e) {
+            // Ignore unsub errors
           }
-        } catch (e) {
-          // Ignore unsub errors
+          await reg.unregister();
         }
-        await reg.unregister();
+        // Wait for the browser to release the push channel slot
+        await new Promise(resolve => setTimeout(resolve, 1500));
       }
-
-      // Wait for the browser to release the push channel slot
-      await new Promise(resolve => setTimeout(resolve, isRetry ? 1500 : 800));
 
       // Fresh registration
       const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js', {
@@ -89,7 +90,19 @@ export const useNotifications = () => {
 
   const requestPermission = async () => {
     try {
-      const permission = await Notification.requestPermission();
+      // 🛡️ PERISTENCE CHECK: If already granted, don't trigger browser prompt
+      if (Notification.permission === "denied") {
+        console.warn("[useNotifications] Permission denied by user previously.");
+        return;
+      }
+
+      let permission: NotificationPermission = Notification.permission;
+      
+      // Only request if "default" (hasn't been asked yet in this browser session logic)
+      if (permission === "default") {
+        permission = await Notification.requestPermission();
+      }
+
       if (permission === "granted") {
         const vapidKey = import.meta.env.VITE_FIREBASE_VAPID_KEY;
         if (!vapidKey) return;

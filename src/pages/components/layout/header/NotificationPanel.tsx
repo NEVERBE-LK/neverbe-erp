@@ -107,7 +107,7 @@ export default function NotificationPanel({ open, onClose }: Props) {
                    type={filter === t ? 'primary' : 'text'}
                    size="small"
                    onClick={() => setFilter(t)}
-                   className={`flex-1 text-[9px] font-black uppercase tracking-widest h-8 rounded-lg border-none shadow-none ${filter === t ? 'bg-white !text-emerald-950 shadow-sm' : 'text-gray-400'}`}
+                   className={`flex-1 text-[9px] font-black uppercase tracking-widest h-8 rounded-lg border-none shadow-none ${filter === t ? 'bg-white text-emerald-900! shadow-sm' : 'text-gray-400'}`}
                  >
                    {t}
                  </Button>
@@ -231,15 +231,15 @@ export default function NotificationPanel({ open, onClose }: Props) {
                     </div>
                     
                     <div className="mt-2 pt-4 border-t border-gray-50 flex items-center justify-between">
-                       <Button 
-                         type="primary" 
-                         size="small" 
-                         icon={<IconExternalLink size={14} />}
-                         onClick={(e) => { e.stopPropagation(); handleNotificationClick(item); }}
-                         className="bg-gray-900 border-none rounded-xl text-[9px] font-black uppercase tracking-widest h-9 px-4"
-                       >
-                         {item.type === 'AI' ? 'Execute Intelligence' : 'View Pulse'}
-                       </Button>
+                        <Button 
+                          type="primary" 
+                          size="small" 
+                          icon={<IconExternalLink size={14} />}
+                          onClick={(e) => { e.stopPropagation(); handleNotificationClick(item); }}
+                          className="bg-emerald-600 hover:bg-emerald-700 border-none rounded-xl text-[9px] font-black uppercase tracking-widest h-9 px-4 shadow-lg shadow-emerald-100"
+                        >
+                          {item.type === 'AI' ? 'Execute Intelligence' : 'View Pulse'}
+                        </Button>
                        {item.type === 'STOCK' && (
                           <Button 
                             type="text" 

@@ -46,7 +46,7 @@ const WeeklyTrends = () => {
       toolbar: { show: false },
       animations: { enabled: true, easing: "easeinout", speed: 500 },
     },
-    colors: ["#000000", "#e5e7eb"],
+    colors: ["#10b981", "#34d399"], // Emerald 500, Emerald 400
     fill: {
       type: "gradient",
       gradient: {

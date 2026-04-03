@@ -24,7 +24,7 @@ const NeuralStrategicHub = () => {
 
    if (loading && !data) {
       return (
-         <DashboardCard className="h-[600px] flex items-center justify-center bg-emerald-950/20 rounded-[3rem]">
+         <DashboardCard className="h-[600px] flex items-center justify-center bg-emerald-900/20 rounded-[3rem]">
             <Spin size="large" tip="Orchestrating Unified Neural Hub..." />
          </DashboardCard>
       );
@@ -36,7 +36,7 @@ const NeuralStrategicHub = () => {
         <div className="p-4 bg-white rounded-3xl shadow-xl mb-6">
            <IconBrain size={48} className="text-emerald-200 animate-pulse" />
         </div>
-        <h3 className="text-xl font-black text-emerald-950 m-0 tracking-tight">Neural Core Synchronizing</h3>
+        <h3 className="text-xl font-black text-emerald-900 m-0 tracking-tight">Neural Core Synchronizing</h3>
         <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mt-2 max-w-xs text-center leading-relaxed">
            The Intelligence Hub is currently performing a deep context audit. This typically takes 60-90 seconds.
         </p>
@@ -71,18 +71,18 @@ const NeuralStrategicHub = () => {
       <div className="flex flex-col gap-8">
          {/* 🔮 LAYER 0: THE MORNING BRIEFING & EXECUTIVE PULSE */}
          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
-            <DashboardCard className="lg:col-span-8 bg-white/40 backdrop-blur-xl border border-white/40 overflow-hidden relative rounded-[2.5rem] shadow-2xl shadow-emerald-950/5">
+            <DashboardCard className="lg:col-span-8 bg-white/40 backdrop-blur-xl border border-white/40 overflow-hidden relative rounded-[2.5rem] shadow-2xl shadow-emerald-900/5">
                <div className="absolute top-0 right-0 p-12 opacity-[0.03] scale-150 rotate-12">
-                  <IconBrain size={250} className="text-emerald-950" />
+                  <IconBrain size={250} className="text-emerald-900" />
                </div>
                <div className="relative z-10 p-8">
                   <div className="flex items-center justify-between mb-8">
-                     <div className="flex items-center gap-3 text-emerald-950">
+                     <div className="flex items-center gap-3 text-emerald-900">
                         <div className="p-3 bg-emerald-50 rounded-2xl border border-emerald-100">
                            <IconRobot size={28} className="text-emerald-600" />
                         </div>
                         <div>
-                           <span className="text-[10px] font-black uppercase tracking-[0.4em] block mb-1 text-emerald-950">Neural Core Protocol</span>
+                           <span className="text-[10px] font-black uppercase tracking-[0.4em] block mb-1 text-emerald-900">Neural Core Protocol</span>
                            <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Global Briefing • {dayjs(data.generatedAt).format('HH:mm A')}</span>
                         </div>
                      </div>
@@ -92,7 +92,7 @@ const NeuralStrategicHub = () => {
                      </div>
                   </div>
 
-                  <Title level={2} className="!text-emerald-950 font-black leading-[1.1] mb-6 tracking-tighter max-w-3xl">
+                  <Title level={2} className="text-emerald-900! font-black leading-[1.1] mb-6 tracking-tighter max-w-3xl">
                      "{data.briefing}"
                   </Title>
 
@@ -118,8 +118,8 @@ const NeuralStrategicHub = () => {
                      <IconTrendingUp size={20} className="text-emerald-600" />
                   </div>
                   <div className="flex items-baseline gap-2 mb-6">
-                     <span className="text-7xl font-black text-emerald-950 tracking-tighter">{data.healthScore}</span>
-                     <span className="text-2xl font-black text-emerald-950/20">%</span>
+                     <span className="text-7xl font-black text-emerald-900 tracking-tighter">{data.healthScore}</span>
+                     <span className="text-2xl font-black text-emerald-900/20">%</span>
                   </div>
                   <Progress percent={data.healthScore} showInfo={false} strokeColor="#059669" trailColor="#f1f5f9" strokeWidth={14} className="m-0 mb-4" />
                   <Text className="text-[11px] font-bold text-gray-400 leading-relaxed uppercase">
@@ -130,7 +130,7 @@ const NeuralStrategicHub = () => {
                <div className="mt-8 pt-6 border-t border-gray-100 flex items-center justify-between">
                   <div className="flex flex-col">
                      <span className="text-[9px] font-black text-gray-400 uppercase">Liquidity Peak</span>
-                     <span className="text-sm font-black text-emerald-950">OPTIMAL</span>
+                     <span className="text-sm font-black text-emerald-900">OPTIMAL</span>
                   </div>
                   <Button
                      type="text"
@@ -151,7 +151,7 @@ const NeuralStrategicHub = () => {
                   <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">Daily Velocity</span>
                </div>
                <div className="flex flex-col">
-                  <span className="text-2xl font-black text-emerald-950">Rs. {data.reality.snapshot.totalNetSales.toLocaleString()}</span>
+                  <span className="text-2xl font-black text-emerald-900">Rs. {data.reality.snapshot.totalNetSales.toLocaleString()}</span>
                   <span className="text-[10px] font-bold text-gray-400 uppercase mt-1">Today's Net Revenue</span>
                </div>
             </DashboardCard>
@@ -164,7 +164,7 @@ const NeuralStrategicHub = () => {
                   <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">Profit Delta</span>
                </div>
                <div className="flex items-center gap-2">
-                  <span className={`text-2xl font-black ${(data.reality.comparison.percentageChange.profit || 0) >= 0 ? "text-emerald-950" : "text-rose-500"}`}>
+                  <span className={`text-2xl font-black ${(data.reality.comparison.percentageChange.profit || 0) >= 0 ? "text-emerald-900" : "text-rose-500"}`}>
                      {(data.reality.comparison.percentageChange.profit || 0) >= 0 ? "+" : ""}{data.reality.comparison.percentageChange.profit || 0}%
                   </span>
                   <Tag color={(data.reality.comparison.percentageChange.profit || 0) >= 0 ? "blue" : "red"} bordered={false} className="m-0 text-[10px] font-black rounded-full px-2">MONTHLY</Tag>
@@ -181,17 +181,17 @@ const NeuralStrategicHub = () => {
                </div>
                <div className="flex items-center gap-4">
                   <div className="flex flex-col">
-                     <span className="text-2xl font-black text-emerald-950">{data.reality.orderStats?.pending || 0}</span>
+                     <span className="text-2xl font-black text-emerald-900">{data.reality.orderStats?.pending || 0}</span>
                      <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Pending</span>
                   </div>
                   <div className="w-px h-8 bg-gray-100" />
                   <div className="flex flex-col">
-                     <span className="text-2xl font-black text-emerald-950">{data.reality.orderStats?.processing || 0}</span>
+                     <span className="text-2xl font-black text-emerald-900">{data.reality.orderStats?.processing || 0}</span>
                      <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Process</span>
                   </div>
                   <div className="w-px h-8 bg-gray-100" />
                   <div className="flex flex-col">
-                     <span className="text-2xl font-black text-emerald-950">{data.reality.orderStats?.shipped || 0}</span>
+                     <span className="text-2xl font-black text-emerald-900">{data.reality.orderStats?.shipped || 0}</span>
                      <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Shipped</span>
                   </div>
                </div>
@@ -206,7 +206,7 @@ const NeuralStrategicHub = () => {
                </div>
                <div className="flex items-center justify-between">
                   <div className="flex flex-col">
-                     <span className="text-2xl font-black text-emerald-950">{data.reality.neuralRisks.length}</span>
+                     <span className="text-2xl font-black text-emerald-900">{data.reality.neuralRisks.length}</span>
                      <span className="text-[10px] font-bold text-gray-400 uppercase mt-1">Stock Breaches</span>
                   </div>
                </div>
@@ -224,7 +224,7 @@ const NeuralStrategicHub = () => {
                   <div className="flex items-center gap-4">
                      <div className="w-1.5 h-8 bg-emerald-600 rounded-full" />
                      <div>
-                        <h2 className="text-2xl font-black text-emerald-950 m-0 tracking-tight">Neural Forecast Matrix</h2>
+                        <h2 className="text-2xl font-black text-emerald-900 m-0 tracking-tight">Neural Forecast Matrix</h2>
                         <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">14-Day Trajectory Prediction</span>
                      </div>
                   </div>
@@ -282,7 +282,7 @@ const NeuralStrategicHub = () => {
                      </div>
                      <div>
                         <span className="text-[9px] font-black text-gray-400 uppercase block leading-none mb-1">Projected Peak</span>
-                        <span className="text-sm font-black text-emerald-950">Rs. {Math.max(...chartPoints.map(p => p.netSales)).toLocaleString()}</span>
+                        <span className="text-sm font-black text-emerald-900">Rs. {Math.max(...chartPoints.map(p => p.netSales)).toLocaleString()}</span>
                      </div>
                   </div>
                   <div className="flex items-center gap-3">
@@ -324,7 +324,7 @@ const NeuralStrategicHub = () => {
                                  const routes: any = { REVENUE: "/reports", FINANCE: "/finance", INVENTORY: "/inventory/purchase-orders", PROMOTION: "/campaign/promotions" };
                                  if (routes[item.type]) navigate(routes[item.type]);
                               }}
-                              className="rounded-[2rem] p-6 border border-gray-100 bg-white shadow-sm cursor-pointer hover:translate-y-[-4px] transition-all hover:shadow-xl hover:shadow-emerald-950/5 group"
+                              className="rounded-[2rem] p-6 border border-gray-100 bg-white shadow-sm cursor-pointer hover:translate-y-[-4px] transition-all hover:shadow-xl hover:shadow-emerald-900/5 group"
                            >
                               <div className="flex gap-5">
                                  <div className="w-20 h-20 rounded-2xl overflow-hidden border border-gray-100 shrink-0 bg-gray-50 flex items-center justify-center">
@@ -341,7 +341,7 @@ const NeuralStrategicHub = () => {
                                           {item.priority}
                                        </Tag>
                                     </div>
-                                    <h4 className="m-0 font-black text-emerald-950 leading-tight tracking-tight text-base truncate">{item.title}</h4>
+                                    <h4 className="m-0 font-black text-emerald-900 leading-tight tracking-tight text-base truncate">{item.title}</h4>
                                     <p className="m-0 text-[11px] text-gray-500 leading-relaxed font-bold">
                                        {item.desc}
                                     </p>
@@ -374,7 +374,7 @@ const NeuralStrategicHub = () => {
                            <div key={idx} className="bg-white p-4 rounded-2xl border border-gray-100 flex items-center justify-between shadow-sm">
                               <div className="flex flex-col">
                                  <span className="text-[9px] font-black text-gray-400 uppercase">{dayjs(p.date).format('dddd')}</span>
-                                 <span className="text-xs font-black text-emerald-950">{dayjs(p.date).format('MMM DD, YYYY')}</span>
+                                 <span className="text-xs font-black text-emerald-900">{dayjs(p.date).format('MMM DD, YYYY')}</span>
                               </div>
                               <div className="text-right">
                                  <span className="text-sm font-black text-amber-600 block">Rs. {p.netSales.toLocaleString()}</span>
