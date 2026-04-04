@@ -90,10 +90,7 @@ export const OrderEditForm: React.FC<OrderEditFormProps> = ({
   };
 
   return (
-    <div className="w-full animate-in fade-in duration-500 space-y-12">
-        {/* 🧠 Neural Strategy Hub */}
-        <NeuralOrderInsight order={order} />
-
+    <div className="w-full animate-in fade-in duration-700 space-y-16">
         {/* ⚠️ Security Alert */}
         {order.integrity === false && (
           <Alert
@@ -110,16 +107,18 @@ export const OrderEditForm: React.FC<OrderEditFormProps> = ({
           layout="vertical"
           onFinish={onFinish}
           requiredMark={false}
+          className="space-y-12"
         >
-          <Row gutter={[32, 48]}>
+          <Row gutter={[48, 64]}>
             {/* Main Configuration Card */}
             <Col xs={24} lg={16}>
               <Space direction="vertical" size={48} className="w-full">
                 <Card
-                  title="Order Configuration"
-                  className="shadow-sm border-gray-200"
+                  title={<span className="text-emerald-900/40 text-[10px] font-black uppercase tracking-widest">Order Configuration</span>}
+                  className="shadow-xl shadow-gray-200/50 border-gray-100"
+                  bodyStyle={{ padding: '32px' }}
                 >
-                  <Row gutter={16}>
+                  <Row gutter={40}>
                     <Col xs={24} md={8}>
                       <Form.Item
                         label="Order Status"
@@ -172,7 +171,7 @@ export const OrderEditForm: React.FC<OrderEditFormProps> = ({
                       </Form.Item>
                     </Col>
                   </Row>
-                  <Row gutter={16} className="mt-4">
+                  <Row gutter={40} className="mt-8">
                     <Col xs={24} md={12}>
                       <Form.Item label="Tracking Number" name="trackingNumber">
                         <Input size="large" placeholder="Enter Tracking Number" />
@@ -195,10 +194,11 @@ export const OrderEditForm: React.FC<OrderEditFormProps> = ({
                 <Row gutter={[32, 48]}>
                   <Col xs={24} md={12}>
                     <Card
-                      title="Billing Details"
-                      className="shadow-sm border-gray-200 h-full"
+                      title={<span className="text-emerald-900/40 text-[10px] font-black uppercase tracking-widest">Billing Details</span>}
+                      className="shadow-xl shadow-gray-200/50 border-gray-100 h-full"
+                      bodyStyle={{ padding: '32px' }}
                     >
-                      <div className="space-y-4">
+                      <div className="space-y-6">
                         <Form.Item
                           label="Customer Name"
                           name={["customer", "name"]}
@@ -250,10 +250,11 @@ export const OrderEditForm: React.FC<OrderEditFormProps> = ({
                   </Col>
                   <Col xs={24} md={12}>
                     <Card
-                      title="Shipping Details"
-                      className="shadow-sm border-gray-200 h-full"
+                      title={<span className="text-emerald-900/40 text-[10px] font-black uppercase tracking-widest">Shipping Details</span>}
+                      className="shadow-xl shadow-gray-200/50 border-gray-100 h-full"
+                      bodyStyle={{ padding: '32px' }}
                     >
-                      <div className="space-y-4">
+                      <div className="space-y-6">
                         <Form.Item
                           label="Recipient Name"
                           name={["customer", "shippingName"]}
@@ -297,18 +298,24 @@ export const OrderEditForm: React.FC<OrderEditFormProps> = ({
                     </Card>
                   </Col>
                 </Row>
+                
+                {/* 🧠 Neural Strategy Hub - Relocated for better focus */}
+                <div className="pt-8">
+                   <NeuralOrderInsight order={order} />
+                </div>
               </Space>
             </Col>
 
             {/* Action Sidebar */}
             <Col xs={24} lg={8}>
               <Card
-                className="sticky top-8 shadow-md border-green-100 bg-gray-50/50"
+                className="sticky top-8 shadow-2xl shadow-emerald-900/10 border-emerald-500/10 bg-[#f8fafc]"
                 title={
-                  <span className="text-gray-500 text-xs font-bold uppercase tracking-widest">
+                  <span className="text-emerald-900 text-xs font-black uppercase tracking-[0.2em] opacity-40">
                     Update Summary
                   </span>
                 }
+                bodyStyle={{ padding: '24px' }}
               >
                 <div className="space-y-6">
                   <div className="bg-white p-4 border border-gray-100 rounded-lg">

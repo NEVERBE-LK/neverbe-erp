@@ -3,7 +3,7 @@ import { Spin } from "antd";
 
 type Props = {
   description?: string;
-  children: ReactNode;
+  children?: ReactNode;
   title?: string;
   loading?: boolean;
 };

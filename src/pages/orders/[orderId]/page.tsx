@@ -40,6 +40,10 @@ const OrderEditPage = () => {
     }
   };
 
+  if (loading) {
+    return <PageContainer title="Loading..." loading={true} children={null} />;
+  }
+
   if (!order) {
     return (
       <PageContainer title="Edit Order">
@@ -53,6 +57,7 @@ const OrderEditPage = () => {
                 <Button
                   type="primary"
                   size="large"
+                  className="h-12 px-8 font-bold"
                   style={{ background: "#16a34a", borderColor: "#16a34a" }}
                 >
                   Back to Orders
