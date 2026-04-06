@@ -79,7 +79,7 @@ const OrderInvoice = () => {
         <div className="flex gap-3">
           <Link
             to="/orders"
-            className="flex items-center gap-2 text-xs font-bold !text-gray-400 hover:!text-green-600 transition-colors uppercase tracking-widest px-4"
+            className="flex items-center gap-2 text-xs font-bold text-gray-400! hover:text-green-600! transition-colors uppercase tracking-widest px-4"
           >
             <IconChevronLeft size={16} /> Back to Orders
           </Link>
@@ -261,7 +261,7 @@ const OrderInvoice = () => {
                             </td>
                             <td className="py-4 pl-4 text-right font-mono font-bold text-black">
                               {(
-                                (Number(item.price) || 0) *
+                                ((Number(item.price) || 0) - (Number(item.discount) || 0)) *
                                 (Number(item.quantity) || 0)
                               ).toFixed(2)}
                             </td>
@@ -325,7 +325,7 @@ const OrderInvoice = () => {
                                     </td>
                                     <td className="py-3 pl-4 text-right font-mono text-gray-600 text-xs">
                                       {(
-                                        (Number(item.price) || 0) *
+                                        ((Number(item.price) || 0) - (Number(item.discount) || 0)) *
                                         (Number(item.quantity) || 0)
                                       ).toFixed(2)}
                                     </td>
@@ -352,7 +352,7 @@ const OrderInvoice = () => {
                       .reduce(
                         (acc, item) =>
                           acc +
-                          (Number(item.price) || 0) *
+                          ((Number(item.price) || 0) - (Number(item.discount) || 0)) *
                             (Number(item.quantity) || 0),
                         0,
                       )
@@ -390,25 +390,7 @@ const OrderInvoice = () => {
                   </div>
                 )}
 
-                {/* Item Discounts (combo discounts, sale prices) */}
-                {(() => {
-                  const itemDiscounts = order.items.reduce(
-                    (acc, item) => acc + (Number(item.discount) || 0),
-                    0
-                  );
-
-                  if (itemDiscounts > 0) {
-                    return (
-                      <div className="flex justify-between text-xs font-bold text-gray-500 ">
-                        <span>Item Discounts</span>
-                        <span className="font-mono text-red-600">
-                          - {itemDiscounts.toFixed(2)}
-                        </span>
-                      </div>
-                    );
-                  }
-                  return null;
-                })()}
+                {/* Item Discounts already factored into the net Subtotal directly above! */}
 
                 {Number(order.shippingFee) > 0 && (
                   <div className="flex justify-between text-xs font-bold text-gray-500 ">
