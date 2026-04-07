@@ -84,38 +84,47 @@ const PopularItems = () => {
   return (
     <DashboardCard>
       <div className="mb-2">
-        <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-6 gap-4 pb-4 border-b border-green-600">
-          <div className="flex items-center gap-4">
-            <h4 className="text-xl font-bold text-black m-0 leading-none">
+        <div className="flex flex-wrap items-center justify-between gap-y-4 mb-6 pb-4 border-b border-green-600">
+          <div className="flex flex-wrap items-center gap-3 md:gap-4">
+            <h4 className="text-xl font-black text-black m-0 leading-none tracking-tight">
               Trending Products
             </h4>
 
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-2">
               <Button
+                size="small"
                 icon={<IconRefresh size={16} />}
                 onClick={fetchPopularItems}
+                className="border-gray-200 hover:border-emerald-500 hover:text-emerald-500 transition-colors"
               />
-              <Divider type="vertical" className="h-6 bg-gray-300 mx-1" />
-              <Button.Group>
+              <Divider type="vertical" className="h-4 bg-gray-200" />
+              <div className="flex items-center bg-gray-50 rounded-lg p-0.5 border border-gray-100">
                 <Button
+                  type="text"
+                  size="small"
                   icon={<IconChevronLeft size={16} />}
                   onClick={() => scrollSlider("left")}
+                  className="hover:bg-white text-gray-400 hover:text-emerald-600"
                 />
                 <Button
+                  type="text"
+                  size="small"
                   icon={<IconChevronRight size={16} />}
                   onClick={() => scrollSlider("right")}
+                  className="hover:bg-white text-gray-400 hover:text-emerald-600"
                 />
-              </Button.Group>
+              </div>
             </div>
           </div>
 
-          <div className="flex gap-2 w-full xl:w-auto">
+          <div className="flex items-center gap-2 w-full md:w-auto">
             {/* Size Selector */}
             <Select
               value={fetchSize}
               onChange={setFetchSize}
               options={sizeOptions}
-              className="w-1/3 xl:w-28"
+              className="flex-1 md:w-28 h-9"
+              popupClassName="rounded-xl border-none shadow-2xl"
             />
 
             {/* Month Selector */}
@@ -123,7 +132,8 @@ const PopularItems = () => {
               value={selectedMonth}
               onChange={setSelectedMonth}
               options={months}
-              className="w-2/3 xl:w-40"
+              className="flex-[1.5] md:w-36 h-9"
+              popupClassName="rounded-xl border-none shadow-2xl"
             />
           </div>
         </div>

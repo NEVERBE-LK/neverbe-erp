@@ -192,10 +192,11 @@ const PromotionsPage = () => {
         </div>
 
         {/* 🧠 Neural Strategy Hub */}
-        <NeuralPromoAdvisor onApply={handleApplyStrategy} />
+        <div className="mb-12">
+           <NeuralPromoAdvisor onApply={handleApplyStrategy} />
+        </div>
 
-
-        <div className="bg-transparent space-y-4">
+        <div className="bg-transparent space-y-4 pt-4 border-t border-gray-100">
           {/* Filter bar */}
           <Card size="small" className="shadow-sm mb-4!">
             <Form

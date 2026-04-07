@@ -94,9 +94,12 @@ const NeuralOrderInsight: React.FC<Props> = ({ order }) => {
 
         {/* Neural Risks */}
         <div className="flex-1 bg-emerald-500/5 p-4 rounded-2xl border border-emerald-500/10">
-           <div className="text-[10px] font-black text-emerald-900 mb-3 opacity-60 flex items-center gap-1">
-              <span className="animate-pulse">⚠️</span> CRITICAL INVENTORY RUNWAY
-           </div>
+            <div className="flex items-center justify-between mb-3 text-[10px] font-black uppercase tracking-widest">
+               <div className="text-emerald-900 opacity-60 flex items-center gap-1">
+                  <span className="animate-pulse">⚠️</span> CRITICAL STOCK RUNWAY
+               </div>
+               <div className="text-emerald-600/40">DAYS LEFT</div>
+            </div>
            
            {riskyItems.length > 0 ? (
              <div className="space-y-3">
@@ -108,11 +111,14 @@ const NeuralOrderInsight: React.FC<Props> = ({ order }) => {
                           <Text strong className="block text-xs leading-tight text-gray-700">{item.name}</Text>
                           <Text type="secondary" className="text-[9px]">Predicted Demand: {risk.projectedDemand} units</Text>
                        </div>
-                       <Tooltip title={`${risk.daysRemaining} days of stock remaining`}>
-                          <Badge 
-                            count={`${risk.daysRemaining}D`} 
-                            style={{ backgroundColor: risk.riskLevel === 'CRITICAL' ? '#f5222d' : '#faad14', fontSize: '8px' }} 
-                          />
+                       <Tooltip title={`${risk.daysRemaining} days of inventory remaining based on neural demand forecasting.`}>
+                          <div className="flex flex-col items-end">
+                             <Badge 
+                               count={`${risk.daysRemaining}D`} 
+                               style={{ backgroundColor: risk.riskLevel === 'CRITICAL' ? '#ef4444' : '#f59e0b', fontSize: '9px', padding: '0 8px', borderRadius: '6px' }} 
+                             />
+                             <span className="text-[7px] font-bold text-gray-300 mt-1 uppercase">RUNWAY</span>
+                          </div>
                        </Tooltip>
                     </div>
                   );

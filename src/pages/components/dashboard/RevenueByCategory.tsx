@@ -100,14 +100,14 @@ const RevenueByCategory = () => {
                           backgroundColor: widthColors[idx] || "#e5e7eb",
                         }}
                       ></span>
-                      <div className="flex flex-col">
+                      <div className="flex flex-col min-w-0">
                         <Typography.Text
                           strong
-                          className="text-xs truncate max-w-[120px] text-gray-800"
+                          className="text-sm truncate w-full text-gray-900 leading-none"
                         >
                           {item.category}
                         </Typography.Text>
-                        <span className="text-[10px] font-medium text-gray-400 uppercase tracking-widest mt-0.5">
+                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.1em] mt-1.5">
                           {item.orders} orders
                         </span>
                       </div>
