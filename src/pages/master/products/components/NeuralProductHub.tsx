@@ -3,10 +3,14 @@ import { Card, Row, Col, Statistic, Typography, Space, Tag, Button, Tooltip } fr
 import { IconBrain, IconTrendingUp, IconAlertTriangle, IconCash } from "@tabler/icons-react";
 import { useNeural } from "@/contexts/NeuralContext";
 
+import { useNavigate } from "react-router-dom";
 const { Text, Title } = Typography;
+
 
 const NeuralProductHub: React.FC = () => {
   const { data: neuralData, loading } = useNeural();
+  const navigate = useNavigate();
+
 
   if (loading) return null;
   if (!neuralData) return null;
@@ -24,9 +28,10 @@ const NeuralProductHub: React.FC = () => {
           <Card
             className="h-full border-none shadow-xl relative overflow-hidden"
             style={{
-              background: "linear-gradient(135deg, #022c22 0%, #064e3b 100%)",
+              background: "linear-gradient(135deg, #065f46 0%, #059669 100%)",
               borderRadius: "24px"
             }}
+
           >
             <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full -mr-32 -mt-32 blur-3xl animate-pulse" />
 
@@ -38,8 +43,9 @@ const NeuralProductHub: React.FC = () => {
                 <span className="text-[10px] font-black uppercase tracking-[0.3em] text-emerald-400/60">Neural Product Analytics</span>
               </Space>
 
-              <Row gutter={48}>
-                <Col span={12}>
+              <Row gutter={[48, 32]}>
+                <Col xs={24} md={12}>
+
                   <Title level={2} className="!text-white !mb-1 font-black">
                     Catalog Health
                   </Title>
@@ -63,7 +69,8 @@ const NeuralProductHub: React.FC = () => {
                   </div>
                 </Col>
 
-                <Col span={12} className="border-l border-white/5 pl-12 flex flex-col justify-center">
+                <Col xs={24} md={12} className="border-t md:border-t-0 md:border-l border-white/10 pt-8 md:pt-0 md:pl-12 flex flex-col justify-center">
+
                   <div className="p-4 bg-white/5 rounded-3xl border border-white/10 backdrop-blur-md">
                     <div className="flex items-center gap-2 mb-3">
                       <IconTrendingUp size={16} className="text-emerald-400" />
@@ -118,11 +125,16 @@ const NeuralProductHub: React.FC = () => {
               )}
             </div>
 
-            <div className="mt-4 pt-4 border-t border-gray-50">
-              <Button type="link" className="w-full text-[10px] font-black uppercase tracking-widest text-emerald-600">
+            <div className="mt-4 pt-4 border-t border-gray-50 text-center">
+              <Button 
+                type="link" 
+                onClick={() => navigate('/reports/sales/sales-vs-discount')}
+                className="w-full text-[10px] font-black uppercase tracking-widest text-emerald-600 hover:text-emerald-500"
+              >
                 View Full Elasticity Report
               </Button>
             </div>
+
           </Card>
         </Col>
       </Row>
