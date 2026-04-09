@@ -4,6 +4,7 @@ import api from "@/lib/api";
 
 import React, { useState, useEffect, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
+import dayjs from "dayjs";
 
 const { Text, Title } = Typography;
 import PageContainer from "@/pages/components/container/PageContainer";
@@ -60,6 +61,26 @@ const TYPE_COLORS: Record<AdjustmentType, string> = {
   damage: "bg-orange-100 text-orange-800",
   return: "bg-blue-100 text-blue-800",
   transfer: "bg-purple-100 text-purple-800",
+};
+
+const formatDate = (date: any) => {
+  if (!date) return "N/A";
+  try {
+    // If it's a Firestore timestamp object with seconds
+    if (
+      typeof date === "object" &&
+      date !== null &&
+      (date.seconds !== undefined || date._seconds !== undefined)
+    ) {
+      const seconds = date.seconds !== undefined ? date.seconds : date._seconds;
+      return dayjs(seconds * 1000).format("DD MMM YYYY, hh:mm A");
+    }
+    const d = dayjs(date);
+    if (!d.isValid()) return String(date);
+    return d.format("DD MMM YYYY, hh:mm A");
+  } catch (e) {
+    return String(date);
+  }
 };
 
 const ViewAdjustmentPage = () => {
@@ -205,7 +226,7 @@ const ViewAdjustmentPage = () => {
     <PageContainer title={adjustment.adjustmentNumber}>
       <div className="space-y-8">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start md:items-center gap-6 border-b border-gray-100 pb-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 border-b border-gray-100 pb-8">
           <div>
             <Text className="block text-[10px] uppercase font-bold tracking-widest text-green-600 mb-2">
               Inventory Adjustment Overview
@@ -217,7 +238,7 @@ const ViewAdjustmentPage = () => {
               #{adjustment.adjustmentNumber}
             </Title>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
             <Tag
               className={`px-4 py-1.5 text-xs font-bold rounded-full border-none uppercase tracking-wider ${
                 ADJUSTMENT_STATUS_COLORS[adjustment.status] ||
@@ -233,7 +254,7 @@ const ViewAdjustmentPage = () => {
             </Tag>
 
             {adjustment.status === "SUBMITTED" && (
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <Button
                   danger
                   className="rounded-full px-6 font-bold text-xs uppercase tracking-wider"
@@ -425,16 +446,12 @@ const ViewAdjustmentPage = () => {
                 </Descriptions.Item>
                 <Descriptions.Item label="Created At">
                   <Text className="text-xs text-gray-600">
-                    {adjustment.createdAt
-                      ? String(adjustment.createdAt)
-                      : "N/A"}
+                    {formatDate(adjustment.createdAt)}
                   </Text>
                 </Descriptions.Item>
                 <Descriptions.Item label="Last Update">
                   <Text className="text-xs text-gray-600">
-                    {adjustment.updatedAt
-                      ? String(adjustment.updatedAt)
-                      : "N/A"}
+                    {formatDate(adjustment.updatedAt)}
                   </Text>
                 </Descriptions.Item>
                 {adjustment.notes && (
