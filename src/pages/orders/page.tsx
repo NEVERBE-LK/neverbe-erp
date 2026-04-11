@@ -113,10 +113,15 @@ const OrdersPage = () => {
       params.append("size", String(pagination.pageSize));
 
       const filters = values || form.getFieldsValue();
-      if (filters.payment && filters.payment !== "all")
-        params.append("payment", filters.payment as string);
-      if (filters.status && filters.status !== "all")
-        params.append("status", filters.status as string);
+      
+      // Enforce view-specific filters (even if form fields are hidden)
+      const effectivePayment = isPaymentPendingView ? "Pending" : (filters.payment || "all");
+      const effectiveStatus = isProcessingView ? "Processing" : (filters.status || "all");
+
+      if (effectivePayment !== "all")
+        params.append("payment", effectivePayment as string);
+      if (effectiveStatus !== "all")
+        params.append("status", effectiveStatus as string);
       if (filters.search)
         params.append("search", (filters.search as string).trim());
       if (filters.dateRange) {
@@ -400,22 +405,7 @@ const OrdersPage = () => {
       align: "center" as const,
       render: (_: any, order: Order) => (
         <div className="flex flex-col items-center">
-          {isProcessingView ? (
-            <Select
-              size="small"
-              value={order.paymentStatus}
-              className="w-24 text-[10px] uppercase"
-              onChange={(val) => handleInlineUpdate(order.orderId, "paymentStatus", val)}
-              style={{ color: getStatusTagColor(order.paymentStatus, "payment") === 'success' ? '#166534' : '#1e293b' }}
-            >
-              <Option value="Pending">PENDING</Option>
-              <Option value="Paid">PAID</Option>
-              <Option value="Failed">FAILED</Option>
-              <Option value="Refunded">REFUNDED</Option>
-            </Select>
-          ) : (
-            <Tag color={getStatusTagColor(order.paymentStatus, "payment")} className="rounded-full text-[10px] font-black">{order.paymentStatus || "N/A"}</Tag>
-          )}
+          <Tag color={getStatusTagColor(order.paymentStatus, "payment")} className="rounded-full text-[10px] font-black uppercase text-center min-w-[80px]">{order.paymentStatus || "N/A"}</Tag>
           <span className="text-[10px] text-gray-400 mt-1 uppercase font-bold">{order.paymentMethod || "—"}</span>
         </div>
       ),
@@ -444,21 +434,7 @@ const OrdersPage = () => {
       key: "status",
       align: "center" as const,
       render: (_: any, order: Order) => (
-        isPaymentPendingView ? (
-          <Select
-            size="small"
-            value={order.status}
-            className="w-28 text-[10px] uppercase"
-            onChange={(val) => handleInlineUpdate(order.orderId, "status", val)}
-          >
-            <Option value="Pending">PENDING</Option>
-            <Option value="Processing">PROCESSING</Option>
-            <Option value="Completed">COMPLETED</Option>
-            <Option value="Cancelled">CANCELLED</Option>
-          </Select>
-        ) : (
-          <Tag color={getStatusTagColor(order.status, "order")} className="rounded-full text-[10px] font-black uppercase">{order.status}</Tag>
-        )
+        <Tag color={getStatusTagColor(order.status, "order")} className="rounded-full text-[10px] font-black uppercase text-center min-w-[100px]">{order.status}</Tag>
       ),
     }] : []),
     // Show Read-only Status column specifically for Processing page
