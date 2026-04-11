@@ -115,21 +115,29 @@ const ViewAdjustmentPage = () => {
   }, [currentUser, adjustmentId, fetchAdjustment]);
 
   const handleUpdateStatus = (status: AdjustmentStatus) => {
-    const isApproved = status === "COMPLETED";
+    let message = `Are you sure you want to ${status.toLowerCase()} this adjustment?`;
+    let confirmText = "Confirm";
+    let variant: "default" | "danger" | "warning" = "default";
+
+    if (status === "APPROVED") {
+      message = "Are you sure you want to APPROVE this adjustment? This will mark the review as done, but physical stock will NOT be updated yet.";
+      confirmText = "Approve";
+      variant = "default";
+    } else if (status === "COMPLETED") {
+      message = "Are you sure you want to COMPLETE this adjustment? This WILL update your physical inventory levels.";
+      confirmText = "Mark as Completed";
+      variant = "default";
+    } else if (status === "REJECTED") {
+      message = "Are you sure you want to REJECT this adjustment?";
+      confirmText = "Reject";
+      variant = "danger";
+    }
 
     showConfirmation({
       title: `Confirm ${status.toLowerCase()}`,
-      message: `Are you sure you want to ${status.toLowerCase()} this adjustment? ${
-        isApproved ? "This will update your inventory levels." : ""
-      }`,
-      variant:
-        status === "REJECTED" ? "danger" : isApproved ? "default" : "warning",
-      confirmText:
-        status === "COMPLETED"
-          ? "Approve"
-          : status === "REJECTED"
-            ? "Reject"
-            : "Confirm",
+      message,
+      variant,
+      confirmText,
       onSuccess: async () => {
         try {
           const formData = new FormData();
@@ -265,9 +273,28 @@ const ViewAdjustmentPage = () => {
                 <Button
                   type="primary"
                   className="rounded-full px-6 font-bold text-xs uppercase tracking-wider bg-green-600 hover:bg-green-700 border-none h-auto py-2.5 shadow-none"
+                  onClick={() => handleUpdateStatus("APPROVED")}
+                >
+                  Approve Review
+                </Button>
+              </div>
+            )}
+
+            {adjustment.status === "APPROVED" && (
+              <div className="flex flex-wrap items-center gap-2">
+                <Button
+                  danger
+                  className="rounded-full px-6 font-bold text-xs uppercase tracking-wider"
+                  onClick={() => handleUpdateStatus("REJECTED")}
+                >
+                  Reject
+                </Button>
+                <Button
+                  type="primary"
+                  className="rounded-full px-6 font-bold text-xs uppercase tracking-wider bg-indigo-600 hover:bg-indigo-700 border-none h-auto py-2.5 shadow-none"
                   onClick={() => handleUpdateStatus("COMPLETED")}
                 >
-                  Approve
+                  Update Stock (Complete)
                 </Button>
               </div>
             )}
