@@ -75,8 +75,8 @@ const OrderEditPage = () => {
     <PageContainer title={`Edit Order #${order.orderId}`} loading={loading}>
       <div className="w-full flex flex-col gap-8">
         <OrderEditForm order={order} onRefresh={fetchOrder} />
-        <CommunicationHub order={order} />
         <OrderExchangeHistory orderId={order.orderId} />
+        <CommunicationHub orderId={order.orderId} customerName={order.customer?.name} />
       </div>
     </PageContainer>
   );

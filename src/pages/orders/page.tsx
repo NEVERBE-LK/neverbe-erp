@@ -10,6 +10,7 @@ import {
   IconSearch,
   IconFilter,
   IconX,
+  IconBellRinging,
 } from "@tabler/icons-react";
 import PageContainer from "../components/container/PageContainer";
 import toast from "react-hot-toast";
@@ -54,6 +55,10 @@ const OrdersPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [stocks, setStocks] = useState<{ id: string; label: string }[]>([]);
   const [paymentMethods, setPaymentMethods] = useState<any[]>([]);
+  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+
+  // --- Bulk Action State ---
+  const [isBulkLoading, setIsBulkLoading] = useState(false);
 
   // --- Fetch dropdown data ---
   const fetchDropdownData = async () => {
@@ -156,6 +161,32 @@ const OrdersPage = () => {
     handleFilterSubmit({});
   };
 
+  const handleBulkNotify = async (status: string) => {
+    try {
+      setIsBulkLoading(true);
+      const ordersToNotify = orders.filter(o => selectedRowKeys.includes(o.orderId));
+      
+      const promises = ordersToNotify.map(async (o) => {
+        const payload = { 
+          status: status,
+          sendNotification: true 
+        };
+        const fd = new FormData();
+        fd.append("data", JSON.stringify(payload));
+        return api.put(`/api/v1/erp/orders/${o.orderId}`, fd);
+      });
+
+      await Promise.all(promises);
+      toast.success(`Successfully sent ${status} notifications to ${selectedRowKeys.length} orders`);
+      setSelectedRowKeys([]);
+      fetchOrders();
+    } catch (error) {
+      toast.error("Failed to send some notifications");
+    } finally {
+      setIsBulkLoading(false);
+    }
+  };
+
   // Helper for Date Formatting
   const formatDate = (dateValue: any) => {
     if (!dateValue) return "-";
@@ -248,6 +279,21 @@ const OrdersPage = () => {
             via {order.from}
           </Typography.Text>
         </div>
+      ),
+    },
+    {
+      title: "Notify",
+      key: "notify",
+      width: 80,
+      align: "center",
+      render: (_, order) => (
+        <Tooltip title="Quick Notify">
+          <Button
+            type="text"
+            icon={<IconBellRinging size={18} className="text-emerald-500" />}
+            onClick={() => navigate(`/orders/${order.orderId}`)}
+          />
+        </Tooltip>
       ),
     },
     {
@@ -423,16 +469,53 @@ const OrdersPage = () => {
         </Card>
 
         {/* Table */}
-        <Table
-          columns={columns}
-          dataSource={orders}
-          rowKey="orderId"
-          pagination={{ ...pagination, position: ["bottomRight"] }}
-          loading={isLoading}
-          onChange={handleTableChange}
-          scroll={{ x: 1000 }}
-          bordered
-        />
+        <div className="relative">
+          {selectedRowKeys.length > 0 && (
+            <div className="absolute -top-16 left-0 right-0 z-10 animate-in slide-in-from-bottom-4 duration-300">
+              <Card size="small" className="bg-emerald-900 border-emerald-800 shadow-2xl shadow-emerald-900/40">
+                <div className="flex items-center justify-between px-4 py-1">
+                  <div className="flex items-center gap-4">
+                    <span className="text-emerald-100 font-bold">
+                      {selectedRowKeys.length} Orders Selected
+                    </span>
+                    <Divider type="vertical" className="bg-emerald-700" />
+                    <Space size="middle">
+                      <Button 
+                        type="link" 
+                        size="small" 
+                        className="text-emerald-300 hover:text-white font-bold uppercase text-[10px] tracking-widest"
+                        onClick={() => handleBulkNotify("Completed")}
+                        disabled={isBulkLoading}
+                      >
+                        Notify Shipped (Completed)
+                      </Button>
+                    </Space>
+                  </div>
+                  <Button 
+                    type="text" 
+                    icon={<IconX size={16} />} 
+                    className="text-emerald-400 hover:text-white"
+                    onClick={() => setSelectedRowKeys([])}
+                  />
+                </div>
+              </Card>
+            </div>
+          )}
+          <Table
+            rowSelection={{
+              selectedRowKeys,
+              onChange: (keys) => setSelectedRowKeys(keys),
+            }}
+            columns={columns}
+            dataSource={orders}
+            rowKey="orderId"
+            pagination={{ ...pagination, position: ["bottomRight"] }}
+            loading={isLoading || isBulkLoading}
+            onChange={handleTableChange}
+            scroll={{ x: 1200 }}
+            bordered
+          />
+        </div>
       </Space>
     </PageContainer>
   );

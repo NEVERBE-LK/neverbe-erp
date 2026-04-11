@@ -1,265 +1,253 @@
-import React, { useEffect, useState } from \"react\";
+import React, { useState, useEffect } from "react";
 import {
   Card,
-  Table,
-  Button,
+  Timeline,
+  Typography,
   Tag,
-  Modal,
+  Tabs,
   Form,
   Input,
-  Radio,
+  Button,
   Space,
-  Typography,
-  Divider,
   Empty,
+  Spin,
   Tooltip,
-} from \"antd\";
+} from "antd";
 import {
-  IconMessage,
+  IconMessage2,
   IconMail,
   IconSend,
   IconHistory,
-  IconPlus,
-  IconHourglass,
-  IconInfoCircle,
-} from \"@tabler/icons-react\";
-import api from \"@/lib/api\";
-import toast from \"react-hot-toast\";
-import dayjs from \"dayjs\";
-import { Order } from \"@/model/Order\";
+  IconTemplate,
+} from "@tabler/icons-react";
+import api from "@/lib/api";
+import toast from "react-hot-toast";
+import dayjs from "dayjs";
 
 const { Text, Title, Paragraph } = Typography;
+const { TabPane } = Tabs;
 
-interface Props {
-  order: Order;
+interface CommunicationLog {
+  id: string;
+  type: string;
+  to: string;
+  content: string;
+  status?: string;
+  createdAt: any;
 }
 
-const CommunicationHub: React.FC<Props> = ({ order }) => {
-  const [history, setHistory] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isSending, setIsSending] = useState(false);
-  const [form] = Form.useForm();
-  const [selectedTemplate, setSelectedTemplate] = useState<string>(\"custom\");
+interface CommunicationHubProps {
+  orderId: string;
+  customerName?: string;
+}
 
-  const fetchHistory = async () => {
+const CommunicationHub: React.FC<CommunicationHubProps> = ({
+  orderId,
+  customerName = "Customer",
+}) => {
+  const [logs, setLogs] = useState<CommunicationLog[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [form] = Form.useForm();
+  const [activeTab, setActiveTab] = useState("sms");
+
+  const fetchLogs = async () => {
     try {
-      setIsLoading(true);
-      const { data } = await api.get(`/api/v1/erp/orders/${order.orderId}/notifications`);
-      setHistory(data);
+      setLoading(true);
+      const response = await api.get(`/api/v1/erp/orders/${orderId}/notifications`);
+      setLogs(response.data);
     } catch (error) {
-      console.error(\"Failed to fetch notification history\", error);
+      console.error("Failed to fetch notification logs:", error);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchHistory();
-  }, [order.orderId]);
+    if (orderId) fetchLogs();
+  }, [orderId]);
 
-  const handleSendManual = async (values: any) => {
+  const onFinish = async (values: any) => {
     try {
-      setIsSending(true);
-      await api.post(`/api/v1/erp/orders/${order.orderId}/notifications/send`, values);
-      toast.success(`${values.type.toUpperCase()} SENT SUCCESSFULLY`);
-      setIsModalOpen(false);
-      form.resetFields();
-      fetchHistory();
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || \"Failed to send message\");
-    } finally {
-      setIsSending(false);
-    }
-  };
-
-  const templates: Record<string, { subject?: string; content: string }> = {
-    quick: {
-      subject: `Update regarding your order #${order.orderId.toUpperCase()}`,
-      content: `Hi ${order.customer?.name?.split(\" \")[0] || \"customer\"}, your order #${order.orderId.toUpperCase()} is currently in ${order.status} status. We will keep you updated on further progress. Thank you!`,
-    },
-    delay: {
-      subject: `Important update: Order #${order.orderId.toUpperCase()} Delay`,
-      content: `Hi ${order.customer?.name?.split(\" \")[0] || \"customer\"}, we apologize, but your order #${order.orderId.toUpperCase()} is experiencing a slight delay. We are working hard to ship it as soon as possible. Thank you for your patience.`,
-    },
-    custom: {
-      subject: `Update regarding your order #${order.orderId.toUpperCase()}`,
-      content: \"\",
-    },
-  };
-
-  const handleTemplateChange = (e: any) => {
-    const val = e.target.value;
-    setSelectedTemplate(val);
-    if (val !== \"custom\") {
-      form.setFieldsValue({
-        content: templates[val].content,
-        subject: templates[val].subject,
+      setSending(true);
+      await api.post(`/api/v1/erp/orders/${orderId}/notifications`, {
+        type: activeTab,
+        content: values.content,
+        subject: values.subject,
       });
-    } else {
-      form.setFieldsValue({ content: \"\", subject: templates[\"custom\"].subject });
+      toast.success("Notification sent successfully");
+      form.resetFields();
+      fetchLogs();
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Failed to send notification");
+    } finally {
+      setSending(false);
     }
   };
 
-  const columns = [
-    {
-      title: \"Date\",
-      dataIndex: \"createdAt\",
-      key: \"createdAt\",
-      width: 180,
-      render: (date: any) => dayjs(date).format(\"DD MMM YYYY, hh:mm A\"),
-    },
-    {
-      title: \"Type\",
-      dataIndex: \"type\",
-      key: \"type\",
-      width: 140,
-      render: (type: string) => {
-        const isSms = type.toLowerCase().includes(\"sms\");
-        const isEmail = type.toLowerCase().includes(\"email\");
-        const isManual = type.toLowerCase().includes(\"manual\");
-        
-        return (
-          <Space>
-            {isSms ? <IconMessage size={14} className=\"text-blue-500\" /> : <IconMail size={14} className=\"text-emerald-500\" />}
-            <Text className=\"text-xs font-bold uppercase tracking-tighter\">
-              {isManual ? \"Manual\" : \"Auto\"} {isSms ? \"SMS\" : \"Email\"}
-            </Text>
-          </Space>
-        );
-      },
-    },
-    {
-      title: \"Recipient\",
-      dataIndex: \"to\",
-      key: \"to\",
-      width: 180,
-      render: (to: string) => <Text className=\"text-xs text-gray-500\">{to}</Text>,
-    },
-    {
-      title: \"Message Content\",
-      dataIndex: \"content\",
-      key: \"content\",
-      render: (content: string, record: any) => {
-         if (!content && record.type.includes(\"status\")) {
-            return <i className=\"text-gray-400 text-xs\">Automated {record.status} update notification</i>;
-         }
-         return (
-           <Tooltip title={content}>
-             <Text className=\"text-xs line-clamp-1 truncate max-w-[400px]\">{content || \"-\"}</Text>
-           </Tooltip>
-         );
-      }
-    },
-  ];
+  const applyTemplate = (templateType: string) => {
+    let content = "";
+    const name = customerName.split(" ")[0];
+    const upperId = orderId.toUpperCase();
+
+    if (templateType === "delay") {
+      content = `NEVERBE: Hi ${name}, unfortunately your order #${upperId} is slightly delayed due to a logistics issue. We expect to ship it within 48 hours. Sorry for the trouble!`;
+    } else if (templateType === "quick_update") {
+      content = `NEVERBE: Hi ${name}, just a quick update that we are working on your order #${upperId}. We will notify you as soon as it's out for delivery!`;
+    }
+
+    form.setFieldsValue({ content });
+  };
+
+  const formatDate = (dateValue: any) => {
+    if (!dateValue) return "-";
+    if (dateValue.seconds) return dayjs(dateValue.seconds * 1000).format("DD MMM, hh:mm A");
+    return dayjs(dateValue).format("DD MMM, hh:mm A");
+  };
 
   return (
     <Card
-      title={
-        <div className=\"flex items-center gap-2\">
-          <IconHistory size={18} className=\"text-emerald-600\" />
-          <span className=\"text-emerald-900 text-[10px] font-black uppercase tracking-widest\">
-            Customer Communication Hub
-          </span>
-        </div>
-      }
-      extra={
-        <Button
-          type=\"primary\"
-          icon={<IconPlus size={16} />}
-          onClick={() => setIsModalOpen(true)}
-          style={{ background: \"#16a34a\", borderColor: \"#16a34a\" }}
-          className=\"font-bold text-xs\"
-        >
-          SEND UPDATE
-        </Button>
-      }
-      className=\"shadow-xl shadow-gray-200/50 border-gray-100\"
+      className="shadow-xl shadow-gray-200/50 border-gray-100 overflow-hidden"
+      bodyStyle={{ padding: 0 }}
     >
-      <Table
-        columns={columns}
-        dataSource={history}
-        rowKey=\"id\"
-        loading={isLoading}
-        pagination={{ pageSize: 5 }}
-        size=\"small\"
-        locale={{ emptyText: <Empty description=\"No communication history yet\" /> }}
-      />
-
-      <Modal
-        title={
-          <div className=\"flex flex-col gap-1 mb-6\">
-            <Text className=\"text-[10px] font-black uppercase tracking-widest text-emerald-600\">New Message</Text>
-            <Title level={4} className=\"!m-0 tracking-tight\">Direct Customer Notification</Title>
-          </div>
-        }
-        open={isModalOpen}
-        onCancel={() => setIsModalOpen(false)}
-        footer={null}
-        width={600}
-        destroyOnClose
-      >
-        <Form
-          form={form}
-          layout=\"vertical\"
-          onFinish={handleSendManual}
-          initialValues={{ type: \"sms\", template: \"custom\", subject: templates[\"custom\"].subject }}
-        >
-          <div className=\"grid grid-cols-2 gap-6 mb-6\">
-             <Form.Item label=\"Delivery Channel\" name=\"type\" rules={[{ required: true }]}>
-                <Radio.Group className=\"w-full\">
-                   <Radio.Button value=\"sms\" className=\"w-1/2 text-center h-12 flex items-center justify-center font-bold\">
-                      <IconMessage size={18} className=\"mr-2\" /> SMS
-                   </Radio.Button>
-                   <Radio.Button value=\"email\" className=\"w-1/2 text-center h-12 flex items-center justify-center font-bold\">
-                      <IconMail size={18} className=\"mr-2\" /> EMAIL
-                   </Radio.Button>
-                </Radio.Group>
-             </Form.Item>
-
-             <Form.Item label=\"Template Option\">
-                <Radio.Group onChange={handleTemplateChange} value={selectedTemplate} className=\"w-full flex flex-col gap-2\">
-                   <Radio value=\"quick\" className=\"text-xs\">Quick Status Update</Radio>
-                   <Radio value=\"delay\" className=\"text-xs\">Order Delay / Wait</Radio>
-                   <Radio value=\"custom\" className=\"text-xs\">Custom Message</Radio>
-                </Radio.Group>
-             </Form.Item>
+      <div className="flex flex-col md:flex-row min-h-[500px]">
+        {/* Sidebar: Message Form */}
+        <div className="w-full md:w-1/2 p-8 border-r border-gray-100 bg-gray-50/30">
+          <div className="flex items-center gap-3 mb-8">
+            <div className="p-2 bg-emerald-100 text-emerald-600 rounded-lg">
+              <IconMessage2 size={24} />
+            </div>
+            <div>
+              <Title level={4} className="!mb-0">Communication Hub</Title>
+              <Text type="secondary" className="text-xs uppercase tracking-widest font-bold">Direct Messaging</Text>
+            </div>
           </div>
 
-          <Form.Item noStyle shouldUpdate={(prev, curr) => prev.type !== curr.type}>
-             {({ getFieldValue }) => getFieldValue('type') === 'email' && (
-                <Form.Item label=\"Email Subject\" name=\"subject\" rules={[{ required: true }]}>
-                   <Input size=\"large\" prefix={<IconInfoCircle size={16} className=\"text-gray-300\" />} />
-                </Form.Item>
-             )}
-          </Form.Item>
+          <Tabs activeKey={activeTab} onChange={setActiveTab} className="mb-6">
+            <TabPane
+              tab={
+                <span>
+                  <IconMessage2 size={16} className="inline mr-2" />
+                  SMS
+                </span>
+              }
+              key="sms"
+            />
+            <TabPane
+              tab={
+                <span>
+                  <IconMail size={16} className="inline mr-2" />
+                  Email
+                </span>
+              }
+              key="email"
+            />
+          </Tabs>
 
-          <Form.Item 
-            label=\"Message Content\" 
-            name=\"content\" 
-            rules={[{ required: true, message: 'Please enter message content' }]}
-            help={<Text type=\"secondary\" className=\"text-[10px]\">Keep SMS content under 160 characters if possible for best delivery.</Text>}
-          >
-            <Input.TextArea rows={5} className=\"rounded-xl p-4 bg-gray-50 border-gray-100\" placeholder=\"Type your message here...\" />
-          </Form.Item>
+          <Form form={form} layout="vertical" onFinish={onFinish}>
+            {activeTab === "email" && (
+              <Form.Item name="subject" label="Subject" rules={[{ required: true }]}>
+                <Input placeholder="Enter email subject..." />
+              </Form.Item>
+            )}
 
-          <Divider />
+            <Form.Item
+              name="content"
+              label="Message Content"
+              rules={[{ required: true, message: "Please enter message content" }]}
+              extra={
+                <div className="mt-3 flex gap-2 overflow-x-auto pb-2">
+                  <Button 
+                    size="small" 
+                    icon={<IconTemplate size={14} />} 
+                    onClick={() => applyTemplate("quick_update")}
+                    className="text-[10px] uppercase font-bold"
+                  >
+                    Quick Update
+                  </Button>
+                  <Button 
+                    size="small" 
+                    icon={<IconTemplate size={14} />} 
+                    onClick={() => applyTemplate("delay")}
+                    className="text-[10px] uppercase font-bold"
+                  >
+                    Delay Note
+                  </Button>
+                </div>
+              }
+            >
+              <Input.TextArea 
+                rows={6} 
+                placeholder={`Type ${activeTab.toUpperCase()} message here...`}
+                className="rounded-xl border-gray-200 focus:border-emerald-500"
+              />
+            </Form.Item>
 
-          <Space className=\"w-full justify-end\">
-             <Button onClick={() => setIsModalOpen(false)} className=\"font-bold h-11 px-6\">CANCEL</Button>
-             <Button 
-                type=\"primary\" 
-                htmlType=\"submit\" 
-                icon={<IconSend size={18} />} 
-                loading={isSending}
-                className=\"h-11 px-8 font-bold shadow-lg shadow-emerald-500/20\"
-                style={{ background: \"#16a34a\", borderColor: \"#16a34a\" }}
-             >
-                SEND NOTIFICATION
-             </Button>
-          </Space>
-        </Form>
-      </Modal>
+            <Button
+              type="primary"
+              htmlType="submit"
+              block
+              size="large"
+              loading={sending}
+              icon={<IconSend size={18} />}
+              style={{ background: "#16a34a", borderColor: "#16a34a" }}
+              className="h-12 font-bold rounded-xl mt-4"
+            >
+              Send {activeTab.toUpperCase()}
+            </Button>
+          </Form>
+        </div>
+
+        {/* Timeline: History */}
+        <div className="w-full md:w-1/2 p-8 bg-white">
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
+                <IconHistory size={24} />
+              </div>
+              <Title level={4} className="!mb-0">History</Title>
+            </div>
+            <Button size="small" type="text" onClick={fetchLogs} icon={<IconHistory size={14} />}>
+              Refresh
+            </Button>
+          </div>
+
+          <div className="max-h-[400px] overflow-y-auto pr-4 custom-scrollbar">
+            {loading ? (
+              <div className="flex justify-center py-20">
+                <Spin />
+              </div>
+            ) : logs.length === 0 ? (
+              <Empty description="No communication history yet" className="py-10" />
+            ) : (
+              <Timeline mode="left">
+                {logs.map((log) => (
+                  <Timeline.Item 
+                    key={log.id}
+                    color={log.type.includes("sms") ? "green" : "blue"}
+                    label={<Text type="secondary" className="text-[10px] uppercase font-bold">{formatDate(log.createdAt)}</Text>}
+                  >
+                    <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 mb-2">
+                      <div className="flex justify-between items-start mb-2">
+                        <Tag color={log.type.includes("sms") ? "green" : "blue"} className="text-[10px] uppercase font-bold rounded-full px-3">
+                          {log.type.toUpperCase()}
+                        </Tag>
+                        {log.status && <Tag className="text-[10px] uppercase font-bold">{log.status}</Tag>}
+                      </div>
+                      <Paragraph className="!mb-0 text-sm text-gray-700 italic">
+                        "{log.content}"
+                      </Paragraph>
+                      <div className="mt-2 text-[10px] text-gray-400">
+                        To: {log.to}
+                      </div>
+                    </div>
+                  </Timeline.Item>
+                ))}
+              </Timeline>
+            )}
+          </div>
+        </div>
+      </div>
     </Card>
   );
 };

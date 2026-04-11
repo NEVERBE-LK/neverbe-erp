@@ -10,6 +10,7 @@ import {
   Divider,
   Alert,
   Popconfirm,
+  Switch,
 } from "antd";
 import api from "@/lib/api";
 import React, { useState, useEffect } from "react";
@@ -38,6 +39,7 @@ export const OrderEditForm: React.FC<OrderEditFormProps> = ({
     form.setFieldsValue({
       ...order,
       customer: order.customer || {},
+      sendNotification: true, // Default to true for new status updates
     });
     fetchPaymentMethods();
   }, [order, form]);
@@ -74,7 +76,12 @@ export const OrderEditForm: React.FC<OrderEditFormProps> = ({
           }
 
           const fd = new FormData();
-          fd.append("data", JSON.stringify(payload));
+          // Include sendNotification and ensure status is present
+          const finalPayload = {
+            ...payload,
+            sendNotification: values.sendNotification,
+          };
+          fd.append("data", JSON.stringify(finalPayload));
           await api.put(`/api/v1/erp/orders/${order.orderId}`, fd);
           toast.success(`ORDER #${order.orderId} UPDATED`);
           onRefresh?.();
@@ -342,6 +349,16 @@ export const OrderEditForm: React.FC<OrderEditFormProps> = ({
                   </div>
 
                   <Divider className="my-0" />
+
+                  <div className="bg-emerald-50/50 p-4 border border-emerald-100 rounded-lg flex justify-between items-center">
+                    <div className="flex flex-col">
+                      <span className="text-[10px] text-emerald-900 font-black uppercase tracking-widest">Notifications</span>
+                      <span className="text-xs text-emerald-700">Send status update to customer</span>
+                    </div>
+                    <Form.Item name="sendNotification" valuePropName="checked" className="!mb-0">
+                      <Switch className="bg-gray-300" />
+                    </Form.Item>
+                  </div>
 
                   <Space direction="vertical" className="w-full" size="middle">
                     <Popconfirm
