@@ -55,7 +55,9 @@ const CommunicationHub: React.FC<CommunicationHubProps> = ({
     try {
       setLoading(true);
       const response = await api.get(`/api/v1/erp/orders/${orderId}/notifications`);
-      setLogs(response.data);
+      // Standardized response format: { success: true, data: [...] }
+      const logsData = response.data?.data || response.data || [];
+      setLogs(Array.isArray(logsData) ? logsData : []);
     } catch (error) {
       console.error("Failed to fetch notification logs:", error);
     } finally {
