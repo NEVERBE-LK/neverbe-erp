@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine
+   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Line, ComposedChart, Legend
 } from "recharts";
 import {
    Card, Typography, Tag, Spin, Button, Badge, Progress, Space, Divider
 } from "antd";
 import {
-   IconBrain, IconAlertTriangle, IconRefresh, IconRobot, IconTrendingUp, IconChartLine, IconUserCheck
+   IconBrain, IconAlertTriangle, IconRefresh, IconRobot, IconTrendingUp, IconChartLine, IconUserCheck,
+   IconTarget, IconCalendarStats
 } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
@@ -52,20 +53,36 @@ const NeuralStrategicHub = () => {
     );
   }
 
-   // Process Forecast Data
+   // Process Forecast Data with Past Predictions Overlay
    const raw = data?.projections?.predictions || [];
+   const pastPredictions: Record<string, number> = data?.pastPredictions || {};
    const chartPoints: any[] = [];
+   
    if (raw.length) {
       const today = dayjs().format('YYYY-MM-DD');
       raw.forEach((p: any) => {
+         const dateStr = dayjs(p.date).format('YYYY-MM-DD');
          chartPoints.push({
             ...p,
             timestamp: dayjs(p.date).valueOf(),
-            netSales: Number(p.netSales.toFixed(0))
+            netSales: Number(p.netSales.toFixed(0)),
+            // Add past AI prediction for overlay (only for historical dates)  
+            aiPredicted: !p.isForecast && pastPredictions[dateStr] ? Number(pastPredictions[dateStr].toFixed(0)) : undefined,
+            // For forecast dates, continue the AI line
+            aiForecast: p.isForecast ? Number(p.netSales.toFixed(0)) : undefined
          });
       });
    }
    const fIndex = chartPoints.findIndex(p => p.isForecast);
+
+   // Monthly Target Data
+   const mt = data?.monthlyTarget;
+   const monthlyProgressColor = mt?.progressPercent >= 80 ? '#059669' : mt?.progressPercent >= 50 ? '#f59e0b' : '#ef4444';
+   const monthlyProgressStatus = mt?.progressPercent >= 80 ? 'On Track' : mt?.progressPercent >= 50 ? 'Slightly Behind' : 'Behind Target';
+
+   // Forecast Accuracy
+   const accuracy = data?.forecastAccuracy || 0;
+   const accuracyPoints = data?.forecastAccuracyDataPoints || 0;
 
    return (
       <div className="flex flex-col gap-8">
@@ -105,7 +122,12 @@ const NeuralStrategicHub = () => {
                      </div>
                      <div className="flex flex-col">
                         <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Neural Accuracy</span>
-                        <span className="text-xl font-black text-emerald-600">98.4%</span>
+                        <span className={`text-xl font-black ${accuracy > 0 ? 'text-emerald-600' : 'text-gray-300'}`}>
+                           {accuracy > 0 ? `${accuracy}%` : 'Calibrating'}
+                        </span>
+                        {accuracyPoints > 0 && (
+                           <span className="text-[8px] font-bold text-gray-300 uppercase">{accuracyPoints} data points</span>
+                        )}
                      </div>
                   </div>
                </div>
@@ -215,7 +237,7 @@ const NeuralStrategicHub = () => {
 
          <div className="h-px w-full bg-gray-100/50 my-2" />
 
-         {/* 🛰️ LAYER 1: NEURAL FORECAST MATRIX & ACTIONABLE FEED */}
+         {/* 🛰️ LAYER 1: NEURAL FORECAST MATRIX & MONTHLY TARGET */}
          <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
             <DashboardCard className="xl:col-span-8 p-10 relative overflow-hidden group rounded-[3rem]">
                <div className="absolute top-0 right-0 -mt-24 -mr-24 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl" />
@@ -225,25 +247,43 @@ const NeuralStrategicHub = () => {
                      <div className="w-1.5 h-8 bg-emerald-600 rounded-full" />
                      <div>
                         <h2 className="text-2xl font-black text-emerald-900 m-0 tracking-tight">Neural Forecast Matrix</h2>
-                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">14-Day Trajectory Prediction</span>
+                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Real vs AI Forecast • {data?.projections?.metrics?.dataPoints || 0} Training Points</span>
                      </div>
                   </div>
                   <div className="flex items-center gap-4">
-                     <Tag color="emerald" bordered={false} className="m-0 font-black text-[9px] rounded-full px-3">TF.JS ACTIVE</Tag>
+                     <Tag color="emerald" bordered={false} className="m-0 font-black text-[9px] rounded-full px-3">GEMINI 2.5 PRO</Tag>
                      <Tag color="amber" bordered={false} className="m-0 font-black text-[9px] rounded-full px-3">FORECASTING</Tag>
                   </div>
                </div>
 
+               {/* Legend */}
+               <div className="flex items-center gap-6 mb-6">
+                  <div className="flex items-center gap-2">
+                     <div className="w-6 h-[3px] bg-emerald-600 rounded-full" />
+                     <span className="text-[9px] font-black text-gray-500 uppercase">Actual Sales</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                     <div className="w-6 h-[3px] bg-amber-500 rounded-full" style={{ backgroundImage: 'repeating-linear-gradient(90deg, #f59e0b 0, #f59e0b 6px, transparent 6px, transparent 10px)' }} />
+                     <span className="text-[9px] font-black text-gray-500 uppercase">AI Forecast</span>
+                  </div>
+                  {Object.keys(pastPredictions).length > 0 && (
+                     <div className="flex items-center gap-2">
+                        <div className="w-6 h-[3px] bg-blue-500 rounded-full" style={{ backgroundImage: 'repeating-linear-gradient(90deg, #3b82f6 0, #3b82f6 3px, transparent 3px, transparent 6px)' }} />
+                        <span className="text-[9px] font-black text-gray-500 uppercase">Past AI Predictions</span>
+                     </div>
+                  )}
+               </div>
+
                <div className="h-[380px] w-full">
                   <ResponsiveContainer width="100%" height="100%">
-                     <AreaChart data={chartPoints} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                     <ComposedChart data={chartPoints} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                         <defs>
                            <linearGradient id="gSales" x1="0" y1="0" x2="0" y2="1">
                               <stop offset="5%" stopColor="#059669" stopOpacity={0.15} />
                               <stop offset="95%" stopColor="#059669" stopOpacity={0} />
                            </linearGradient>
                            <linearGradient id="gForecast" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.1} />
+                              <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.08} />
                               <stop offset="95%" stopColor="#f59e0b" stopOpacity={0} />
                            </linearGradient>
                         </defs>
@@ -262,16 +302,35 @@ const NeuralStrategicHub = () => {
                         <Tooltip
                            contentStyle={{ borderRadius: '24px', border: 'none', boxShadow: '0 25px 50px -12px rgb(0 0 0 / 0.15)', padding: '20px' }}
                            labelFormatter={(v) => dayjs(v).format('MMMM DD, YYYY')}
-                           itemStyle={{ fontWeight: 900, fontSize: '16px' }}
+                           formatter={(value: any, name: string) => {
+                              const labels: any = { netSales: 'Actual Sales', aiForecast: 'AI Forecast', aiPredicted: 'Past AI Prediction' };
+                              return [`Rs. ${Number(value).toLocaleString()}`, labels[name] || name];
+                           }}
+                           itemStyle={{ fontWeight: 900, fontSize: '13px' }}
                         />
-                        <Area type="monotone" dataKey="netSales" stroke="none" fill="url(#gSales)" data={chartPoints.slice(0, fIndex + 1)} isAnimationActive={false} />
-                        <Area type="monotone" dataKey="netSales" stroke="none" fill="url(#gForecast)" data={chartPoints.slice(fIndex)} isAnimationActive={false} />
-                        <Area type="monotone" dataKey="netSales" stroke="#059669" strokeWidth={3} fill="none" data={chartPoints.slice(0, fIndex + 1)} dot={false} />
-                        <Area type="monotone" dataKey="netSales" stroke="#f59e0b" strokeWidth={4} strokeDasharray="10 5" fill="none" data={chartPoints.slice(fIndex)} dot={false} />
+                        
+                        {/* Actual Sales Area (Green — solid) */}
+                        <Area type="monotone" dataKey="netSales" stroke="none" fill="url(#gSales)" data={chartPoints.slice(0, fIndex !== -1 ? fIndex + 1 : chartPoints.length)} isAnimationActive={false} />
+                        <Line type="monotone" dataKey="netSales" stroke="#059669" strokeWidth={3} dot={false} connectNulls={false} isAnimationActive={false} />
+                        
+                        {/* AI Forecast Area (Amber — dashed, future only) */}
+                        {fIndex !== -1 && (
+                           <>
+                              <Area type="monotone" dataKey="aiForecast" stroke="none" fill="url(#gForecast)" isAnimationActive={false} />
+                              <Line type="monotone" dataKey="aiForecast" stroke="#f59e0b" strokeWidth={3} strokeDasharray="10 5" dot={false} connectNulls={false} isAnimationActive={false} />
+                           </>
+                        )}
+
+                        {/* Past AI Predictions (Blue — dotted, overlay on historical) */}
+                        {Object.keys(pastPredictions).length > 0 && (
+                           <Line type="monotone" dataKey="aiPredicted" stroke="#3b82f6" strokeWidth={2.5} strokeDasharray="4 4" dot={false} connectNulls={false} isAnimationActive={false} />
+                        )}
+
+                        {/* Reference line at forecast boundary */}
                         {fIndex !== -1 && (
                            <ReferenceLine x={chartPoints[fIndex].timestamp} stroke="#f59e0b" strokeWidth={2} strokeDasharray="4 4" />
                         )}
-                     </AreaChart>
+                     </ComposedChart>
                   </ResponsiveContainer>
                </div>
 
@@ -294,11 +353,74 @@ const NeuralStrategicHub = () => {
                         <span className="text-sm font-black text-amber-600">POSITIVE</span>
                      </div>
                   </div>
+                  {accuracyPoints > 0 && (
+                     <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600">
+                           <IconTarget size={20} />
+                        </div>
+                        <div>
+                           <span className="text-[9px] font-black text-gray-400 uppercase block leading-none mb-1">Forecast MAPE</span>
+                           <span className={`text-sm font-black ${accuracy >= 80 ? 'text-emerald-600' : accuracy >= 60 ? 'text-amber-600' : 'text-rose-500'}`}>
+                              {accuracy}% Accuracy
+                           </span>
+                        </div>
+                     </div>
+                  )}
                </div>
             </DashboardCard>
 
             {/* Action Feed Sidebar */}
             <div className="xl:col-span-4 flex flex-col gap-6">
+               {/* 📊 Monthly Sales Target Gauge */}
+               {mt && (
+                  <DashboardCard className="p-6 bg-white border border-gray-100 rounded-[2.5rem] shadow-sm">
+                     <div className="flex items-center gap-3 mb-5">
+                        <div className="p-2 bg-indigo-50 rounded-xl text-indigo-600">
+                           <IconCalendarStats size={20} />
+                        </div>
+                        <div>
+                           <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none block">{mt.monthName} {mt.year}</span>
+                           <span className="text-[9px] font-bold text-gray-300 uppercase">Monthly Sales Target</span>
+                        </div>
+                     </div>
+
+                     <div className="flex items-center justify-center mb-5">
+                        <div className="relative">
+                           <Progress
+                              type="circle"
+                              percent={Math.min(mt.progressPercent, 100)}
+                              size={140}
+                              strokeColor={monthlyProgressColor}
+                              trailColor="#f1f5f9"
+                              strokeWidth={10}
+                              format={() => (
+                                 <div className="flex flex-col items-center">
+                                    <span className="text-2xl font-black text-gray-900 tracking-tighter">{mt.progressPercent}%</span>
+                                    <span className="text-[8px] font-black uppercase tracking-widest" style={{ color: monthlyProgressColor }}>{monthlyProgressStatus}</span>
+                                 </div>
+                              )}
+                           />
+                        </div>
+                     </div>
+
+                     <div className="grid grid-cols-2 gap-3">
+                        <div className="bg-emerald-50/50 rounded-2xl p-3 text-center">
+                           <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest block mb-1">Actual</span>
+                           <span className="text-sm font-black text-emerald-700">Rs. {(mt.actual / 1000).toFixed(0)}K</span>
+                        </div>
+                        <div className="bg-amber-50/50 rounded-2xl p-3 text-center">
+                           <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest block mb-1">AI Target</span>
+                           <span className="text-sm font-black text-amber-700">Rs. {(mt.forecast / 1000).toFixed(0)}K</span>
+                        </div>
+                     </div>
+
+                     <div className="mt-3 flex items-center justify-between px-1">
+                        <span className="text-[8px] font-black text-gray-300 uppercase">{mt.daysElapsed} days elapsed</span>
+                        <span className="text-[8px] font-black text-gray-300 uppercase">{mt.daysRemaining} days left</span>
+                     </div>
+                  </DashboardCard>
+               )}
+
                <div className="bg-gray-100/50 p-1 rounded-2xl flex items-center gap-1">
                   <Button
                      className={`flex-1 rounded-xl h-10 text-[10px] font-black uppercase tracking-widest border-none transition-all ${activeTab === 'INTERVENTIONS' ? 'bg-white shadow-sm text-emerald-900' : 'bg-transparent text-gray-400'}`}
@@ -370,18 +492,72 @@ const NeuralStrategicHub = () => {
                      </>
                   ) : (
                      <div className="space-y-3">
-                        {chartPoints.filter(p => p.isForecast).map((p, idx) => (
-                           <div key={idx} className="bg-white p-4 rounded-2xl border border-gray-100 flex items-center justify-between shadow-sm">
-                              <div className="flex flex-col">
-                                 <span className="text-[9px] font-black text-gray-400 uppercase">{dayjs(p.date).format('dddd')}</span>
-                                 <span className="text-xs font-black text-emerald-900">{dayjs(p.date).format('MMM DD, YYYY')}</span>
+                        {chartPoints.filter(p => p.isForecast).map((p, idx) => {
+                           // Check if we have a past prediction for comparison (won't exist for future dates)
+                           const pastPred = pastPredictions[dayjs(p.date).format('YYYY-MM-DD')];
+                           return (
+                              <div key={idx} className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
+                                 <div className="flex items-center justify-between">
+                                    <div className="flex flex-col">
+                                       <span className="text-[9px] font-black text-gray-400 uppercase">{dayjs(p.date).format('dddd')}</span>
+                                       <span className="text-xs font-black text-emerald-900">{dayjs(p.date).format('MMM DD, YYYY')}</span>
+                                    </div>
+                                    <div className="text-right">
+                                       <span className="text-sm font-black text-amber-600 block">Rs. {p.netSales.toLocaleString()}</span>
+                                       <span className="text-[8px] font-bold text-gray-300 uppercase">AI Forecast</span>
+                                    </div>
+                                 </div>
                               </div>
-                              <div className="text-right">
-                                 <span className="text-sm font-black text-amber-600 block">Rs. {p.netSales.toLocaleString()}</span>
-                                 <span className="text-[8px] font-bold text-gray-300 uppercase">Neural Estimate</span>
+                           );
+                        })}
+                        
+                        {/* Past forecasts that now have real data */}
+                        {Object.keys(pastPredictions).length > 0 && (
+                           <>
+                              <div className="pt-3 pb-1">
+                                 <span className="text-[9px] font-black text-blue-500 uppercase tracking-widest">Past Predictions vs Reality</span>
                               </div>
-                           </div>
-                        ))}
+                              {Object.entries(pastPredictions)
+                                 .sort(([a], [b]) => b.localeCompare(a))
+                                 .slice(0, 7)
+                                 .map(([date, predicted], idx) => {
+                                    const actual = chartPoints.find(p => dayjs(p.date).format('YYYY-MM-DD') === date)?.netSales;
+                                    const diff = actual !== undefined ? ((actual - predicted) / Math.max(predicted, 1)) * 100 : null;
+                                    return (
+                                       <div key={`past-${idx}`} className="bg-blue-50/30 p-4 rounded-2xl border border-blue-100/50 shadow-sm">
+                                          <div className="flex items-center justify-between">
+                                             <div className="flex flex-col">
+                                                <span className="text-[9px] font-black text-gray-400 uppercase">{dayjs(date).format('dddd')}</span>
+                                                <span className="text-xs font-black text-emerald-900">{dayjs(date).format('MMM DD, YYYY')}</span>
+                                             </div>
+                                             <div className="flex items-center gap-4">
+                                                <div className="text-right">
+                                                   <span className="text-xs font-black text-blue-500 block">Rs. {Math.round(predicted).toLocaleString()}</span>
+                                                   <span className="text-[7px] font-bold text-gray-300 uppercase">Predicted</span>
+                                                </div>
+                                                {actual !== undefined && (
+                                                   <>
+                                                      <div className="w-px h-8 bg-gray-200" />
+                                                      <div className="text-right">
+                                                         <span className="text-xs font-black text-emerald-600 block">Rs. {Math.round(actual).toLocaleString()}</span>
+                                                         <span className="text-[7px] font-bold text-gray-300 uppercase">Actual</span>
+                                                      </div>
+                                                      <Tag 
+                                                         color={diff !== null && Math.abs(diff) < 20 ? 'green' : 'orange'} 
+                                                         bordered={false} 
+                                                         className="m-0 text-[8px] font-black rounded-full px-2"
+                                                      >
+                                                         {diff !== null ? `${diff >= 0 ? '+' : ''}${diff.toFixed(0)}%` : 'N/A'}
+                                                      </Tag>
+                                                   </>
+                                                )}
+                                             </div>
+                                          </div>
+                                       </div>
+                                    );
+                                 })}
+                           </>
+                        )}
                      </div>
                   )}
                </div>
