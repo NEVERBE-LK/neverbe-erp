@@ -5,6 +5,7 @@ import api from "@/lib/api";
 import PageContainer from "../components/container/PageContainer";
 import dayjs from "dayjs";
 import toast from "react-hot-toast";
+import { useAppSelector } from "@/lib/hooks";
 
 const { Text, Title, Paragraph } = Typography;
 const { Option } = Select;
@@ -33,6 +34,11 @@ const CommunicationsPage = () => {
   const [loading, setLoading] = useState(true);
   const [searchText, setSearchText] = useState("");
   const [selectedLog, setSelectedLog] = useState<NotificationLog | null>(null);
+  
+  const { currentUser } = useAppSelector((state) => state.authSlice);
+
+  // Helper for permission
+  const canCompose = currentUser?.role === "ADMIN" || currentUser?.role === "SUPERADMIN" || currentUser?.permissions?.includes("send_custom_notifications");
   
   // Compose state
   const [isComposeOpen, setIsComposeOpen] = useState(false);
@@ -183,14 +189,16 @@ const CommunicationsPage = () => {
               value={searchText}
               onChange={e => setSearchText(e.target.value)}
             />
-            <Button 
-               type="primary"
-               icon={<IconPlus size={18} />} 
-               onClick={() => setIsComposeOpen(true)}
-               className="h-10 px-6 rounded-xl font-bold bg-emerald-600 border-none flex items-center gap-2"
-            >
-              Compose
-            </Button>
+            {canCompose && (
+              <Button 
+                 type="primary"
+                 icon={<IconPlus size={18} />} 
+                 onClick={() => setIsComposeOpen(true)}
+                 className="h-10 px-6 rounded-xl font-bold bg-emerald-600 border-none flex items-center gap-2"
+              >
+                Compose
+              </Button>
+            )}
             <Button 
               icon={<IconRefresh size={18} />} 
               onClick={fetchLogs}
