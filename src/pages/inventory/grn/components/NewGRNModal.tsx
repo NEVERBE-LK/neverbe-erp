@@ -92,10 +92,10 @@ const NewGRNModal: React.FC<NewGRNModalProps> = ({
   const { currentUser } = useAppSelector((state: RootState) => state.authSlice);
 
   const loadPOItems = useCallback(
-    (po: PurchaseOrder) => {
+    (po: PurchaseOrder, currentStocks: Stock[] = stocks) => {
       setSelectedPO(po);
       const defaultStockId =
-        po.stockId || (stocks.length > 0 ? stocks[0].id : "");
+        po.stockId || (currentStocks.length > 0 ? currentStocks[0].id : "");
 
       const grnItems: GRNItemInput[] = po.items.map((item) => ({
         productId: item.productId,
@@ -131,7 +131,7 @@ const NewGRNModal: React.FC<NewGRNModalProps> = ({
       const targetId = selectedPOId || initialPOId;
       if (targetId) {
         const po = posRes.data.find((p) => p.id === targetId);
-        if (po) loadPOItems(po);
+        if (po) loadPOItems(po, stocksRes.data);
       }
     } catch (error) {
       console.error(error);
@@ -139,7 +139,7 @@ const NewGRNModal: React.FC<NewGRNModalProps> = ({
     } finally {
       setLoading(false);
     }
-  }, [open, selectedPOId, initialPOId, loadPOItems]);
+  }, [open, selectedPOId, initialPOId]); // Removed loadPOItems from deps
 
   useEffect(() => {
     if (open && currentUser) fetchData();

@@ -247,6 +247,7 @@ const PurchaseOrdersPage = () => {
             dataSource={filteredOrders}
             loading={loading}
             rowKey="id"
+            rowClassName="group"
             pagination={{ pageSize: 15, position: ["bottomRight"] }}
           />
         </div>
