@@ -251,7 +251,7 @@ const NeuralStrategicHub = () => {
                      </div>
                   </div>
                   <div className="flex items-center gap-4">
-                     <Tag color="emerald" bordered={false} className="m-0 font-black text-[9px] rounded-full px-3">GEMINI 2.5 PRO</Tag>
+                     <Tag color="emerald" bordered={false} className="m-0 font-black text-[9px] rounded-full px-3">TF.JS ML ENGINE</Tag>
                      <Tag color="amber" bordered={false} className="m-0 font-black text-[9px] rounded-full px-3">FORECASTING</Tag>
                   </div>
                </div>
