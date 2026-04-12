@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Table, Tag, Card, Input, Space, Button, Typography, Modal, Descriptions, Form, Select, Row, Col, Divider } from "antd";
+import { Table, Tag, Card, Input, Space, Button, Typography, Modal, Descriptions, Form, Select, Row, Col, Divider, Tooltip } from "antd";
 import { IconSearch, IconEye, IconRefresh, IconMessage2, IconCheck, IconAlertTriangle, IconSend, IconPlus, IconTemplate, IconMail, IconLanguage } from "@tabler/icons-react";
 import api from "@/lib/api";
 import PageContainer from "../components/container/PageContainer";
@@ -53,6 +53,7 @@ const CommunicationsPage = () => {
   const [form] = Form.useForm();
   const [msgType, setMsgType] = useState<"sms" | "email">("sms");
 
+  useEffect(() => {
     fetchLogs(pagination.current, pagination.pageSize, searchText);
     fetchTemplates();
   }, [pagination.current, pagination.pageSize]);
