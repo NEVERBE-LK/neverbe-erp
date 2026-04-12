@@ -35,6 +35,13 @@ const CommunicationsPage = () => {
   const [searchText, setSearchText] = useState("");
   const [selectedLog, setSelectedLog] = useState<NotificationLog | null>(null);
   
+  // Pagination state
+  const [pagination, setPagination] = useState({
+    current: 1,
+    pageSize: 20,
+    total: 0
+  });
+  
   const { currentUser } = useAppSelector((state) => state.authSlice);
 
   // Helper for permission
@@ -48,15 +55,16 @@ const CommunicationsPage = () => {
   const [msgType, setMsgType] = useState<"sms" | "email">("sms");
 
   useEffect(() => {
-    fetchLogs();
+    fetchLogs(pagination.current, pagination.pageSize);
     fetchTemplates();
-  }, []);
+  }, [pagination.current, pagination.pageSize]);
 
-  const fetchLogs = async () => {
+  const fetchLogs = async (page: number = pagination.current, pageSize: number = pagination.pageSize) => {
     try {
       setLoading(true);
-      const response = await api.get("/api/v1/erp/communications?limit=100");
+      const response = await api.get(`/api/v1/erp/communications?page=${page}&pageSize=${pageSize}`);
       setLogs(response.data.data || []);
+      setPagination(prev => ({ ...prev, total: response.data.total || 0 }));
     } catch (error) {
       console.error("Failed to fetch communication logs:", error);
       toast.error("Failed to load communication history");
@@ -112,10 +120,9 @@ const CommunicationsPage = () => {
       key: "createdAt",
       render: (date: any) => (
         <Text className="text-gray-500 text-xs">
-          {dayjs(date?.toDate?.() || date?.seconds ? date.seconds * 1000 : date).format("MMM DD, YYYY HH:mm")}
+          {date}
         </Text>
       ),
-      sorter: (a: any, b: any) => dayjs(a.createdAt).unix() - dayjs(b.createdAt).unix(),
     },
     {
       title: "Order ID",
@@ -131,9 +138,12 @@ const CommunicationsPage = () => {
       key: "type",
       render: (type: string) => {
         const isEmail = type?.includes("email");
+        let label = type?.replace("_", " ").toUpperCase();
+        if (type === "ebill_sms") label = "DIGITAL RECEIPT";
+        
         return (
-          <Tag color={isEmail ? "blue" : "green"} className="rounded-full px-3 uppercase text-[10px] font-bold">
-            {type?.replace("_", " ")}
+          <Tag color={isEmail ? "blue" : "green"} className="rounded-full px-3 text-[10px] font-bold">
+            {label}
           </Tag>
         );
       },
@@ -149,15 +159,25 @@ const CommunicationsPage = () => {
       dataIndex: "content",
       key: "content",
       ellipsis: true,
-      render: (content: string) => <Text className="text-gray-500 text-xs">{content || "Template-based message"}</Text>,
+      render: (content: string, record: any) => {
+        if (content) return <Text className="text-gray-500 text-xs">{content}</Text>;
+        if (record.type === "ebill_sms") return <Text className="text-gray-400 text-[10px] italic">Digital Receipt Link (Hidden for privacy)</Text>;
+        return <Text className="text-gray-400 text-[10px] italic">Automated Template Message</Text>;
+      },
     },
     {
       title: "Status",
       dataIndex: "status",
       key: "status",
       render: (status: string) => status ? (
-        <Tag color="cyan" className="rounded-full text-[10px] font-black uppercase">{status}</Tag>
-      ) : <Tag color="default" className="rounded-full text-[10px] font-black uppercase">SENT</Tag>,
+        <Tooltip title="Triggered by Order Status Change">
+           <Tag color="cyan" className="rounded-full text-[10px] font-black uppercase border-none bg-cyan-50 text-cyan-700">{status}</Tag>
+        </Tooltip>
+      ) : (
+        <Tooltip title="Message successfully dispatched to provider">
+           <Tag color="default" className="rounded-full text-[10px] font-black uppercase border-none bg-gray-100 text-gray-400">DISPATCHED</Tag>
+        </Tooltip>
+      ),
     },
     {
       title: "Actions",
@@ -213,7 +233,19 @@ const CommunicationsPage = () => {
             dataSource={filteredLogs}
             loading={loading}
             rowKey="id"
-            pagination={{ pageSize: 15, position: ["bottomCenter"] }}
+            pagination={{
+              ...pagination,
+              position: ["bottomCenter"],
+              showSizeChanger: true,
+              pageSizeOptions: ["10", "20", "50", "100"],
+            }}
+            onChange={(pag: any) => {
+              setPagination(prev => ({
+                ...prev,
+                current: pag.current,
+                pageSize: pag.pageSize,
+              }));
+            }}
             className="custom-table"
           />
         </Card>
@@ -332,19 +364,19 @@ const CommunicationsPage = () => {
                 {selectedLog.to}
               </Descriptions.Item>
               <Descriptions.Item label="Date Sent" labelStyle={{ fontWeight: 'bold' }}>
-                {dayjs(selectedLog.createdAt?.toDate?.() || selectedLog.createdAt?.seconds ? selectedLog.createdAt.seconds * 1000 : selectedLog.createdAt).format("MMMM DD, YYYY HH:mm:ss")}
+                {selectedLog.createdAt}
               </Descriptions.Item>
               {selectedLog.status && (
                 <Descriptions.Item label="Status Hook" labelStyle={{ fontWeight: 'bold' }}>
-                  {selectedLog.status}
+                  <Tag color="cyan" className="rounded-full text-[10px] font-black uppercase border-none bg-cyan-50 text-cyan-700">{selectedLog.status}</Tag>
                 </Descriptions.Item>
               )}
             </Descriptions>
 
             <div className="bg-gray-50 p-6 rounded-xl border border-gray-200 flex flex-col gap-3">
-              <Text className="text-[10px] uppercase font-black tracking-widest text-gray-400">Content</Text>
+              <Text className="text-[10px] uppercase font-black tracking-widest text-gray-400">Message Payload / Content</Text>
               <div className="whitespace-pre-wrap text-sm text-gray-700 leading-relaxed font-mono italic">
-                {selectedLog.content || "Content was rendered from a Handlebars template."}
+                {selectedLog.content || (selectedLog.type === 'ebill_sms' ? "Digital receipt with unique tracking hash generated for the customer." : "Message content was rendered dynamically from a Handlebars template at the time of sending.")}
               </div>
             </div>
           </div>
