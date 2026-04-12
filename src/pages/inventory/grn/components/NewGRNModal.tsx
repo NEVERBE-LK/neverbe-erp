@@ -338,7 +338,7 @@ const NewGRNModal: React.FC<NewGRNModalProps> = ({
       }
       open={open}
       onCancel={onClose}
-      width={1000}
+      width={1200}
       footer={null}
       centered
       bodyStyle={{ padding: "24px", maxHeight: "85vh", overflowY: "auto" }}
@@ -419,7 +419,7 @@ const NewGRNModal: React.FC<NewGRNModalProps> = ({
 
               {/* Action Sidebar */}
               <div className="lg:col-span-1 space-y-4">
-                <div className="bg-green-600 text-white p-6 rounded-2xl shadow-lg">
+                <div className="bg-green-600 text-white p-5 rounded-2xl shadow-lg">
                   <h4 className="text-[10px] font-bold mb-1 uppercase opacity-70">
                     Received Value
                   </h4>
@@ -428,7 +428,7 @@ const NewGRNModal: React.FC<NewGRNModalProps> = ({
                   </div>
                 </div>
 
-                <div className="bg-white border border-gray-100 p-5 space-y-3 rounded-2xl shadow-sm">
+                <div className="bg-white border border-gray-100 p-4 space-y-3 rounded-2xl shadow-sm">
                   <Button
                     type="primary"
                     size="large"
