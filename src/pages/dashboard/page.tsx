@@ -19,7 +19,7 @@ const Dashboard = () => {
     <PageContainer title="Dashboard" description="This is the Dashboard">
       <div className="flex flex-col gap-6">
         {/* Row 1: Key Metrics - Daily + Monthly */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 items-start">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 items-stretch">
           <div className="md:col-span-2">
             <DailyEarnings />
           </div>
@@ -34,7 +34,7 @@ const Dashboard = () => {
         </div>
 
         {/* Row 2: Sales Chart + Order Status Panel (combined donut + attention) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 items-start">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 items-stretch">
           <div className="md:col-span-2">
             <SalesOverview />
           </div>
@@ -44,7 +44,7 @@ const Dashboard = () => {
         </div>
 
         {/* Row 3: Weekly Trends + Financial 3-col */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 items-start">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 items-stretch">
           <div>
             <WeeklyTrends />
           </div>
@@ -60,7 +60,7 @@ const Dashboard = () => {
         </div>
 
         {/* Row 4: Category Revenue + Popular Items + Low Stock */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
           <div>
             <RevenueByCategory />
           </div>

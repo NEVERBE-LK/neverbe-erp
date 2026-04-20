@@ -238,11 +238,11 @@ const NeuralStrategicHub = () => {
          <div className="h-px w-full bg-gray-100/50 my-2" />
 
          {/* 🛰️ LAYER 1: NEURAL FORECAST MATRIX & MONTHLY TARGET */}
-         <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start">
-            <DashboardCard className="xl:col-span-8 p-10 relative overflow-hidden group rounded-[3rem] h-fit">
+         <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-stretch">
+            <DashboardCard className="xl:col-span-8 p-10 relative overflow-hidden group rounded-[3rem] h-full flex flex-col">
                <div className="absolute top-0 right-0 -mt-24 -mr-24 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl" />
 
-               <div className="flex items-center justify-between mb-8">
+               <div className="flex items-center justify-between mb-8 shrink-0">
                   <div className="flex items-center gap-4">
                      <div className="w-1.5 h-8 bg-emerald-600 rounded-full" />
                      <div>
@@ -257,7 +257,7 @@ const NeuralStrategicHub = () => {
                </div>
 
                {/* Legend */}
-               <div className="flex items-center gap-6 mb-6">
+               <div className="flex items-center gap-6 mb-6 shrink-0">
                   <div className="flex items-center gap-2">
                      <div className="w-6 h-[3px] bg-emerald-600 rounded-full" />
                      <span className="text-[9px] font-black text-gray-500 uppercase">Actual Sales</span>
@@ -274,7 +274,7 @@ const NeuralStrategicHub = () => {
                   )}
                </div>
 
-               <div className="h-[260px] w-full">
+               <div className="flex-1 w-full min-h-[260px]">
                   <ResponsiveContainer width="100%" height="100%">
                      <ComposedChart data={chartPoints} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                         <defs>
@@ -291,7 +291,7 @@ const NeuralStrategicHub = () => {
                         <XAxis
                            dataKey="timestamp"
                            type="number"
-                           domain={['auto', 'auto']}
+                           domain={['dataMin', 'dataMax']}
                            axisLine={false}
                            tickLine={false}
                            tick={{ fontSize: 10, fontWeight: 700, fill: '#94a3b8' }}
@@ -334,7 +334,7 @@ const NeuralStrategicHub = () => {
                   </ResponsiveContainer>
                </div>
 
-               <div className="mt-8 flex items-center gap-10">
+               <div className="mt-8 flex items-center gap-10 shrink-0">
                   <div className="flex items-center gap-3">
                      <div className="w-10 h-10 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-600">
                         <IconChartLine size={20} />
@@ -373,7 +373,7 @@ const NeuralStrategicHub = () => {
             <div className="xl:col-span-4 flex flex-col gap-6">
                {/* 📊 Monthly Sales Target Gauge */}
                {mt ? (
-                  <DashboardCard className="p-6 bg-white border border-gray-100 rounded-[2.5rem] shadow-sm h-fit">
+                  <DashboardCard className="p-6 bg-white border border-gray-100 rounded-[2.5rem] shadow-sm h-full">
                      <div className="flex items-center gap-3 mb-5">
                         <div className="p-2 bg-indigo-50 rounded-xl text-indigo-600">
                            <IconCalendarStats size={20} />
@@ -420,7 +420,7 @@ const NeuralStrategicHub = () => {
                      </div>
                   </DashboardCard>
                ) : (
-                  <DashboardCard className="p-6 bg-white border border-gray-100 rounded-[2.5rem] shadow-sm h-fit">
+                  <DashboardCard className="p-6 bg-white border border-gray-100 rounded-[2.5rem] shadow-sm h-full">
                      <div className="flex items-center gap-3 mb-5">
                         <div className="p-2 bg-indigo-50 rounded-xl text-indigo-600">
                            <IconCalendarStats size={20} />
