@@ -10,7 +10,6 @@ import PromotionFormModal from "./components/PromotionFormModal"; // Will create
 import toast from "react-hot-toast";
 import { useAppSelector } from "@/lib/hooks";
 import { useConfirmationDialog } from "@/contexts/ConfirmationDialogContext";
-import NeuralPromoAdvisor from "./components/NeuralPromoAdvisor";
 import dayjs from "dayjs";
 
 
@@ -133,34 +132,6 @@ const PromotionsPage = () => {
     });
   };
   
-  const handleApplyStrategy = (suggestion: any) => {
-    const draft: any = {
-      name: `AI RECO: ${suggestion.name} Liquidity Boost`,
-      description: `Neural strategy to optimize liquidity for ${suggestion.name} by clearing stagnant stock.`,
-      type: "PERCENTAGE",
-      isActive: true,
-      startDate: dayjs(),
-      endDate: dayjs().add(7, "day"),
-      conditions: [
-        {
-          type: "SPECIFIC_PRODUCT",
-          value: suggestion.productId,
-        },
-      ],
-      actions: [
-        {
-          type: "PERCENTAGE_OFF",
-          value: suggestion.recommendedDiscount,
-        },
-      ],
-      stackable: false,
-      priority: 5,
-    };
-    setEditingItem(draft);
-    setIsModalOpen(true);
-  };
-
-
   return (
     <PageContainer
       title="Promotions"
@@ -190,10 +161,8 @@ const PromotionsPage = () => {
             New Promotion
           </Button>
         </div>
-
-        {/* 🧠 Neural Strategy Hub */}
-        <div className="mb-12">
-           <NeuralPromoAdvisor onApply={handleApplyStrategy} />
+        <div className="py-2">
+           {/* Standard Promotion List */}
         </div>
 
         <div className="bg-transparent space-y-4 pt-4 border-t border-gray-100">

@@ -25,7 +25,6 @@ import {
   Spin,
 } from "antd";
 import DashboardCard from "@/pages/components/shared/DashboardCard";
-import NeuralFinanceInsight from "./components/NeuralFinanceInsight";
 
 const { Option } = Select;
 
@@ -184,9 +183,6 @@ const FinanceDashboard = () => {
             Generate Report
           </Button>
         </div>
-
-        {/* 🧠 Neural Strategy Hub */}
-        <NeuralFinanceInsight />
 
         {/* Stats Grid */}
         <Row gutter={[16, 16]}>

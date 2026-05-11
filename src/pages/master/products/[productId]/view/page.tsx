@@ -28,12 +28,10 @@ import {
   IconTag,
   IconRuler,
   IconPhoto,
-  IconBrain,
   IconTrendingUp,
   IconAlertTriangle,
   IconCash,
   IconHistory,
-  IconArrowUpRight,
 } from "@tabler/icons-react";
 import api from "@/lib/api";
 import { Product } from "@/model/Product";
@@ -206,7 +204,6 @@ const ProductViewPage = () => {
       description={`Details for ${product.name}`}
     >
       <div className="space-y-8">
-        {" "}
         {/* Header & Main Actions */}
         <div className="flex flex-col sm:flex-row justify-between items-start md:items-center gap-6 border-b border-gray-100 pb-8">
           <div className="flex items-center gap-4">
@@ -253,35 +250,28 @@ const ProductViewPage = () => {
           </div>
         </div>
 
-        {/* Neural Strategic Hub - Item Specific */}
+        {/* Inventory & Specs Hub */}
         <Row gutter={[24, 24]}>
           <Col xs={24} lg={16}>
-            <Card
-              className="border-none shadow-xl relative overflow-hidden h-full"
-              style={{
-                background: "linear-gradient(135deg, #064e3b 0%, #065f46 100%)",
-                borderRadius: "24px",
-              }}
-            >
-              <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full -mr-32 -mt-32 blur-3xl animate-pulse" />
-              <div className="relative z-10 p-2">
+            <Card className="border border-gray-100 rounded-[24px] bg-white shadow-sm h-full">
+              <div className="p-2">
                 <Space align="center" className="mb-6">
-                  <div className="w-8 h-8 rounded-xl bg-emerald-500/20 flex items-center justify-center text-emerald-400 border border-emerald-500/30">
-                    <IconBrain size={20} />
+                  <div className="w-8 h-8 rounded-xl bg-green-50 flex items-center justify-center text-green-600">
+                    <IconTrendingUp size={20} />
                   </div>
-                  <span className="text-[10px] font-black uppercase tracking-[0.3em] text-emerald-400/60">
-                    Neural Strategic Briefing
+                  <span className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">
+                    Inventory Overview
                   </span>
                 </Space>
 
                 <Row gutter={[48, 32]}>
                   <Col xs={24} md={14}>
-                    <h2 className="text-white text-3xl font-black mb-2 tracking-tight">
-                      Reality Check
+                    <h2 className="text-gray-900 text-3xl font-black mb-2 tracking-tight">
+                      Current Availability
                     </h2>
                     <div className="flex flex-wrap gap-4 mb-6">
-                      <div className="px-3 py-1 bg-white/10 rounded-full border border-white/10 backdrop-blur-sm">
-                        <span className="text-[10px] text-emerald-300 font-bold uppercase tracking-wider">
+                      <div className="px-3 py-1 bg-gray-50 rounded-full border border-gray-100">
+                        <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">
                           ROI Status:{" "}
                           {(product.sellingPrice - product.buyingPrice) /
                             product.sellingPrice >
@@ -290,48 +280,28 @@ const ProductViewPage = () => {
                             : "Thin Margins"}
                         </span>
                       </div>
-                      <div className="px-3 py-1 bg-white/10 rounded-full border border-white/10 backdrop-blur-sm">
-                        <span className="text-[10px] text-amber-300 font-bold uppercase tracking-wider">
-                          Velocity: Moderate
+                      <div className="px-3 py-1 bg-gray-50 rounded-full border border-gray-100">
+                        <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">
+                          Stock Health: {product.inStock ? "Adequate" : "Exhausted"}
                         </span>
                       </div>
                     </div>
-                    <p className="text-emerald-100/70 text-sm leading-relaxed mb-0 italic">
-                      &quot;The current gross margin of{" "}
-                      {Math.round(
-                        ((product.sellingPrice - product.buyingPrice) /
-                          product.sellingPrice) *
-                          100
-                      )}
-                      % is {product.discount > 20 ? "being eroded by aggressive discounting" : "stable for this category"}. 
-                      Stock levels indicate approximately {Math.round((product.totalStock || 0) / 1.5)} days of remaining runway at current velocity.&quot;
+                    <p className="text-gray-500 text-sm leading-relaxed mb-0">
+                      This product currently has {product.totalStock || 0} units across all locations.
+                      The acquisition cost is LKR {product.buyingPrice?.toLocaleString()} with a gross margin of {Math.round(((product.sellingPrice - product.buyingPrice) / product.sellingPrice) * 100)}%.
                     </p>
                   </Col>
                   <Col xs={24} md={10} className="flex items-center">
                     <div className="w-full grid grid-cols-1 gap-3">
-                      <div className="p-4 bg-white/5 rounded-2xl border border-white/10 hover:bg-white/10 transition-colors">
+                      <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100">
                         <div className="flex justify-between items-center mb-1">
-                          <span className="text-[9px] font-bold text-emerald-400 uppercase tracking-widest">
-                            Replenishment
+                          <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">
+                            Retail Price
                           </span>
-                          <IconTrendingUp size={14} className="text-emerald-500" />
+                          <IconCash size={14} className="text-green-600" />
                         </div>
-                        <div className="text-xl font-black text-white">
-                          No Action
-                        </div>
-                      </div>
-                      <div className="p-4 bg-white/5 rounded-2xl border border-white/10 hover:bg-white/10 transition-colors">
-                        <div className="flex justify-between items-center mb-1">
-                          <span className="text-[9px] font-bold text-emerald-400 uppercase tracking-widest">
-                            Price Ceiling
-                          </span>
-                          <IconArrowUpRight
-                            size={14}
-                            className="text-emerald-500"
-                          />
-                        </div>
-                        <div className="text-xl font-black text-white">
-                          LKR {Math.round(product.sellingPrice * 1.15).toLocaleString()}
+                        <div className="text-xl font-black text-gray-900">
+                          LKR {product.sellingPrice?.toLocaleString()}
                         </div>
                       </div>
                     </div>
@@ -348,7 +318,7 @@ const ProductViewPage = () => {
                 <Space>
                   <IconAlertTriangle size={18} className="text-amber-500" />
                   <span className="text-[10px] font-black uppercase tracking-widest text-gray-500">
-                    Risk Assessment
+                    Stock Alerts
                   </span>
                 </Space>
               }
@@ -364,22 +334,7 @@ const ProductViewPage = () => {
                         Critical Depletion
                       </div>
                       <div className="text-[10px] text-red-700 font-medium">
-                        Stock will be exhausted in &lt; 5 days.
-                      </div>
-                    </div>
-                  </div>
-                )}
-                {product.discount > 40 && (
-                  <div className="p-3 rounded-xl bg-amber-50 border border-amber-100 flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-amber-500 text-white flex items-center justify-center shrink-0">
-                      <IconCash size={18} />
-                    </div>
-                    <div>
-                      <div className="text-xs font-black text-amber-900 uppercase tracking-tight">
-                        Margin Pressure
-                      </div>
-                      <div className="text-[10px] text-amber-700 font-medium">
-                        Heavy discount affecting ROI efficiency.
+                        Low stock detected.
                       </div>
                     </div>
                   </div>
@@ -393,23 +348,18 @@ const ProductViewPage = () => {
                       Listing Health
                     </div>
                     <div className="text-[10px] text-emerald-700 font-medium">
-                      Optimized for current market price.
+                      Optimized for retail listing.
                     </div>
                   </div>
                 </div>
               </div>
-              <div className="mt-auto pt-6">
-                <Button className="w-full rounded-xl border-gray-200 text-xs font-bold uppercase tracking-widest h-11 hover:bg-gray-50">
-                  Run Deep Audit
-                </Button>
-              </div>
             </Card>
           </Col>
         </Row>
+
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* Left Column: Media & Primary Info (Lg: 5/12) */}
+          {/* Left Column: Media & Primary Info */}
           <div className="lg:col-span-5 space-y-8">
-            {/* Image Gallery Container */}
             <div className="space-y-4">
               <Card
                 className="border-none rounded-3xl overflow-hidden bg-gray-50 shadow-none ring-1 ring-gray-100"
@@ -422,13 +372,6 @@ const ProductViewPage = () => {
                       alt={product.name}
                       className="w-full h-full object-contain mix-blend-multiply"
                       style={{ maxHeight: "450px" }}
-                      preview={{
-                        mask: (
-                          <div className="flex items-center gap-2 font-bold text-white uppercase tracking-widest text-[10px]">
-                            <IconPhoto size={20} /> Preview
-                          </div>
-                        ),
-                      }}
                     />
                   ) : (
                     <div className="flex flex-col items-center text-gray-300 gap-2">
@@ -441,7 +384,6 @@ const ProductViewPage = () => {
                 </div>
               </Card>
 
-              {/* Thumbnails Swiper-like grid */}
               {allImages.length > 1 && (
                 <div className="grid grid-cols-5 gap-3 px-1">
                   {allImages.slice(0, 5).map((img, i) => (
@@ -465,7 +407,6 @@ const ProductViewPage = () => {
               )}
             </div>
 
-            {/* Product Overview / Description */}
             <Card
               title={
                 <div className="flex items-center gap-2">
@@ -480,38 +421,15 @@ const ProductViewPage = () => {
               <div className="text-sm text-gray-600 leading-relaxed font-medium">
                 {product.description || (
                   <span className="italic text-gray-400">
-                    No description provided for this catalog item.
+                    No description provided.
                   </span>
                 )}
               </div>
             </Card>
-
-            {/* Tags Box */}
-            {product.tags && product.tags.length > 0 && (
-              <Card
-                className="border border-gray-100 rounded-2xl bg-white shadow-none p-2"
-                styles={{ body: { padding: "12px" } }}
-              >
-                <div className="flex flex-wrap gap-2 text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-3 px-1">
-                  <IconTag size={12} /> Keywords
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {product.tags.map((tag) => (
-                    <Tag
-                      key={tag}
-                      className="m-0 px-3 py-1 rounded-full border-gray-100 bg-gray-50 text-gray-600 font-bold"
-                    >
-                      {tag}
-                    </Tag>
-                  ))}
-                </div>
-              </Card>
-            )}
           </div>
 
-          {/* Right Column: Specs, Pricing & Variants (Lg: 7/12) */}
+          {/* Right Column: Specs & Pricing */}
           <div className="lg:col-span-7 space-y-8">
-            {/* Financial Performance Section */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <Card className="border border-emerald-100 rounded-2xl bg-emerald-50/20 shadow-none">
                 <div className="text-[9px] font-black uppercase text-emerald-700 tracking-[0.2em] mb-2">
@@ -520,9 +438,6 @@ const ProductViewPage = () => {
                 <div className="text-xl font-black text-emerald-900">
                   <span className="text-xs font-bold mr-1">LKR</span>
                   {product.buyingPrice?.toLocaleString()}
-                </div>
-                <div className="mt-1 text-[9px] font-bold text-emerald-600/50 uppercase">
-                  Per Unit
                 </div>
               </Card>
 
@@ -538,9 +453,6 @@ const ProductViewPage = () => {
                   )}
                   %
                 </div>
-                <div className="mt-1 text-[9px] font-bold text-emerald-500 uppercase">
-                  +LKR {(product.sellingPrice - product.buyingPrice).toLocaleString()}
-                </div>
               </Card>
 
               <Card className="border border-blue-100 rounded-2xl bg-blue-50/20 shadow-none">
@@ -552,9 +464,6 @@ const ProductViewPage = () => {
                   {(
                     (product.buyingPrice || 0) * (product.totalStock || 0)
                   ).toLocaleString()}
-                </div>
-                <div className="mt-1 text-[9px] font-bold text-blue-600/50 uppercase">
-                  At Cost
                 </div>
               </Card>
 
@@ -568,62 +477,9 @@ const ProductViewPage = () => {
                     product.sellingPrice * (product.totalStock || 0)
                   ).toLocaleString()}
                 </div>
-                <div className="mt-1 text-[9px] font-bold text-purple-600/50 uppercase">
-                  At MSRP
-                </div>
               </Card>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <Card className="border border-gray-100 rounded-2xl bg-green-50/30 shadow-none hover:bg-green-50 transition-colors">
-                <Statistic
-                  title={
-                    <span className="text-[10px] uppercase font-bold text-green-700 tracking-widest">
-                      Primary Retail
-                    </span>
-                  }
-                  value={product.sellingPrice}
-                  prefix={<span className="text-sm font-bold">LKR</span>}
-                  valueStyle={{
-                    color: "#059669",
-                    fontSize: 24,
-                    fontWeight: 900,
-                  }}
-                  formatter={(v) => Number(v).toLocaleString()}
-                />
-                <div className="mt-1">
-                  <span className="text-[10px] font-bold text-green-600 uppercase">
-                    Active MSRP
-                  </span>
-                </div>
-              </Card>
-              <Card className="border border-gray-100 rounded-2xl bg-white shadow-none hover:border-gray-200 transition-colors">
-                <Statistic
-                  title={
-                    <span className="text-[10px] uppercase font-bold text-gray-400 tracking-widest">
-                      Market Value
-                    </span>
-                  }
-                  value={product.marketPrice}
-                  prefix={<span className="text-sm font-bold">LKR</span>}
-                  valueStyle={{
-                    color: "#1f2937",
-                    fontSize: 20,
-                    fontWeight: 700,
-                    textDecoration: "line-through",
-                    opacity: 0.3,
-                  }}
-                  formatter={(v) => Number(v).toLocaleString()}
-                />
-                <div className="mt-1">
-                  <Tag className="rounded-full bg-red-50 text-red-600 border-none font-bold text-[10px]">
-                    SAVE {product.discount}%
-                  </Tag>
-                </div>
-              </Card>
-            </div>
-
-            {/* Product Specifications Grid */}
             <Card
               title={
                 <div className="flex items-center gap-2">
@@ -639,81 +495,30 @@ const ProductViewPage = () => {
                 bordered={false}
                 column={{ xxl: 2, xl: 2, lg: 1, md: 2, sm: 1, xs: 1 }}
                 size="middle"
-                labelStyle={{
-                  color: "#9ca3af",
-                  fontSize: 12,
-                  fontWeight: 600,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.05em",
-                  paddingBottom: 4,
-                }}
-                contentStyle={{
-                  color: "#111827",
-                  fontSize: 14,
-                  fontWeight: 700,
-                  paddingBottom: 20,
-                }}
               >
                 <Descriptions.Item label="Inventory Status">
-                  <span
-                    className={
-                      product.inStock ? "text-green-600" : "text-red-500"
-                    }
-                  >
-                    {product.inStock
-                      ? `${product.totalStock} units available`
-                      : "Stock Exhausted"}
+                  <span className={product.inStock ? "text-green-600" : "text-red-500 font-bold"}>
+                    {product.inStock ? `${product.totalStock} units available` : "Out of Stock"}
                   </span>
                 </Descriptions.Item>
                 <Descriptions.Item label="Unit Weight">
-                  {product.weight ? `${product.weight} g` : "Not specified"}
+                  {product.weight ? `${product.weight} g` : "N/A"}
                 </Descriptions.Item>
-                <Descriptions.Item label="Target Audience">
-                  <div className="flex flex-wrap gap-1">
-                    {(product as any).gender?.length > 0 ? (
-                      (product as any).gender.map((g: string) => (
-                        <Tag
-                          key={g}
-                          className="m-0 rounded-full border-gray-100 bg-gray-50 text-gray-600 text-xs font-bold"
-                        >
-                          {g}
-                        </Tag>
-                      ))
-                    ) : (
-                      <span className="text-gray-400 font-medium">Generic</span>
-                    )}
-                  </div>
-                </Descriptions.Item>
-                <Descriptions.Item label="Size Range">
-                  <div className="flex flex-wrap gap-1">
-                    {(product as any).availableSizes?.length > 0 ? (
-                      (product as any).availableSizes.map((s: string) => (
-                        <Tag
-                          key={s}
-                          className="m-0 rounded-md border-gray-200 bg-white text-gray-900 text-xs font-bold"
-                        >
-                          {s}
-                        </Tag>
-                      ))
-                    ) : (
-                      <span className="text-gray-400 font-medium">—</span>
-                    )}
-                  </div>
-                </Descriptions.Item>
+                <Descriptions.Item label="Brand">{product.brand}</Descriptions.Item>
+                <Descriptions.Item label="Category">{product.category}</Descriptions.Item>
               </Descriptions>
             </Card>
 
-            {/* Variants Table Section */}
             <div className="space-y-4">
               <div className="flex items-center justify-between px-1">
                 <div className="flex items-center gap-2">
                   <IconRuler size={18} className="text-gray-400" />
                   <span className="text-xs font-bold uppercase tracking-widest text-gray-500">
-                    Geometric Variants ({product.variants?.length || 0})
+                    Product Variants ({product.variants?.length || 0})
                   </span>
                 </div>
               </div>
-              <div className="border border-gray-100 rounded-2xl overflow-hidden bg-white shadow-none">
+              <div className="border border-gray-100 rounded-2xl overflow-hidden bg-white">
                 <Table
                   scroll={{ x: 1000 }}
                   bordered
@@ -722,65 +527,38 @@ const ProductViewPage = () => {
                   rowKey="variantId"
                   pagination={false}
                   size="middle"
-                  locale={{ emptyText: "No variants configured" }}
-                  className="variant-table"
                 />
               </div>
             </div>
-
-            </div>
-
-            {/* Footprint / Metadata Section */}
-            <Card
-              className="border border-gray-100 rounded-2xl bg-gray-50/30 shadow-none"
-              styles={{ body: { padding: "16px 24px" } }}
-            >
-              <div className="flex flex-col sm:flex-row justify-between gap-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full bg-white border border-gray-100 flex items-center justify-center text-gray-400">
-                    <IconHistory size={18} />
-                  </div>
-                  <div>
-                    <div className="text-[9px] font-black uppercase text-gray-400 tracking-widest mb-0.5">
-                      Record Footprint
-                    </div>
-                    <div className="text-[11px] font-bold text-gray-600">
-                      Created {dayjs(product.createdAt).format("MMM DD, YYYY")} at{" "}
-                      {dayjs(product.createdAt).format("hh:mm A")}
-                    </div>
-                  </div>
-                </div>
-                <div className="text-left sm:text-right">
-                  <div className="text-[9px] font-black uppercase text-gray-400 tracking-widest mb-0.5">
-                    Last Global Sync
-                  </div>
-                  <div className="text-[11px] font-bold text-gray-900 flex items-center sm:justify-end gap-1">
-                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                    {dayjs(product.updatedAt).fromNow?.() ||
-                      dayjs(product.updatedAt).format("MMM DD, hh:mm A")}
-                  </div>
-                </div>
-              </div>
-            </Card>
           </div>
         </div>
 
+        <Card className="border border-gray-100 rounded-2xl bg-gray-50/30">
+          <div className="flex flex-col sm:flex-row justify-between gap-6">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-full bg-white border border-gray-100 flex items-center justify-center text-gray-400">
+                <IconHistory size={18} />
+              </div>
+              <div>
+                <div className="text-[9px] font-black uppercase text-gray-400 tracking-widest mb-0.5">
+                  Created On
+                </div>
+                <div className="text-[11px] font-bold text-gray-600">
+                  {dayjs(product.createdAt).format("MMM DD, YYYY")}
+                </div>
+              </div>
+            </div>
+          </div>
+        </Card>
+      </div>
+
       <style>{`
-        .variant-table .ant-table-thead > tr > th {
+        .ant-table-thead > tr > th {
           background: #fcfcfc !important;
           color: #9ca3af !important;
           font-size: 11px !important;
           text-transform: uppercase !important;
-          letter-spacing: 0.05em !important;
           font-weight: 800 !important;
-          border-bottom: 1px solid #f3f4f6 !important;
-        }
-        .variant-table .ant-table-tbody > tr > td {
-          border-bottom: 1px solid #f9fafb !important;
-          padding: 16px !important;
-        }
-        .variant-table .ant-table {
-          background: transparent !important;
         }
       `}</style>
     </PageContainer>

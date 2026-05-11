@@ -109,7 +109,6 @@ const PaymentMethods = lazy(
 );
 const Shipping = lazy(() => import("@/pages/settings/shipping/page"));
 const TaxSettings = lazy(() => import("@/pages/settings/tax/page"));
-const AISettings = lazy(() => import("@/pages/settings/ai/page"));
 const TemplatesSettings = lazy(() => import("@/pages/settings/templates/page"));
 
 // Users & Roles
@@ -274,7 +273,6 @@ export default function App() {
           <Route path="settings/payment-methods" element={<PaymentMethods />} />
           <Route path="settings/shipping" element={<Shipping />} />
           <Route path="settings/tax" element={<TaxSettings />} />
-          <Route path="settings/ai" element={<AISettings />} />
           <Route path="settings/templates" element={<TemplatesSettings />} /> 
 
           {/* Users & Roles */}

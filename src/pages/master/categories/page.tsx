@@ -12,7 +12,6 @@ import PageContainer from "../../components/container/PageContainer";
 import { useAppSelector } from "@/lib/hooks";
 import { Category } from "@/model/Category";
 import toast from "react-hot-toast";
-import { useConfirmationDialog } from "@/contexts/ConfirmationDialogContext";
 import AIDescriptionTextarea from "@/components/AIDescriptionTextarea";
 import {
   Table,
@@ -344,13 +343,10 @@ const CategoryPage: React.FC = () => {
 
             <Form.Item name="description" label="Description">
               <AIDescriptionTextarea
-                aiContext={{
-                  name: form.getFieldValue("name"),
-                  category: "Brand",
-                }}
                 rows={4}
-                placeholder="Enter details..."
-                disabled={saving}
+                placeholder="Enter category description..."
+                className="rounded-xl"
+                contextTitle="Category Description"
               />
             </Form.Item>
 

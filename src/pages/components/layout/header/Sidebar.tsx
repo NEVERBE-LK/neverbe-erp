@@ -5,7 +5,6 @@ import { IconMenu2, IconUser, IconLogout } from "@tabler/icons-react";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { clearUser } from "@/lib/authSlice/authSlice";
 import Menuitems from "./MenuItems";
-import NeuralPulse from "./NeuralPulse";
 
 const { Sider } = Layout;
 

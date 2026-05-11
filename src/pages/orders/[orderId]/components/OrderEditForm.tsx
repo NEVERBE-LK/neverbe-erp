@@ -17,7 +17,6 @@ import React, { useState, useEffect } from "react";
 import { Order } from "@/model/Order";
 import toast from "react-hot-toast";
 import { useConfirmationDialog } from "@/contexts/ConfirmationDialogContext";
-import NeuralOrderInsight from "./NeuralOrderInsight";
 
 interface OrderEditFormProps {
   order: Order;
@@ -109,11 +108,6 @@ export const OrderEditForm: React.FC<OrderEditFormProps> = ({
             className="shadow-sm"
           />
         )}
-
-        {/* 🧠 Neural Strategy Hub - Priority View */}
-        <div className="mb-8">
-           <NeuralOrderInsight order={order} />
-        </div>
 
         <Form
           form={form}

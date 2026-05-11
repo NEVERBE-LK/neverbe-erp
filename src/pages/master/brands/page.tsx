@@ -15,7 +15,6 @@ import { useAppSelector } from "@/lib/hooks";
 import { Brand } from "@/model/Brand";
 import toast from "react-hot-toast";
 import { useConfirmationDialog } from "@/contexts/ConfirmationDialogContext";
-import AIDescriptionTextarea from "@/components/AIDescriptionTextarea";
 import {
   Table,
   Button,
@@ -364,13 +363,10 @@ const BrandPage: React.FC = () => {
 
             <Form.Item name="description" label="Description">
               <AIDescriptionTextarea
-                aiContext={{
-                  name: form.getFieldValue("name"),
-                  category: "Brand",
-                }}
                 rows={4}
-                placeholder="Enter description..."
-                disabled={saving}
+                placeholder="Enter brand details..."
+                className="rounded-xl"
+                contextTitle="Brand Story"
               />
             </Form.Item>
 

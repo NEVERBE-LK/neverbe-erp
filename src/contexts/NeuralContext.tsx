@@ -1,64 +1,62 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
 import api from "@/lib/api";
 import toast from "react-hot-toast";
+import dayjs from "dayjs";
 
 interface NeuralState {
   data: any | null;
   loading: boolean;
   refreshing: boolean;
   lastSynced: string | null;
+  selectedYear: number;
+  selectedMonth: number;
+  setPeriod: (year: number, month: number) => void;
   refresh: (force?: boolean) => Promise<void>;
 }
 
 const NeuralContext = createContext<NeuralState | undefined>(undefined);
-
-const CACHE_KEY = "neverbe_neural_cache";
 
 export const NeuralProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [lastSynced, setLastSynced] = useState<string | null>(null);
+  
+  const [selectedYear, setSelectedYear] = useState<number>(dayjs().year());
+  const [selectedMonth, setSelectedMonth] = useState<number>(dayjs().month() + 1);
 
-  const fetchNeural = useCallback(async (force: boolean = false) => {
+  const fetchNeural = useCallback(async (force: boolean = false, year?: number, month?: number) => {
     if (force) setRefreshing(true);
     
+    const y = year || selectedYear;
+    const m = month || selectedMonth;
+    
     try {
-      const resp = await api.get(`/api/v1/erp/ai/neural?refresh=${force}`);
+      const resp = await api.get(`/api/v1/erp/ai/neural?refresh=${force}&year=${y}&month=${m}`);
       if (resp.data.success) {
         const feed = resp.data.data;
         setData(feed);
         setLastSynced(new Date().toISOString());
-        localStorage.setItem(CACHE_KEY, JSON.stringify({
-          data: feed,
-          syncedAt: new Date().toISOString()
-        }));
       }
     } catch (err) {
       console.error("Neural Synchronization Failed", err);
-      // Soft fail: Toast only if it was a manual refresh
-      if (force) toast.error("Neural Core synchronization failed. Using cached data.");
+      if (force) toast.error("Neural Core synchronization failed.");
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [selectedYear, selectedMonth]);
 
-  // Initialization: Load from cache then fetch fresh
+  const setPeriod = (year: number, month: number) => {
+    setSelectedYear(year);
+    setSelectedMonth(month);
+    setLoading(true);
+    fetchNeural(false, year, month);
+  };
+
+  // Initialization: fetch fresh
   useEffect(() => {
-    const cached = localStorage.getItem(CACHE_KEY);
-    if (cached) {
-      const { data: cachedFeed, syncedAt } = JSON.parse(cached);
-      setData(cachedFeed);
-      setLastSynced(syncedAt);
-      setLoading(false);
-    }
-    
-    fetchNeural(); // Initial silent fetch
-
-    // Auto-poll every 5 minutes
-    const interval = setInterval(() => fetchNeural(false), 5 * 60 * 1000);
-    return () => clearInterval(interval);
+    fetchNeural(); // Initial fetch
   }, [fetchNeural]);
 
   return (
@@ -67,6 +65,9 @@ export const NeuralProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       loading,
       refreshing,
       lastSynced,
+      selectedYear,
+      selectedMonth,
+      setPeriod,
       refresh: fetchNeural
     }}>
       {children}

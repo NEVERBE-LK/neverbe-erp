@@ -10,7 +10,6 @@ import {
   IconChartPie,
   IconSettings,
   IconShield,
-  IconRobot,
   IconMessage2,
 } from "@tabler/icons-react";
 import { uniqueId } from "lodash";
@@ -250,12 +249,6 @@ const Menuitems = [
         title: "Payment Methods",
         href: "/settings/payment-methods",
         permission: "view_payment_methods",
-      },
-      {
-        id: uniqueId(),
-        title: "AI Settings",
-        href: "/settings/ai",
-        permission: "view_settings",
       },
       {
         id: uniqueId(),

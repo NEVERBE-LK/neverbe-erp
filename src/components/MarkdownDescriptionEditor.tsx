@@ -34,7 +34,6 @@ function insertAtCursor(
   let cursorOffset: number;
 
   if (linePrefix) {
-    // Prefix each selected line
     const lines = selected ? selected.split("\n") : [""];
     replacement = lines.map((l) => `${linePrefix}${l}`).join("\n");
     cursorOffset = replacement.length;
@@ -72,7 +71,6 @@ const MarkdownDescriptionEditor: React.FC<MarkdownDescriptionEditorProps> = ({
     );
     onChange?.(newValue);
 
-    // Restore focus and cursor
     requestAnimationFrame(() => {
       ta.focus();
       ta.setSelectionRange(selectionStart, selectionEnd);
@@ -129,7 +127,7 @@ const MarkdownDescriptionEditor: React.FC<MarkdownDescriptionEditorProps> = ({
             <button
               type="button"
               onMouseDown={(e) => {
-                e.preventDefault(); // Keep textarea focus
+                e.preventDefault();
                 btn.action();
               }}
               disabled={disabled || generating}
@@ -149,7 +147,6 @@ const MarkdownDescriptionEditor: React.FC<MarkdownDescriptionEditorProps> = ({
           onClick={handleGenerateAI}
           disabled={disabled || generating}
           className="flex items-center gap-1 text-xs font-black uppercase tracking-widest bg-green-600 hover:bg-green-700 border-none shadow-lg shadow-green-100 h-8 px-4 rounded-xl transition-all hover:scale-[1.02]"
-
         >
           {generating ? "ORCHESTRATING..." : "Generate with AI"}
         </Button>

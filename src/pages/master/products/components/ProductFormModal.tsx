@@ -5,8 +5,6 @@ import { ProductVariant } from "@/model/ProductVariant";
 import VariantList from "./VariantList";
 import VariantFormModal from "./VariantFormModal";
 import MarkdownDescriptionEditor from "@/components/MarkdownDescriptionEditor";
-import { useAIChat } from "@/contexts/AIChatContext";
-
 import toast from "react-hot-toast";
 import { IconUpload, IconPackage } from "@tabler/icons-react";
 import {
@@ -80,7 +78,6 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
   sizes,
   saving,
 }) => {
-  const { setContextData, setContextTitle, clearContext } = useAIChat();
   const [form] = Form.useForm();
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [isVariantModalOpen, setIsVariantModalOpen] = useState(false);
@@ -96,30 +93,8 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
   const watchedCategory = Form.useWatch("category", form) || "";
   const watchedBrand = Form.useWatch("brand", form) || "";
   const watchedGender = Form.useWatch("gender", form) || [];
-  const allValues = Form.useWatch([], form);
 
   const isEditing = !!product;
-
-  useEffect(() => {
-    if (open) {
-      setContextTitle(
-        isEditing
-          ? `Product: ${watchedName || "Loading..."}`
-          : "New Product Draft",
-      );
-    } else {
-      clearContext();
-    }
-  }, [open, isEditing, watchedName, setContextTitle, clearContext]);
-
-  useEffect(() => {
-    if (open && allValues) {
-      setContextData({
-        ...allValues,
-        variants: variants, // Variants are managed in state, not form directly
-      });
-    }
-  }, [open, allValues, variants, setContextData]);
 
   useEffect(() => {
     if (open) {

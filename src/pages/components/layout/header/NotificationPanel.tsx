@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Drawer, List, Badge, Button, Space, Typography, Tag, Empty, Tooltip } from "antd";
-import { IconBell, IconCheck, IconExternalLink, IconTrash, IconBrain } from "@tabler/icons-react";
+import { IconBell, IconCheck, IconExternalLink, IconTrash } from "@tabler/icons-react";
 import { useNotifications, Notification } from "@/hooks/useNotifications";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
@@ -54,7 +54,7 @@ export default function NotificationPanel({ open, onClose }: Props) {
     switch (type) {
       case "ORDER": return <Tag color="blue" bordered={false} className="m-0 text-[8px] font-black uppercase px-2 rounded-full">Order</Tag>;
       case "STOCK": return <Tag color="orange" bordered={false} className="m-0 text-[8px] font-black uppercase px-2 rounded-full">Inventory</Tag>;
-      case "AI": return <Tag color="purple" bordered={false} className="m-0 text-[8px] font-black uppercase px-2 rounded-full shadow-sm shadow-purple-100">AI Engine</Tag>;
+      case "SYSTEM": return <Tag color="gray" bordered={false} className="m-0 text-[8px] font-black uppercase px-2 rounded-full">System</Tag>;
       default: return <Tag color="gray" bordered={false} className="m-0 text-[8px] font-black uppercase px-2 rounded-full">System</Tag>;
     }
   };
@@ -79,12 +79,12 @@ export default function NotificationPanel({ open, onClose }: Props) {
           <div className="flex flex-col gap-6 w-full py-2">
             <div className="flex items-center justify-between">
               <Space size="middle">
-                <div className="p-3 bg-emerald-50 rounded-2xl">
-                   <IconBell size={22} className="text-emerald-600" />
+                <div className="p-3 bg-blue-50 rounded-2xl">
+                   <IconBell size={22} className="text-blue-600" />
                 </div>
                 <div className="flex flex-col">
-                  <Title level={5} style={{ margin: 0 }} className="font-black tracking-tight uppercase text-[12px]">Strategy Feed</Title>
-                  <Text className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">{unreadCount} UNRESOLVED PULSES</Text>
+                   <Title level={5} style={{ margin: 0 }} className="font-black tracking-tight uppercase text-[12px]">System Notifications</Title>
+                   <Text className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">{unreadCount} UNREAD UPDATES</Text>
                 </div>
               </Space>
               {unreadCount > 0 && (
@@ -93,7 +93,7 @@ export default function NotificationPanel({ open, onClose }: Props) {
                   size="small" 
                   icon={<IconCheck size={14} />} 
                   onClick={handleMarkAllAsRead}
-                  className="text-emerald-600 font-black text-[9px] uppercase tracking-widest hover:bg-emerald-50 rounded-lg px-3"
+                  className="text-blue-600 font-black text-[9px] uppercase tracking-widest hover:bg-blue-50 rounded-lg px-3"
                 >
                   Mark all
                 </Button>
@@ -101,13 +101,13 @@ export default function NotificationPanel({ open, onClose }: Props) {
             </div>
 
             <div className="flex items-center gap-1 bg-gray-50 p-1 rounded-xl">
-               {["ALL", "AI", "ORDER", "STOCK"].map((t) => (
+               {["ALL", "ORDER", "STOCK", "SYSTEM"].map((t) => (
                  <Button 
                    key={t}
                    type={filter === t ? 'primary' : 'text'}
                    size="small"
                    onClick={() => setFilter(t)}
-                   className={`flex-1 text-[9px] font-black uppercase tracking-widest h-8 rounded-lg border-none shadow-none ${filter === t ? 'bg-white text-emerald-900! shadow-sm' : 'text-gray-400'}`}
+                   className={`flex-1 text-[9px] font-black uppercase tracking-widest h-8 rounded-lg border-none shadow-none ${filter === t ? 'bg-white text-blue-900! shadow-sm' : 'text-gray-400'}`}
                  >
                    {t}
                  </Button>
@@ -124,9 +124,8 @@ export default function NotificationPanel({ open, onClose }: Props) {
       >
         {filteredNotifications.length === 0 ? (
           <Empty 
-            description={<span className="text-[10px] font-black uppercase text-gray-300 tracking-[0.2em]">Neural Silence</span>} 
+            description={<span className="text-[10px] font-black uppercase text-gray-300 tracking-[0.2em]">No Notifications</span>} 
             className="mt-32 opacity-50" 
-            image={<IconBrain size={48} className="mx-auto text-gray-200" />}
           />
         ) : (
           <List
@@ -142,20 +141,20 @@ export default function NotificationPanel({ open, onClose }: Props) {
                   className={`p-6 cursor-pointer transition-all hover:bg-gray-50 border border-gray-100 rounded-[2.5rem] relative overflow-hidden group mb-4 ${item.read ? 'bg-white opacity-60' : 'bg-white shadow-xl shadow-gray-100/50'}`}
                   onClick={() => handleNotificationClick(item)}
                 >
-                  {!item.read && <div className="absolute top-0 left-0 w-1.5 h-full bg-emerald-500" />}
+                  {!item.read && <div className="absolute top-0 left-0 w-1.5 h-full bg-blue-500" />}
                   
                   <div className="flex flex-col gap-3 w-full">
                     <div className="flex justify-between items-center">
                       <div className="flex items-center gap-2">
                         {getTypeTag(item.type)}
-                        {!item.read && <Badge status="processing" color="#10b981" />}
+                        {!item.read && <Badge status="processing" color="#3b82f6" />}
                       </div>
                       <Text type="secondary" className="text-[9px] font-black uppercase tracking-widest opacity-40">
                         {dayjs(item.createdAt?.toDate ? item.createdAt.toDate() : item.createdAt).fromNow()}
                       </Text>
                     </div>
                     
-                    <Title level={5} className="m-0 font-black tracking-tight leading-tight text-gray-900 group-hover:text-emerald-700 transition-colors">
+                    <Title level={5} className="m-0 font-black tracking-tight leading-tight text-gray-900 group-hover:text-blue-700 transition-colors">
                       {item.title}
                     </Title>
                     
@@ -168,8 +167,8 @@ export default function NotificationPanel({ open, onClose }: Props) {
                       </Text>
                       
                       {isExpanded && item.metadata && (
-                         <div className="mt-4 p-4 bg-emerald-50/50 rounded-2xl border border-emerald-100/50 animate-in fade-in slide-in-from-top-2 duration-300">
-                            <span className="text-[9px] font-black text-emerald-800 uppercase tracking-widest mb-3 block opacity-60">Neural Deep Analysis</span>
+                         <div className="mt-4 p-4 bg-blue-50/50 rounded-2xl border border-blue-100/50 animate-in fade-in slide-in-from-top-2 duration-300">
+                            <span className="text-[9px] font-black text-blue-800 uppercase tracking-widest mb-3 block opacity-60">Technical Details</span>
                             <div className="grid grid-cols-2 gap-4">
                                {item.metadata.sku && (
                                   <div className="flex flex-col">
@@ -186,24 +185,10 @@ export default function NotificationPanel({ open, onClose }: Props) {
                                {item.metadata.revenueRisk && (
                                   <div className="flex flex-col">
                                      <span className="text-[7px] font-black text-gray-400 uppercase tracking-widest">Value at Risk</span>
-                                     <span className="text-[10px] font-black text-emerald-950">Rs. {Number(item.metadata.revenueRisk).toLocaleString()}</span>
+                                     <span className="text-[10px] font-black text-blue-950">Rs. {Number(item.metadata.revenueRisk).toLocaleString()}</span>
                                   </div>
-                               )}
-                               {item.metadata.riskLevel && (
-                                  <div className="flex flex-col">
-                                     <span className="text-[7px] font-black text-gray-400 uppercase tracking-widest">Confidence</span>
-                                     <span className="text-[10px] font-black text-emerald-600">HIGH (Neural Matrix)</span>
-                                  </div>
-                               )}
+                                )}
                             </div>
-                            <Button 
-                              type="link" 
-                              size="small" 
-                              onClick={(e) => { e.stopPropagation(); navigate("/inventory/purchase-orders"); onClose(); }}
-                              className="p-0 h-auto text-[9px] font-black uppercase mt-4 text-emerald-600 hover:text-emerald-700 tracking-widest flex items-center gap-1"
-                            >
-                               Initiate Strategic Reorder <IconExternalLink size={10} />
-                            </Button>
                          </div>
                       )}
 
@@ -211,10 +196,10 @@ export default function NotificationPanel({ open, onClose }: Props) {
                         <Button 
                           type="link" 
                           size="small" 
-                          className="p-0 h-auto text-[10px] font-black uppercase mt-3 text-emerald-600 hover:text-emerald-700 tracking-widest flex items-center gap-1"
+                          className="p-0 h-auto text-[10px] font-black uppercase mt-3 text-blue-600 hover:text-blue-700 tracking-widest flex items-center gap-1"
                           onClick={(e) => toggleExpand(e, item.id)}
                         >
-                          Deep Analysis
+                          View Details
                         </Button>
                       )}
 
@@ -236,9 +221,9 @@ export default function NotificationPanel({ open, onClose }: Props) {
                           size="small" 
                           icon={<IconExternalLink size={14} />}
                           onClick={(e) => { e.stopPropagation(); handleNotificationClick(item); }}
-                          className="bg-emerald-600 hover:bg-emerald-700 border-none rounded-xl text-[9px] font-black uppercase tracking-widest h-9 px-4 shadow-lg shadow-emerald-100"
+                          className="bg-blue-600 hover:bg-blue-700 border-none rounded-xl text-[9px] font-black uppercase tracking-widest h-9 px-4 shadow-lg shadow-blue-100"
                         >
-                          {item.type === 'AI' ? 'Execute Intelligence' : 'View Pulse'}
+                          View Details
                         </Button>
                        {item.type === 'STOCK' && (
                           <Button 

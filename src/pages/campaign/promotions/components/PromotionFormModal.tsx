@@ -9,7 +9,6 @@ import {
   IconBolt,
   IconCalendarEvent,
 } from "@tabler/icons-react";
-import toast from "react-hot-toast";
 import AIDescriptionTextarea from "@/components/AIDescriptionTextarea";
 import { DropdownOption } from "../../../master/products/page";
 import {
@@ -31,6 +30,7 @@ import {
 import dayjs, { Dayjs } from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 import { PlusOutlined, DeleteOutlined } from "@ant-design/icons";
+import toast from "react-hot-toast";
 
 dayjs.extend(customParseFormat);
 
