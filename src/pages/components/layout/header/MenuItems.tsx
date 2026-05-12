@@ -262,6 +262,13 @@ const Menuitems = [
         href: "/settings/templates",
         permission: "view_settings",
       },
+      {
+        id: uniqueId(),
+        title: "Email Templates",
+        href: "/settings/email-templates",
+        permission: "view_settings",
+      },
+
     ],
   },
 ];
