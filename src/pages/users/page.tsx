@@ -44,7 +44,7 @@ import {
   Card,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { formatSLDate } from "@/utils/dateUtils";
+import { formatSLDate, dayjs } from "@/utils/dateUtils";
 
 const { Option } = Select;
 
@@ -112,8 +112,8 @@ const UserForm = ({
         email: values.email,
         status: values.status === "Active",
         role: values.role,
-        createdAt: user?.createdAt || new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        createdAt: user?.createdAt || dayjs().toISOString(),
+        updatedAt: dayjs().toISOString(),
       };
 
       // If it was "Auto Generated" in the form, ensuring backend handles it or we pass what existing action expects.

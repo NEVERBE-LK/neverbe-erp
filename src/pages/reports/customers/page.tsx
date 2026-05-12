@@ -14,6 +14,7 @@ import {
 import React, { useState, useEffect } from "react";
 import * as XLSX from "xlsx";
 import dayjs from "dayjs";
+import { formatSLDate, getNowSL, parseToDayjs } from "@/utils/dateUtils";
 import { exportReportPDF } from "@/lib/pdf/exportReportPDF";
 import {
   IconFilter,
@@ -81,12 +82,8 @@ const TOOLTIP_STYLE = {
 
 const CustomerAnalyticsPage = () => {
   const [form] = Form.useForm();
-  const [from, setFrom] = useState(() => {
-    const d = new Date();
-    d.setDate(1);
-    return d.toISOString().split("T")[0];
-  });
-  const [to, setTo] = useState(new Date().toISOString().split("T")[0]);
+  const [from, setFrom] = useState(() => getNowSL().startOf("month").format("YYYY-MM-DD"));
+  const [to, setTo] = useState(() => getNowSL().format("YYYY-MM-DD"));
   const [loading, setLoading] = useState(false);
   const [report, setReport] = useState<CustomerAnalytics | null>(null);
 
@@ -257,7 +254,7 @@ const CustomerAnalyticsPage = () => {
   const retentionPct = report
     ? report.overview.totalCustomers > 0
       ? (report.overview.returningCustomers / report.overview.totalCustomers) *
-        100
+      100
       : 0
     : 0;
 
