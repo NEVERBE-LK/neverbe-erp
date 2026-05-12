@@ -35,6 +35,7 @@ import {
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
+import { formatSLDateTime } from "@/utils/dateUtils";
 
 const { Option } = Select;
 const { RangePicker } = DatePicker;
@@ -290,14 +291,7 @@ const OrdersPage = () => {
 
   // Helper for Date Formatting
   const formatDate = (dateValue: any) => {
-    if (!dateValue) return "-";
-    if (typeof dateValue === "object") {
-      if (dateValue._seconds !== undefined) return dayjs(dateValue._seconds * 1000).format("DD MMM YYYY, hh:mm A");
-      if (dateValue.seconds !== undefined) return dayjs(dateValue.seconds * 1000).format("DD MMM YYYY, hh:mm A");
-      if (dateValue.toDate) return dayjs(dateValue.toDate()).format("DD MMM YYYY, hh:mm A");
-    }
-    const parsed = dayjs(dateValue);
-    return parsed.isValid() ? parsed.format("DD MMM YYYY, hh:mm A") : String(dateValue);
+    return dateValue || "-";
   };
 
   const getStatusTagColor = (status: string | undefined, type: "payment" | "order") => {

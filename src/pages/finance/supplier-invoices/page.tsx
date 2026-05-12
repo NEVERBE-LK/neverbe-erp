@@ -117,8 +117,7 @@ const SupplierInvoicesPage = () => {
 
   const formatCurrency = (amount: number) => `Rs ${amount.toLocaleString()}`;
   const formatDate = (date: any) => {
-    if (!date) return "-";
-    return new Date(date).toLocaleDateString();
+    return date || "-";
   };
 
   const filteredInvoices = invoices.filter(

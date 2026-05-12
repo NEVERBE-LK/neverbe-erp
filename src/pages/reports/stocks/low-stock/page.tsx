@@ -26,6 +26,7 @@ import PageContainer from "@/pages/components/container/PageContainer";
 import { useAppSelector } from "@/lib/hooks";
 import toast from "react-hot-toast";
 import { exportReportPDF } from "@/lib/pdf/exportReportPDF";
+import { SL_TIMEZONE } from "@/utils/dateUtils";
 
 const fmt = (v: number) =>
   new Intl.NumberFormat("en-LK", {
@@ -127,7 +128,7 @@ const LowStockPage = () => {
       await exportReportPDF({
         title: "Low Stock Alerts",
         subtitle: "Products and variants falling below critical limits",
-        period: new Date().toLocaleDateString(),
+        period: new Date().toLocaleString("en-LK", { timeZone: SL_TIMEZONE }),
         summaryItems: [
           {
             label: "Critical SKUs",

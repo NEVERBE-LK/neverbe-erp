@@ -13,6 +13,7 @@ import type { ColumnsType } from "antd/es/table";
 import { IconPackage, IconShoppingCart } from "@tabler/icons-react";
 import api from "@/lib/api";
 import toast from "react-hot-toast";
+import { dayjs } from "@/utils/dateUtils";
 import { useAppSelector } from "@/lib/hooks";
 import { RootState } from "@/lib/store";
 import { useConfirmationDialog } from "@/contexts/ConfirmationDialogContext";
@@ -84,7 +85,7 @@ const NewGRNModal: React.FC<NewGRNModalProps> = ({
 
   // Default fields
   const [receivedDate, setReceivedDate] = useState(
-    new Date().toISOString().split("T")[0],
+    dayjs().format("YYYY-MM-DD"),
   );
   const [notes, setNotes] = useState("");
   const [items, setItems] = useState<GRNItemInput[]>([]);
@@ -152,7 +153,7 @@ const NewGRNModal: React.FC<NewGRNModalProps> = ({
     if (!open) {
       setSelectedPOId("");
       setSelectedPO(null);
-      setReceivedDate(new Date().toISOString().split("T")[0]);
+      setReceivedDate(dayjs().format("YYYY-MM-DD"));
       setNotes("");
       setItems([]);
     }

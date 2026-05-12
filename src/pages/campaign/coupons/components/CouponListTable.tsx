@@ -2,9 +2,7 @@ import React from "react";
 import { Coupon } from "@/model/Coupon";
 import { Table, Button, Tag, Space, Typography, Tooltip } from "antd";
 import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
-import dayjs from "dayjs";
-import relativeTime from "dayjs/plugin/relativeTime";
-dayjs.extend(relativeTime);
+import { dayjs } from "@/utils/dateUtils";
 
 const { Text } = Typography;
 
@@ -70,16 +68,7 @@ const CouponListTable: React.FC<Props> = ({
       dataIndex: "endDate",
       key: "endDate",
       render: (date: any) => {
-        if (!date) return "-";
-        const d = date.seconds ? dayjs(date.toDate()) : dayjs(date);
-        return (
-          <div className="flex flex-col">
-            <Text strong>{d.format("DD MMM YYYY")}</Text>
-            <Text type="secondary" className="text-xs">
-              {d.fromNow()}
-            </Text>
-          </div>
-        );
+        return <Text strong>{date || "-"}</Text>;
       },
     },
     {

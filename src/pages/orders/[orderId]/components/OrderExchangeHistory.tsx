@@ -84,10 +84,7 @@ export const OrderExchangeHistory: React.FC<OrderExchangeHistoryProps> = ({
                   Transaction Date
                 </Text>
                 <Text className="font-bold text-sm">
-                  {new Date(exchange.createdAt as string).toLocaleDateString(
-                    undefined,
-                    { dateStyle: "long" },
-                  )}
+                  {exchange.createdAt}
                 </Text>
               </div>
 

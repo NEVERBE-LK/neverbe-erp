@@ -2,6 +2,7 @@ import api from "@/lib/api";
 import { useAppSelector } from "@/lib/hooks";
 import toast from "react-hot-toast";
 import { exportReportPDF } from "@/lib/pdf/exportReportPDF";
+import { SL_TIMEZONE } from "@/utils/dateUtils";
 import { Card, Form, Spin, Table, Select, Button, Space, Tag } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import React, { useEffect, useState } from "react";
@@ -108,7 +109,7 @@ const StockValuationPage = () => {
       await exportReportPDF({
         title: "Stock Valuation Report",
         subtitle: "Locked asset value based on latest cost prices",
-        period: new Date().toLocaleDateString(),
+        period: new Date().toLocaleString("en-LK", { timeZone: SL_TIMEZONE }),
         summaryItems: [
           {
             label: "Total Unique Products",

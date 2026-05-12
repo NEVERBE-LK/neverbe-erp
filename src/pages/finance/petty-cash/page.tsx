@@ -214,7 +214,7 @@ export default function PettyCashList() {
               {entry.note || "NO NOTE"}
             </span>
             <span className="text-xs text-gray-400 font-bold  ">
-              {new Date(entry.date as string).toLocaleDateString()}
+              {entry.date}
             </span>
           </div>
         </>

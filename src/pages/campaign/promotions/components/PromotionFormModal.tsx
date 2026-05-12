@@ -27,16 +27,12 @@ import {
   Typography,
   Slider,
 } from "antd";
-import dayjs, { Dayjs } from "dayjs";
-import customParseFormat from "dayjs/plugin/customParseFormat";
+import { dayjs, parseToDayjs } from "@/utils/dateUtils";
 import { PlusOutlined, DeleteOutlined } from "@ant-design/icons";
 import toast from "react-hot-toast";
 
-dayjs.extend(customParseFormat);
-
 const { Text } = Typography;
 const { Option } = Select;
-const { TextArea } = Input;
 
 interface Props {
   open: boolean;
@@ -109,29 +105,10 @@ const PromotionFormModal: React.FC<Props> = ({
       fetchProducts();
       setBannerFile(null);
       if (promotion) {
-        const parseDate = (d: any): Dayjs | null => {
-          if (!d) return null;
-          if (d.toDate) return dayjs(d.toDate());
-          if (typeof d === "string") {
-            // First try strict format from our DatePicker (DD/MM/YYYY)
-            let parsed = dayjs(d, "DD/MM/YYYY", true);
-            if (!parsed.isValid()) {
-              // Try ISO or loose parsing as fallback
-              parsed = dayjs(d);
-            }
-            if (parsed.isValid()) return parsed;
-            return null;
-          }
-          if (d.seconds) return dayjs(new Date(d.seconds * 1000));
-          return dayjs(d);
-        };
-
-        // Deep copy needed for AntD Form to handle nested arrays properly logic sometimes
-        // But here we rely on standard form handling
         form.setFieldsValue({
           ...promotion,
-          startDate: parseDate(promotion.startDate),
-          endDate: parseDate(promotion.endDate),
+          startDate: parseToDayjs(promotion.startDate),
+          endDate: parseToDayjs(promotion.endDate),
         });
 
         setBannerPreview(promotion.bannerUrl || "");

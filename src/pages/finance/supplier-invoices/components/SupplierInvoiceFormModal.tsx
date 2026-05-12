@@ -13,6 +13,7 @@ import {
 } from "@tabler/icons-react";
 import { SupplierInvoice } from "@/model/SupplierInvoice";
 import toast from "react-hot-toast";
+import { dayjs, parseToDayjs } from "@/utils/dateUtils";
 
 interface SupplierInvoiceFormModalProps {
   open: boolean;
@@ -25,7 +26,7 @@ const emptyForm = {
   invoiceNumber: "",
   supplierId: "",
   supplierName: "",
-  issueDate: new Date().toISOString().split("T")[0],
+  issueDate: dayjs().format("YYYY-MM-DD"),
   dueDate: "",
   amount: "",
   paidAmount: "0",
@@ -66,18 +67,8 @@ const SupplierInvoiceFormModal: React.FC<SupplierInvoiceFormModalProps> = ({
           invoiceNumber: invoice.invoiceNumber,
           supplierId: invoice.supplierId,
           supplierName: invoice.supplierName,
-          issueDate:
-            typeof invoice.issueDate === "string"
-              ? invoice.issueDate.split("T")[0]
-              : new Date((invoice.issueDate as any).seconds * 1000)
-                  .toISOString()
-                  .split("T")[0],
-          dueDate:
-            typeof invoice.dueDate === "string"
-              ? invoice.dueDate.split("T")[0]
-              : new Date((invoice.dueDate as any).seconds * 1000)
-                  .toISOString()
-                  .split("T")[0],
+          issueDate: parseToDayjs(invoice.issueDate)?.format("YYYY-MM-DD") || "",
+          dueDate: parseToDayjs(invoice.dueDate)?.format("YYYY-MM-DD") || "",
           amount: String(invoice.amount),
           paidAmount: String(invoice.paidAmount),
           currency: invoice.currency,
@@ -87,7 +78,7 @@ const SupplierInvoiceFormModal: React.FC<SupplierInvoiceFormModalProps> = ({
       } else {
         setFormData({
           ...emptyForm,
-          issueDate: new Date().toISOString().split("T")[0],
+          issueDate: dayjs().format("YYYY-MM-DD"),
         });
       }
       setFile(null);

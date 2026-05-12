@@ -58,13 +58,7 @@ const ProfilePage = () => {
 
   // === HELPERS ===
   const formatDate = (date: any) => {
-    if (!date) return "N/A";
-    const d = date.seconds ? new Date(date.seconds * 1000) : new Date(date);
-    return d.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
+    return date || "N/A";
   };
 
   // === ACTIONS ===

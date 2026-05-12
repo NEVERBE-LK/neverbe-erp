@@ -11,6 +11,7 @@ import {
 } from "@tabler/icons-react";
 import toast from "react-hot-toast";
 import { Button, Select, Spin, Divider } from "antd";
+import { dayjs } from "@/utils/dateUtils";
 
 const PopularItems = () => {
   const [items, setItems] = useState<PopularItem[] | null>([]);
@@ -18,7 +19,7 @@ const PopularItems = () => {
   const { currentUser } = useAppSelector((state) => state.authSlice);
 
   // State for Month and Size
-  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
+  const [selectedMonth, setSelectedMonth] = useState(dayjs().month());
   const [fetchSize, setFetchSize] = useState(10); // Default to Top 10
 
   const sliderRef = useRef<HTMLDivElement>(null);
@@ -55,7 +56,7 @@ const PopularItems = () => {
   const fetchPopularItems = async () => {
     try {
       setIsLoading(true);
-      const currentYear = new Date().getFullYear();
+      const currentYear = dayjs().year();
 
       const items: PopularItem[] = await getPopularItemsAction(
         fetchSize, // Pass the dynamic size here

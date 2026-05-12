@@ -44,6 +44,7 @@ import {
   Card,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
+import { formatSLDate } from "@/utils/dateUtils";
 
 const { Option } = Select;
 
@@ -441,7 +442,7 @@ const UsersPage = () => {
       align: "center",
       render: (_, record) => (
         <span className="text-xs text-gray-500">
-          {new Date(record.createdAt as any).toLocaleDateString()}
+          {record.createdAt}
         </span>
       ),
     },

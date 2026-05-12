@@ -19,6 +19,7 @@ import {
 
 import { OrderExchangeHistory } from "../../components/OrderExchangeHistory";
 import CommunicationHub from "../../components/CommunicationHub";
+import { formatSLDateTime } from "@/utils/dateUtils";
 
 const { Text } = Typography;
 
@@ -341,12 +342,12 @@ const OrderView = ({ orderId }: { orderId: string }) => {
               </Descriptions.Item>
               <Descriptions.Item label="Placement Date">
                 <Text>
-                  {order?.createdAt ? String(order.createdAt) : "N/A"}
+                  {order?.createdAt || "N/A"}
                 </Text>
               </Descriptions.Item>
               <Descriptions.Item label="Last Update">
                 <Text>
-                  {order?.updatedAt ? String(order.updatedAt) : "N/A"}
+                  {order?.updatedAt || "N/A"}
                 </Text>
               </Descriptions.Item>
               <Descriptions.Item label="Order Source">
@@ -411,12 +412,12 @@ const OrderView = ({ orderId }: { orderId: string }) => {
               </Descriptions.Item>
               <Descriptions.Item label="Placement Date">
                 <Text>
-                  {order?.createdAt ? String(order.createdAt) : "N/A"}
+                  {order?.createdAt || "N/A"}
                 </Text>
               </Descriptions.Item>
               <Descriptions.Item label="Last Update">
                 <Text>
-                  {order?.updatedAt ? String(order.updatedAt) : "N/A"}
+                  {order?.updatedAt || "N/A"}
                 </Text>
               </Descriptions.Item>
               <Descriptions.Item label="Order Source">

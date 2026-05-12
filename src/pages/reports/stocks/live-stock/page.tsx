@@ -13,7 +13,7 @@ import * as XLSX from "xlsx";
 import PageContainer from "@/pages/components/container/PageContainer";
 import { useAppSelector } from "@/lib/hooks";
 import toast from "react-hot-toast";
-import { exportReportPDF } from "@/lib/pdf/exportReportPDF";
+import { SL_TIMEZONE } from "@/utils/dateUtils";
 
 export interface LiveStockItem {
   id: string;
@@ -113,7 +113,7 @@ const LiveStockPage = () => {
       await exportReportPDF({
         title: "Live Stock Report",
         subtitle: "Current inventory levels across all locations",
-        period: new Date().toLocaleDateString(),
+        period: new Date().toLocaleString("en-LK", { timeZone: SL_TIMEZONE }),
         summaryItems: [
           {
             label: "Total Products",
