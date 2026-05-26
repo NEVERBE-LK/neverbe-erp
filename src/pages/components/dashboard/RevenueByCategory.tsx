@@ -89,7 +89,7 @@ const RevenueByCategory = () => {
             <List
               dataSource={data}
               size="small"
-              className="max-h-[200px] overflow-y-auto mt-4 px-1"
+              className="max-h-[380px] overflow-y-auto mt-4 px-1 scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent"
               renderItem={(item, idx) => (
                 <List.Item className="bg-white hover:bg-gray-50 transition-all border border-gray-100 rounded-2xl shadow-sm mb-2 hover:shadow-md px-3! py-3!">
                   <div className="flex justify-between items-center w-full">
