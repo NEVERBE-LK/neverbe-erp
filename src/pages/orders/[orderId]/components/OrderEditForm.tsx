@@ -70,7 +70,7 @@ export const OrderEditForm: React.FC<OrderEditFormProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Master Dropdown Data
-  const [paymentMethods, setPaymentMethods] = useState<{ paymentId: string; name: string; customerFee?: number }[]>([]);
+  const [paymentMethods, setPaymentMethods] = useState<{ paymentId: string; name: string; customerFee?: number; fee?: number }[]>([]);
   const [products, setProducts] = useState<ProductOption[]>([]);
   const [productsMap, setProductsMap] = useState<Record<string, ProductOption>>({});
   const [availableVariants, setAvailableVariants] = useState<VariantOption[]>([]);
