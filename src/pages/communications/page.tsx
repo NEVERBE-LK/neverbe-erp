@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Table, Tag, Card, Input, Space, Button, Typography, Modal, Descriptions, Form, Select, Row, Col, Divider, Tooltip } from "antd";
 import { IconSearch, IconEye, IconRefresh, IconMessage2, IconCheck, IconAlertTriangle, IconSend, IconPlus, IconTemplate, IconMail, IconLanguage } from "@tabler/icons-react";
+import { Link } from "react-router-dom";
 import api from "@/lib/api";
 import PageContainer from "../components/container/PageContainer";
 import dayjs from "dayjs";
@@ -52,11 +53,19 @@ const CommunicationsPage = () => {
   const [templates, setTemplates] = useState<SMSTemplate[]>([]);
   const [form] = Form.useForm();
   const [msgType, setMsgType] = useState<"sms" | "email">("sms");
+  const [messageText, setMessageText] = useState("");
 
   useEffect(() => {
     fetchLogs(pagination.current, pagination.pageSize, searchText);
     fetchTemplates();
   }, [pagination.current, pagination.pageSize]);
+
+  useEffect(() => {
+    if (!isComposeOpen) {
+      setMessageText("");
+      form.resetFields();
+    }
+  }, [isComposeOpen, form]);
 
   const fetchLogs = async (
     page: number = pagination.current, 
@@ -103,14 +112,22 @@ const CommunicationsPage = () => {
     }
   };
 
-  const applyTemplate = (template: SMSTemplate) => {
-    // For manual send, we combine them for convenience or just use one.
-    // Here we'll just use the EN one as a base or let them choose.
-    const content = template.en || template.si || template.ta;
+  const applyTemplate = (template: SMSTemplate, lang: "en" | "si" | "ta" = "en") => {
+    const content = template[lang] || template.en || template.si || template.ta || "";
     form.setFieldsValue({ content });
+    setMessageText(content);
   };
 
+  const getSMSCount = (text: string) => {
+    if (!text) return { chars: 0, parts: 0, limit: 160, isUnicode: false };
+    const chars = text.length;
+    const isUnicode = /[^\u0000-\u007F]/.test(text);
+    const limit = isUnicode ? 70 : 160;
+    const parts = Math.ceil(chars / limit) || 1;
+    return { chars, parts, limit, isUnicode };
+  };
 
+  const smsMetrics = getSMSCount(messageText);
 
   const columns = [
     {
@@ -119,7 +136,7 @@ const CommunicationsPage = () => {
       key: "createdAt",
       render: (date: any) => (
         <Text className="text-gray-500 text-xs">
-          {date ? dayjs(date).format("DD/MM/YYYY, hh:mm:ss a") : "-"}
+          {date ? dayjs(date).format("DD MMM YYYY, hh:mm A") : "-"}
         </Text>
       ),
     },
@@ -127,9 +144,14 @@ const CommunicationsPage = () => {
       title: "Order ID",
       dataIndex: "orderId",
       key: "orderId",
-      render: (id: string) => (
-        <Text strong className="text-emerald-700">{id === "CUSTOM" ? "N/A" : `#${id?.toUpperCase()}`}</Text>
-      ),
+      render: (id: string) => {
+        if (id === "CUSTOM" || !id) return <Text className="text-gray-400 text-xs">N/A</Text>;
+        return (
+          <Link to={`/orders/${id.toLowerCase()}`} className="text-emerald-600 hover:text-emerald-700 font-bold hover:underline text-xs">
+            #{id?.toUpperCase()}
+          </Link>
+        );
+      },
     },
     {
       title: "Channel",
@@ -154,29 +176,32 @@ const CommunicationsPage = () => {
       render: (to: string) => <Text className="text-xs font-medium">{to}</Text>,
     },
     {
-      title: "Content Preview",
-      dataIndex: "content",
-      key: "content",
-      ellipsis: true,
-      render: (content: string, record: any) => {
-        if (content) return <Text className="text-gray-500 text-xs">{content}</Text>;
-        if (record.type === "ebill_sms") return <Text className="text-gray-400 text-[10px] italic">Digital Receipt Link (Hidden for privacy)</Text>;
-        return <Text className="text-gray-400 text-[10px] italic">Automated Template Message</Text>;
-      },
-    },
-    {
       title: "Status",
       dataIndex: "status",
       key: "status",
-      render: (status: string) => status ? (
-        <Tooltip title="Triggered by Order Status Change">
-           <Tag color="cyan" className="rounded-full text-[10px] font-black uppercase border-none bg-cyan-50 text-cyan-700">{status}</Tag>
-        </Tooltip>
-      ) : (
-        <Tooltip title="Message successfully dispatched to provider">
-           <Tag color="default" className="rounded-full text-[10px] font-black uppercase border-none bg-gray-100 text-gray-400">DISPATCHED</Tag>
-        </Tooltip>
-      ),
+      render: (status: string) => {
+        if (!status) {
+          return (
+            <Tooltip title="Message successfully dispatched to provider">
+               <Tag className="rounded-full text-[10px] font-black uppercase border-none bg-gray-100 text-gray-400">DISPATCHED</Tag>
+            </Tooltip>
+          );
+        }
+        const upper = status.toUpperCase();
+        let colorClass = "bg-cyan-50 text-cyan-700";
+        if (upper === "FAILED" || upper === "ERROR") {
+          colorClass = "bg-red-50 text-red-700";
+        } else if (upper === "COMPLETED" || upper === "SENT" || upper === "SUCCESS") {
+          colorClass = "bg-green-50 text-green-700";
+        } else if (upper === "PENDING" || upper === "PROCESSING") {
+          colorClass = "bg-amber-50 text-amber-700";
+        }
+        return (
+          <Tooltip title={`Status: ${status}`}>
+             <Tag className={`rounded-full text-[10px] font-black uppercase border-none ${colorClass}`}>{status}</Tag>
+          </Tooltip>
+        );
+      },
     },
     {
       title: "Actions",
@@ -302,7 +327,15 @@ const CommunicationsPage = () => {
                   <Row gutter={16}>
                     <Col span={12}>
                       <Form.Item label="Channel" required>
-                         <Select value={msgType} onChange={setMsgType} className="h-10 rounded-xl">
+                         <Select 
+                           value={msgType} 
+                           onChange={(val) => {
+                             setMsgType(val);
+                             form.resetFields(["content", "subject"]);
+                             setMessageText("");
+                           }} 
+                           className="h-10 rounded-xl"
+                         >
                             <Option value="sms">SMS Message</Option>
                             <Option value="email">Email Notification</Option>
                          </Select>
@@ -325,32 +358,115 @@ const CommunicationsPage = () => {
                     </Form.Item>
                   )}
 
-                  <Form.Item name="content" label="Message Content" rules={[{ required: true }]}>
-                    <Input.TextArea rows={6} placeholder="Type your message here..." className="rounded-xl" />
+                  <Form.Item 
+                    name="content" 
+                    label={
+                      <div className="flex justify-between items-center w-full">
+                        <span>Message Content</span>
+                        {msgType === "sms" && messageText.length > 0 && (
+                          <span className={`text-[9px] font-bold ${smsMetrics.parts > 1 ? "text-amber-600" : "text-gray-400"}`}>
+                            {smsMetrics.chars}/{smsMetrics.limit} Chars ({smsMetrics.parts} part{smsMetrics.parts > 1 ? "s" : ""})
+                          </span>
+                        )}
+                      </div>
+                    }
+                    rules={[{ required: true }]}
+                  >
+                    <Input.TextArea 
+                      rows={6} 
+                      onChange={(e) => setMessageText(e.target.value)}
+                      placeholder="Type your message here..." 
+                      className="rounded-xl" 
+                    />
                   </Form.Item>
+
+                  {msgType === "sms" && (
+                    <div className="flex flex-col gap-1.5 mb-4">
+                      {messageText.length > 0 && (
+                        <div className="w-full bg-slate-100 rounded-full h-1 overflow-hidden">
+                          <div
+                            className={`h-full rounded-full transition-all duration-300 ${
+                              smsMetrics.parts > 1
+                                ? "bg-amber-500"
+                                : (smsMetrics.chars / smsMetrics.limit) > 0.85
+                                ? "bg-amber-400"
+                                : "bg-emerald-500"
+                            }`}
+                            style={{
+                              width: `${Math.min(
+                                100,
+                                (((smsMetrics.chars % smsMetrics.limit) || smsMetrics.limit) / smsMetrics.limit) * 100
+                              )}%`,
+                            }}
+                          />
+                        </div>
+                      )}
+                      <div className="flex justify-between items-center text-[9px] font-bold text-gray-400 px-1">
+                        <span>
+                          {smsMetrics.isUnicode
+                            ? "✨ Unicode mode (Sinhala/Tamil character detected)"
+                            : "Standard GSM 7-bit alphabet"}
+                        </span>
+                        <span>
+                          Limit per part: {smsMetrics.limit} chars
+                        </span>
+                      </div>
+                    </div>
+                  )}
                </div>
             </Col>
             <Col span={8}>
-               <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 h-full">
-                  <div className="flex items-center gap-2 mb-4">
-                    <IconTemplate size={18} className="text-gray-400" />
-                    <span className="text-[10px] font-black uppercase text-gray-500 tracking-widest">Use Template</span>
+               <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 h-[520px] flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center gap-2 mb-4">
+                      <IconTemplate size={18} className="text-gray-400" />
+                      <span className="text-[10px] font-black uppercase text-gray-500 tracking-widest">Use Template</span>
+                    </div>
+                    <div className="space-y-2.5 overflow-y-auto max-h-[320px] pr-1 custom-scrollbar">
+                       {templates.map(t => (
+                         <div 
+                           key={t.id} 
+                           className="bg-white p-3 rounded-xl border border-gray-200 shadow-sm flex flex-col gap-1.5"
+                         >
+                            <div className="text-[10px] font-bold text-gray-800 leading-tight">{t.name}</div>
+                            <div className="flex flex-wrap gap-1.5 mt-1">
+                              {t.en && (
+                                <button
+                                  type="button"
+                                  onClick={() => applyTemplate(t, "en")}
+                                  className="px-2 py-0.5 text-[9px] font-black bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-600 rounded-md transition cursor-pointer"
+                                >
+                                  EN
+                                </button>
+                              )}
+                              {t.si && (
+                                <button
+                                  type="button"
+                                  onClick={() => applyTemplate(t, "si")}
+                                  className="px-2 py-0.5 text-[9px] font-black bg-emerald-50 hover:bg-emerald-100 border border-emerald-100 text-emerald-700 rounded-md transition cursor-pointer"
+                                >
+                                  සිංහල
+                                </button>
+                              )}
+                              {t.ta && (
+                                <button
+                                  type="button"
+                                  onClick={() => applyTemplate(t, "ta")}
+                                  className="px-2 py-0.5 text-[9px] font-black bg-blue-50 hover:bg-blue-100 border border-blue-100 text-blue-700 rounded-md transition cursor-pointer"
+                                >
+                                  தமிழ்
+                                </button>
+                              )}
+                            </div>
+                         </div>
+                       ))}
+                    </div>
                   </div>
-                  <div className="space-y-2 overflow-y-auto max-h-[350px]">
-                     {templates.map(t => (
-                       <div 
-                         key={t.id} 
-                         onClick={() => applyTemplate(t)}
-                         className="bg-white p-3 rounded-lg border border-gray-200 cursor-pointer hover:border-emerald-500 transition-colors shadow-sm group"
-                       >
-                          <div className="text-[10px] font-bold text-gray-800 group-hover:text-emerald-600">{t.name}</div>
-                          <div className="text-[9px] text-gray-400 mt-1 line-clamp-2">{t.en}</div>
-                       </div>
-                     ))}
-                  </div>
-                  <Divider className="my-4" />
-                  <div className="p-3 bg-blue-50 text-blue-700 rounded-lg text-[10px] leading-relaxed italic">
-                    <strong>Tip:</strong> Templates selected here will use the EN version as a base for your custom edits.
+                  <div>
+                    <Divider className="my-3" />
+                    <div className="p-3 bg-blue-50/50 text-blue-700 border border-blue-100 rounded-lg text-[10px] leading-relaxed">
+                      <strong>Tip:</strong> Select <strong>EN</strong>, <strong>සිංහල</strong>, or <strong>தமிழ்</strong> on any template to instantly pre-fill in the selected language.
+                    </div>
                   </div>
                </div>
             </Col>
