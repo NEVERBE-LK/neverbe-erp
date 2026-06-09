@@ -772,7 +772,7 @@ const OrdersPage = () => {
             columns={columns}
             dataSource={orders}
             rowKey="orderId"
-            pagination={{ ...pagination, position: ["bottomRight"] }}
+            pagination={{ ...pagination, position: ["bottomRight"], showTotal: (total) => `Total ${total} records` }}
             loading={isLoading || isBulkLoading}
             onChange={handleTableChange}
             scroll={{ x: 1200 }}
