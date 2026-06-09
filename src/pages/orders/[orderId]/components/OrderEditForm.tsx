@@ -1094,7 +1094,7 @@ export const OrderEditForm: React.FC<OrderEditFormProps> = ({
                       Source Location
                     </span>
                     <span className="text-xs font-black text-gray-500 uppercase tracking-wide">
-                      {order.storeName || order.from || "Online Stock"}
+                      {(order as any).storeName || order.from || "Online Stock"}
                     </span>
                   </div>
                   <Divider className="my-1" />

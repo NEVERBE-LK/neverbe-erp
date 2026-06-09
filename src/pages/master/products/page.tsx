@@ -229,7 +229,6 @@ const ProductPage = () => {
     const duplicated: Product = {
       ...product,
       productId: "",
-      itemId: null,
       name: `${product.name} (Copy)`,
       variants: [],
     };
