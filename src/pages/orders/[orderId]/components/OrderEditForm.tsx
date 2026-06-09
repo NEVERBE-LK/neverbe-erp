@@ -374,7 +374,10 @@ export const OrderEditForm: React.FC<OrderEditFormProps> = ({
     const itemsTotal = items.reduce((sum, item) => sum + (item.price - item.discount) * item.quantity, 0);
     const shippingFee = form.getFieldValue("shippingFee") || 0;
     const orderDiscount = form.getFieldValue("discount") || 0;
-    const expectedTotal = itemsTotal + Number(shippingFee) - Number(orderDiscount);
+    const payMethodVal = form.getFieldValue("paymentMethod");
+    const selectedMethodObjForFee = paymentMethods.find((m) => m.name.toUpperCase() === payMethodVal?.toUpperCase());
+    const fee = selectedMethodObjForFee ? (selectedMethodObjForFee.customerFee || 0) : (order?.fee || 0);
+    const expectedTotal = itemsTotal + Number(shippingFee) + Number(fee) - Number(orderDiscount);
     const totalPaid = newPayments.reduce((sum, p) => sum + p.amount, 0);
 
     if (totalPaid < expectedTotal || totalPaid === 0) {
