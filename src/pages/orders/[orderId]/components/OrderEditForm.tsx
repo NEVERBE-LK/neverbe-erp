@@ -70,7 +70,7 @@ export const OrderEditForm: React.FC<OrderEditFormProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Master Dropdown Data
-  const [paymentMethods, setPaymentMethods] = useState<{ paymentId: string; name: string }[]>([]);
+  const [paymentMethods, setPaymentMethods] = useState<{ paymentId: string; name: string; customerFee?: number }[]>([]);
   const [products, setProducts] = useState<ProductOption[]>([]);
   const [productsMap, setProductsMap] = useState<Record<string, ProductOption>>({});
   const [availableVariants, setAvailableVariants] = useState<VariantOption[]>([]);
@@ -347,7 +347,10 @@ export const OrderEditForm: React.FC<OrderEditFormProps> = ({
     const itemsTotal = items.reduce((sum, item) => sum + (item.price - item.discount) * item.quantity, 0);
     const shippingFee = form.getFieldValue("shippingFee") || 0;
     const orderDiscount = form.getFieldValue("discount") || 0;
-    const expectedTotal = itemsTotal + Number(shippingFee) - Number(orderDiscount);
+    const payMethodVal = form.getFieldValue("paymentMethod");
+    const selectedMethodObjForFee = paymentMethods.find((m) => m.name.toUpperCase() === payMethodVal?.toUpperCase());
+    const fee = selectedMethodObjForFee ? (selectedMethodObjForFee.customerFee || 0) : (order?.fee || 0);
+    const expectedTotal = itemsTotal + Number(shippingFee) + Number(fee) - Number(orderDiscount);
     const totalPaid = newPayments.reduce((sum, p) => sum + p.amount, 0);
     
     if (totalPaid >= expectedTotal) {
@@ -390,7 +393,9 @@ export const OrderEditForm: React.FC<OrderEditFormProps> = ({
       return;
     }
 
-    const calculatedTotal = itemsTotal + Number(values.shippingFee || 0) - Number(values.discount || 0);
+    const selectedMethodObjForFee = paymentMethods.find((m) => m.name.toUpperCase() === values.paymentMethod?.toUpperCase());
+    const fee = selectedMethodObjForFee ? (selectedMethodObjForFee.customerFee || 0) : (order?.fee || 0);
+    const calculatedTotal = itemsTotal + Number(values.shippingFee || 0) + Number(fee) - Number(values.discount || 0);
 
     showConfirmation({
       title: "UPDATE ORDER DETAILS",
@@ -404,6 +409,14 @@ export const OrderEditForm: React.FC<OrderEditFormProps> = ({
         try {
           setIsSubmitting(true);
           
+          const transactionFeeCharge = payments.reduce((acc, p) => {
+            const method = paymentMethods.find(
+              (m) => m.name.toUpperCase() === p.paymentMethod?.toUpperCase()
+            );
+            const feePercent = method?.fee || 0;
+            return acc + p.amount * (feePercent / 100);
+          }, 0);
+
           // Assemble complete edit payload
           const payload: Partial<Order> = {
             status: values.status,
@@ -417,6 +430,8 @@ export const OrderEditForm: React.FC<OrderEditFormProps> = ({
             total: calculatedTotal,
             shippingFee: Number(values.shippingFee || 0),
             discount: Number(values.discount || 0),
+            fee: Number(fee),
+            transactionFeeCharge: Math.round(transactionFeeCharge * 100) / 100,
           };
 
           if (values.status !== order.status) {
@@ -1128,6 +1143,21 @@ export const OrderEditForm: React.FC<OrderEditFormProps> = ({
                       </Form.Item>
                     </div>
 
+                    <Form.Item noStyle shouldUpdate>
+                      {() => {
+                        const payMethod = form.getFieldValue("paymentMethod");
+                        const selectedMethodObj = paymentMethods.find((m) => m.name.toUpperCase() === payMethod?.toUpperCase());
+                        const fee = selectedMethodObj ? (selectedMethodObj.customerFee || 0) : (order?.fee || 0);
+                        if (fee <= 0) return null;
+                        return (
+                          <div className="flex justify-between items-center">
+                            <span className="text-xs text-gray-500 font-semibold uppercase">Payment Fee</span>
+                            <span className="text-xs font-mono font-bold text-gray-800">Rs {fee.toLocaleString()}</span>
+                          </div>
+                        );
+                      }}
+                    </Form.Item>
+
                     <Divider className="my-1" />
 
                     <div className="flex justify-between items-center py-1 bg-emerald-50/50 px-2 rounded-xl border border-emerald-100/50">
@@ -1137,7 +1167,10 @@ export const OrderEditForm: React.FC<OrderEditFormProps> = ({
                           {() => {
                             const shipping = form.getFieldValue("shippingFee") || 0;
                             const discount = form.getFieldValue("discount") || 0;
-                            const totalVal = itemsTotal + Number(shipping) - Number(discount);
+                            const payMethod = form.getFieldValue("paymentMethod");
+                            const selectedMethodObj = paymentMethods.find((m) => m.name.toUpperCase() === payMethod?.toUpperCase());
+                            const fee = selectedMethodObj ? (selectedMethodObj.customerFee || 0) : (order?.fee || 0);
+                            const totalVal = itemsTotal + Number(shipping) + Number(fee) - Number(discount);
                             return (
                               <span className="font-mono font-black text-sm text-emerald-700">
                                 Rs {totalVal.toLocaleString()}
@@ -1161,7 +1194,10 @@ export const OrderEditForm: React.FC<OrderEditFormProps> = ({
                         {() => {
                           const shipping = form.getFieldValue("shippingFee") || 0;
                           const discount = form.getFieldValue("discount") || 0;
-                          const totalVal = itemsTotal + Number(shipping) - Number(discount);
+                          const payMethod = form.getFieldValue("paymentMethod");
+                          const selectedMethodObj = paymentMethods.find((m) => m.name.toUpperCase() === payMethod?.toUpperCase());
+                          const fee = selectedMethodObj ? (selectedMethodObj.customerFee || 0) : (order?.fee || 0);
+                          const totalVal = itemsTotal + Number(shipping) + Number(fee) - Number(discount);
                           const due = totalVal - totalPaidAmount;
                           return (
                             <span className={`text-xs font-mono font-black ${due <= 0 ? 'text-green-600' : 'text-rose-600'}`}>
@@ -1191,27 +1227,17 @@ export const OrderEditForm: React.FC<OrderEditFormProps> = ({
                 </div>
 
                 <div className="space-y-3">
-                  <Popconfirm
-                    title="Update Order Details"
-                    description="Are you sure you want to save modifications to this order?"
-                    onConfirm={() => form.submit()}
-                    okText="Yes, Update"
-                    cancelText="Cancel"
-                    okButtonProps={{
-                      className: "bg-green-600 hover:bg-green-700 border-none font-bold",
-                    }}
+                  <Button
+                    type="primary"
+                    htmlType="submit"
+                    block
+                    size="large"
+                    loading={isSubmitting}
+                    icon={<IconDeviceFloppy size={18} />}
+                    className="h-12 rounded-xl font-bold text-sm bg-green-600 hover:bg-green-700 border-none shadow-none"
                   >
-                    <Button
-                      type="primary"
-                      block
-                      size="large"
-                      loading={isSubmitting}
-                      icon={<IconDeviceFloppy size={18} />}
-                      className="h-12 rounded-xl font-bold text-sm bg-green-600 hover:bg-green-700 border-none shadow-none"
-                    >
-                      Save Changes
-                    </Button>
-                  </Popconfirm>
+                    Save Changes
+                  </Button>
                   <Button
                     block
                     size="large"
