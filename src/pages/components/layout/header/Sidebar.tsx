@@ -172,12 +172,20 @@ const Sidebar = ({
         {!collapsed && (
           <div className="p-4 mx-4 mt-6 mb-2 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-between flex-shrink-0">
             <div className="flex items-center gap-3 overflow-hidden">
-              <div className="w-10 h-10 rounded-full bg-green-100 text-green-700 flex items-center justify-center flex-shrink-0 font-bold">
-                {currentUser?.email?.charAt(0).toUpperCase() || "U"}
+              <div className="w-10 h-10 rounded-full bg-green-100 text-green-700 flex items-center justify-center flex-shrink-0 font-bold overflow-hidden">
+                {currentUser?.photoURL ? (
+                  <img
+                    src={currentUser.photoURL}
+                    alt="Profile"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  (currentUser?.username?.charAt(0) || currentUser?.email?.charAt(0) || "U").toUpperCase()
+                )}
               </div>
               <div className="flex flex-col min-w-0">
-                <p className="text-sm font-bold text-gray-800 m-0 truncate w-24">
-                  {currentUser?.email?.split("@")[0] || "User"}
+                <p className="text-sm font-bold text-gray-800 m-0 truncate w-32" title={currentUser?.username || currentUser?.email}>
+                  {currentUser?.username || currentUser?.email?.split("@")[0] || "User"}
                 </p>
                 <p className="text-[10px] font-black uppercase tracking-wider text-green-600 m-0 truncate">
                   {currentUser?.role || "USER"}
