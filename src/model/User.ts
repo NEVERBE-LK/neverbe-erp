@@ -14,4 +14,5 @@ export interface User {
   updatedAt: Timestamp | string;
   photoURL?: string;
   permissions?: string[];
+  phoneNumber?: string;
 }

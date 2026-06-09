@@ -2,39 +2,110 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import {
   IconMail,
+  IconPhone,
+  IconLock,
+  IconKey,
   IconArrowLeft,
   IconRobot,
   IconCheck,
+  IconDeviceMobile,
 } from "@tabler/icons-react";
 import toast from "react-hot-toast";
-import { sendPasswordResetLinkAction } from "@/actions/authActions";
-import { Card, Form, Input, Button, Typography } from "antd";
+import api from "@/lib/api";
+import { Card, Form, Input, Button, Typography, Steps } from "antd";
 
 const { Title, Text } = Typography;
 
 const ResetPassword = () => {
+  const [step, setStep] = useState<"request" | "verify_email" | "verify_phone" | "success">("request");
   const [isLoading, setIsLoading] = useState(false);
-  const [emailSent, setEmailSent] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
+  const [email, setEmail] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  
   const [form] = Form.useForm();
 
-  const onFinish = async (values: any) => {
+  const handleRequestOTP = async (values: any) => {
     if (!isVerified) {
-      toast("Please complete human verification.");
+      toast.error("Please complete human verification.");
       return;
     }
-
     setIsLoading(true);
     try {
-      await sendPasswordResetLinkAction(values.email);
-      setEmailSent(true);
-      toast.success("RESET LINK DISPATCHED");
+      const res = await api.post("/api/v1/erp/auth/reset-password/request", {
+        email: values.email,
+        phoneNumber: values.phoneNumber,
+      });
+      if (res.data.success) {
+        setEmail(values.email);
+        setPhoneNumber(values.phoneNumber);
+        toast.success("Verification code sent to your email!");
+        setStep("verify_email");
+      } else {
+        toast.error(res.data.message || "Failed to send code.");
+      }
     } catch (e: any) {
-      console.log(e);
-      toast.error(e.message);
+      console.error(e);
+      toast.error(e.response?.data?.message || e.message || "An error occurred.");
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleVerifyEmail = async (values: any) => {
+    setIsLoading(true);
+    try {
+      const res = await api.post("/api/v1/erp/auth/reset-password/verify-email", {
+        email,
+        otp: values.emailOtp,
+      });
+      if (res.data.success) {
+        toast.success("Email code verified! SMS code sent to your phone.");
+        setStep("verify_phone");
+      } else {
+        toast.error(res.data.message || "Invalid email verification code.");
+      }
+    } catch (e: any) {
+      console.error(e);
+      toast.error(e.response?.data?.message || e.message || "An error occurred.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleResetPassword = async (values: any) => {
+    if (values.password !== values.confirmPassword) {
+      toast.error("Passwords do not match!");
+      return;
+    }
+    setIsLoading(true);
+    try {
+      const res = await api.post("/api/v1/erp/auth/reset-password/reset", {
+        email,
+        phoneNumber,
+        phoneOtp: values.phoneOtp,
+        password: values.password,
+        confirmPassword: values.confirmPassword,
+      });
+      if (res.data.success) {
+        toast.success("Password reset completed successfully!");
+        setStep("success");
+      } else {
+        toast.error(res.data.message || "Reset failed.");
+      }
+    } catch (e: any) {
+      console.error(e);
+      toast.error(e.response?.data?.message || e.message || "An error occurred.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const currentStepIndex = () => {
+    if (step === "request") return 0;
+    if (step === "verify_email") return 1;
+    if (step === "verify_phone") return 2;
+    return 3;
   };
 
   return (
@@ -48,21 +119,33 @@ const ResetPassword = () => {
             Reset Access
           </h2>
           <p className="mt-2 text-center text-sm font-semibold text-gray-500 uppercase tracking-widest">
-            Enter email to receive recovery link
+            Two-Step Identity Verification
           </p>
         </div>
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <Card
-          className="bg-white py-16 px-4 shadow-xl shadow-green-900/5 sm:rounded-3xl border border-gray-100"
+          className="bg-white py-10 px-4 shadow-xl shadow-green-900/5 sm:rounded-3xl border border-gray-100"
           style={{ borderRadius: "1rem" }}
         >
-          {!emailSent ? (
+          <div className="mb-8">
+            <Steps
+              current={currentStepIndex()}
+              size="small"
+              items={[
+                { title: "Identify" },
+                { title: "Email OTP" },
+                { title: "SMS OTP" },
+              ]}
+              className="px-2"
+            />
+          </div>
+
+          {step === "request" && (
             <Form
-              form={form}
               layout="vertical"
-              onFinish={onFinish}
+              onFinish={handleRequestOTP}
               size="large"
               requiredMark={false}
               className="space-y-6"
@@ -75,15 +158,33 @@ const ResetPassword = () => {
                 }
                 name="email"
                 rules={[
-                  { required: true, message: "Please input your email!" },
+                  { required: true, message: "Please enter your email!" },
                   { type: "email", message: "Please enter a valid email!" },
                 ]}
-                className="mb-0!"
               >
                 <Input
                   prefix={<IconMail size={20} className="text-gray-400 mr-2" />}
                   className="h-14 rounded-xl border-gray-200 bg-gray-50 focus:bg-white text-base font-medium"
                   placeholder="admin@neverbe.com"
+                />
+              </Form.Item>
+
+              <Form.Item
+                label={
+                  <span className="block text-sm font-bold text-gray-700 uppercase tracking-wide">
+                    Registered Phone Number
+                  </span>
+                }
+                name="phoneNumber"
+                rules={[
+                  { required: true, message: "Please enter your phone number!" },
+                  { pattern: /^\+?[0-9]{10,15}$/, message: "Please enter a valid phone number (e.g. +94771234567)" }
+                ]}
+              >
+                <Input
+                  prefix={<IconPhone size={20} className="text-gray-400 mr-2" />}
+                  className="h-14 rounded-xl border-gray-200 bg-gray-50 focus:bg-white text-base font-medium"
+                  placeholder="+94771234567"
                 />
               </Form.Item>
 
@@ -116,7 +217,7 @@ const ResetPassword = () => {
                 />
               </div>
 
-              <Form.Item className="mb-0! mt-8!">
+              <div className="pt-4">
                 <Button
                   type="primary"
                   htmlType="submit"
@@ -125,32 +226,156 @@ const ResetPassword = () => {
                   disabled={!isVerified}
                   className="btn-fluid-primary"
                 >
-                  Send Reset Link
+                  Send Verification Code
                 </Button>
-              </Form.Item>
-
-              <div className="text-center mt-4">
-                <Link to="/login">
-                  <Text
-                    type="success"
-                    className="flex items-center justify-center gap-2 cursor-pointer hover:underline text-green-600 font-semibold"
-                  >
-                    <IconArrowLeft size={16} /> Back to Login
-                  </Text>
-                </Link>
               </div>
             </Form>
-          ) : (
-            <div className="text-center space-y-6">
+          )}
+
+          {step === "verify_email" && (
+            <Form
+              layout="vertical"
+              onFinish={handleVerifyEmail}
+              size="large"
+              requiredMark={false}
+              className="space-y-6"
+            >
+              <div className="text-center mb-4">
+                <Text type="secondary" className="text-sm">
+                  We've sent a 6-digit confirmation code to <strong className="text-gray-900">{email}</strong>. Please enter it below.
+                </Text>
+              </div>
+
+              <Form.Item
+                label={
+                  <span className="block text-sm font-bold text-gray-700 uppercase tracking-wide">
+                    Email Verification Code
+                  </span>
+                }
+                name="emailOtp"
+                rules={[
+                  { required: true, message: "Please enter the 6-digit OTP!" },
+                  { len: 6, message: "Verification code must be 6 digits!" }
+                ]}
+              >
+                <Input
+                  prefix={<IconKey size={20} className="text-gray-400 mr-2" />}
+                  className="h-14 rounded-xl border-gray-200 bg-gray-50 focus:bg-white text-center text-lg font-bold"
+                  placeholder="000000"
+                  maxLength={6}
+                />
+              </Form.Item>
+
+              <div className="pt-4">
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  block
+                  loading={isLoading}
+                  className="btn-fluid-primary"
+                >
+                  Verify Email Code
+                </Button>
+              </div>
+            </Form>
+          )}
+
+          {step === "verify_phone" && (
+            <Form
+              layout="vertical"
+              onFinish={handleResetPassword}
+              size="large"
+              requiredMark={false}
+              className="space-y-5"
+            >
+              <div className="text-center mb-4">
+                <Text type="secondary" className="text-sm">
+                  SMS code sent to <strong className="text-gray-900">{phoneNumber.slice(0, -4) + "****"}</strong>. Enter the SMS code and choose your new password.
+                </Text>
+              </div>
+
+              <Form.Item
+                label={
+                  <span className="block text-sm font-bold text-gray-700 uppercase tracking-wide">
+                    SMS Verification Code
+                  </span>
+                }
+                name="phoneOtp"
+                rules={[
+                  { required: true, message: "Please enter the SMS code!" },
+                  { len: 6, message: "SMS code must be 6 digits!" }
+                ]}
+              >
+                <Input
+                  prefix={<IconDeviceMobile size={20} className="text-gray-400 mr-2" />}
+                  className="h-14 rounded-xl border-gray-200 bg-gray-50 focus:bg-white text-center text-lg font-bold"
+                  placeholder="000000"
+                  maxLength={6}
+                />
+              </Form.Item>
+
+              <Form.Item
+                label={
+                  <span className="block text-sm font-bold text-gray-700 uppercase tracking-wide">
+                    New Password
+                  </span>
+                }
+                name="password"
+                rules={[
+                  { required: true, message: "Please enter your new password!" },
+                  { min: 6, message: "Password must be at least 6 characters!" }
+                ]}
+              >
+                <Input.Password
+                  prefix={<IconLock size={20} className="text-gray-400 mr-2" />}
+                  className="h-14 rounded-xl border-gray-200 bg-gray-50 focus:bg-white text-base font-medium"
+                  placeholder="New Password"
+                />
+              </Form.Item>
+
+              <Form.Item
+                label={
+                  <span className="block text-sm font-bold text-gray-700 uppercase tracking-wide">
+                    Confirm New Password
+                  </span>
+                }
+                name="confirmPassword"
+                rules={[
+                  { required: true, message: "Please confirm your new password!" }
+                ]}
+              >
+                <Input.Password
+                  prefix={<IconLock size={20} className="text-gray-400 mr-2" />}
+                  className="h-14 rounded-xl border-gray-200 bg-gray-50 focus:bg-white text-base font-medium"
+                  placeholder="Confirm Password"
+                />
+              </Form.Item>
+
+              <div className="pt-4">
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  block
+                  loading={isLoading}
+                  className="btn-fluid-primary"
+                >
+                  Reset Password & Activate
+                </Button>
+              </div>
+            </Form>
+          )}
+
+          {step === "success" && (
+            <div className="text-center space-y-6 py-4">
               <div className="w-20 h-20 bg-green-50 text-green-600 rounded-full flex items-center justify-center mx-auto shadow-inner">
-                <IconMail size={40} />
+                <IconCheck size={40} stroke={3} />
               </div>
               <div className="space-y-2">
                 <Title level={3} className="mb-0!">
-                  Check Your Email
+                  Password Updated
                 </Title>
                 <Text type="secondary" className="block text-sm">
-                  We have sent password recovery instructions to your inbox.
+                  Your new credentials are now active. You can log in with your new password.
                 </Text>
               </div>
               <div className="pt-4">
@@ -160,6 +385,18 @@ const ResetPassword = () => {
                   </Button>
                 </Link>
               </div>
+            </div>
+          )}
+
+          {step !== "success" && (
+            <div className="text-center mt-6">
+              <Link to="/login">
+                <Text
+                  className="flex items-center justify-center gap-2 cursor-pointer hover:underline text-green-600 hover:text-green-700 font-semibold"
+                >
+                  <IconArrowLeft size={16} /> Back to Login
+                </Text>
+              </Link>
             </div>
           )}
         </Card>

@@ -78,6 +78,7 @@ const UserForm = ({
           userId: user.userId,
           username: user.username,
           email: user.email,
+          phoneNumber: user.phoneNumber,
           status: user.status ? "Active" : "Inactive",
           role: user.role,
         });
@@ -107,23 +108,17 @@ const UserForm = ({
       setIsLoading(true);
 
       const usr: User = {
-        userId: values.userId === "Auto Generated" ? "" : values.userId, // Logic handles empty ID for new user usually, but existing code used values.userId
+        userId: values.userId === "Auto Generated" ? "" : values.userId,
         username: values.username,
         email: values.email,
+        phoneNumber: values.phoneNumber,
         status: values.status === "Active",
         role: values.role,
         createdAt: user?.createdAt || dayjs().toISOString(),
         updatedAt: dayjs().toISOString(),
       };
 
-      // If it was "Auto Generated" in the form, ensuring backend handles it or we pass what existing action expects.
-      // Existing code: if (userId === "Auto Generated") addNewUserAction(usr);
-      // We'll mimic this logic.
-
       if (values.userId === "Auto Generated") {
-        // remove dummy ID if needed or action handles it.
-        // The action likely ignores userId for creation if it generates it, or we pass it as is?
-        // Checking previous code: userId was passed.
         await addNewUserAction({ ...usr, userId: values.userId });
         toast.success("USER CREATED");
       } else {
@@ -168,6 +163,16 @@ const UserForm = ({
           ]}
         >
           <Input placeholder="Enter Email..." disabled={!!user} />
+        </Form.Item>
+        <Form.Item
+          label="Phone Number"
+          name="phoneNumber"
+          rules={[
+            { required: true, message: "Please enter phone number" },
+            { pattern: /^\+?[0-9]{10,15}$/, message: "Please enter a valid phone number (e.g. +94771234567)" }
+          ]}
+        >
+          <Input placeholder="Enter Phone Number..." />
         </Form.Item>
         <Row gutter={16}>
           <Col span={12}>
@@ -414,6 +419,11 @@ const UsersPage = () => {
           <Typography.Text type="secondary" className="text-xs">
             {record.email}
           </Typography.Text>
+          {record.phoneNumber && (
+            <Typography.Text type="secondary" className="text-xs">
+              {record.phoneNumber}
+            </Typography.Text>
+          )}
           <Typography.Text type="secondary" className="text-[10px]">
             ID: {record.userId.slice(0, 8)}...
           </Typography.Text>
