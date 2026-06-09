@@ -5,8 +5,9 @@ import { ProductVariant } from "@/model/ProductVariant";
 import VariantList from "./VariantList";
 import VariantFormModal from "./VariantFormModal";
 import MarkdownDescriptionEditor from "@/components/MarkdownDescriptionEditor";
+import { suggestProductAttributes } from "@/actions/aiActions";
 import toast from "react-hot-toast";
-import { IconUpload, IconPackage } from "@tabler/icons-react";
+import { IconUpload, IconPackage, IconSparkles } from "@tabler/icons-react";
 import {
   Modal,
   Form,
@@ -21,6 +22,7 @@ import {
   Divider,
   Tabs,
   Tag,
+  Spin,
 } from "antd";
 
 const { Option } = Select;
@@ -96,6 +98,44 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
   const watchedCategory = Form.useWatch("category", form) || "";
   const watchedBrand = Form.useWatch("brand", form) || "";
   const watchedGender = Form.useWatch("gender", form) || [];
+  const [suggesting, setSuggesting] = useState(false);
+
+  const handleSuggestAttributes = async () => {
+    const name = form.getFieldValue("name");
+    if (!name) {
+      toast.error("Please fill in the product name first");
+      return;
+    }
+    setSuggesting(true);
+    try {
+      const category = form.getFieldValue("category");
+      const brand = form.getFieldValue("brand");
+      const description = form.getFieldValue("description");
+
+      const suggestions = await suggestProductAttributes({
+        name,
+        category,
+        brand,
+        description,
+      });
+
+      form.setFieldsValue({
+        gender: suggestions.gender || [],
+        occasion: suggestions.occasion || [],
+        style: suggestions.style || [],
+        season: suggestions.season || [],
+        fit: suggestions.fit || undefined,
+        material: suggestions.material || undefined,
+      });
+
+      toast.success("AI suggested attributes applied!");
+    } catch (e: unknown) {
+      const err = e as { message?: string };
+      toast.error(err.message ?? "Failed to auto-select attributes");
+    } finally {
+      setSuggesting(false);
+    }
+  };
 
   const isEditing = !!product;
 
@@ -344,8 +384,19 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
                               <Select placeholder="Select Material">
                                 <Option value="cotton">Cotton</Option>
                                 <Option value="polyester">Polyester</Option>
-                                <Option value="leather">Leather</Option>
-                                <Option value="denim">Denim</Option>
+                                <Option value="linen">Linen</Option>
+                                <Option value="nylon">Nylon</Option>
+                                <Option value="spandex">Spandex / Lycra</Option>
+                                <Option value="viscose">Viscose</Option>
+                                <Option value="rayon">Rayon</Option>
+                                <Option value="satin">Satin</Option>
+                                <Option value="velvet">Velvet</Option>
+                                <Option value="fleece">Fleece</Option>
+                                <Option value="knitwear">Knitwear / Acrylic</Option>
+                                <Option value="leather">Leather / Faux Leather</Option>
+                                <Option value="suede">Suede</Option>
+                                <Option value="canvas">Canvas</Option>
+                                <Option value="chiffon">Chiffon</Option>
                                 <Option value="silk">Silk</Option>
                                 <Option value="wool">Wool</Option>
                               </Select>
@@ -466,6 +517,21 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
                 label: "Categorization Details",
                 children: (
                   <div className="bg-blue-50/30 p-6 rounded-xl border border-blue-100/50 my-2">
+                    <div className="flex justify-between items-center mb-6">
+                      <span className="text-sm font-semibold text-gray-800 uppercase tracking-wider">
+                        Target Attributes & Demographics
+                      </span>
+                      <Button
+                        type="primary"
+                        size="small"
+                        icon={suggesting ? <Spin size="small" /> : <IconSparkles size={13} />}
+                        onClick={handleSuggestAttributes}
+                        loading={suggesting}
+                        className="flex items-center gap-1 text-xs font-black uppercase tracking-widest bg-emerald-600 hover:bg-emerald-700 border-none shadow-lg shadow-emerald-100 h-8 px-4 rounded-xl transition-all hover:scale-[1.02]"
+                      >
+                        {suggesting ? "ANALYZING..." : "AI Auto Select"}
+                      </Button>
+                    </div>
                     <Row gutter={[24, 16]}>
                       <Col xs={24} md={8}>
                         <Form.Item
@@ -490,10 +556,14 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
                           <Select mode="multiple" placeholder="Select Occasions" size="large">
                             <Option value="casual">Casual</Option>
                             <Option value="formal">Formal</Option>
-                            <Option value="sport">Sport</Option>
-                            <Option value="party">Party</Option>
-                            <Option value="office">Office</Option>
-                            <Option value="beach">Beach</Option>
+                            <Option value="business-casual">Business Casual</Option>
+                            <Option value="sport">Sport / Activewear</Option>
+                            <Option value="party">Party / Evening</Option>
+                            <Option value="office">Office / Workwear</Option>
+                            <Option value="beach">Beachwear</Option>
+                            <Option value="lounge">Lounge / Home</Option>
+                            <Option value="travel">Travel / Outdoor</Option>
+                            <Option value="gym">Gym / Workout</Option>
                           </Select>
                         </Form.Item>
                       </Col>
@@ -509,6 +579,12 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
                             <Option value="streetwear">Streetwear</Option>
                             <Option value="minimalist">Minimalist</Option>
                             <Option value="boho">Boho</Option>
+                            <Option value="athleisure">Athleisure</Option>
+                            <Option value="classic">Classic / Preppy</Option>
+                            <Option value="grunge">Grunge</Option>
+                            <Option value="chic">Chic</Option>
+                            <Option value="casual">Casual / Smart Casual</Option>
+                            <Option value="high-fashion">High Fashion</Option>
                           </Select>
                         </Form.Item>
                       </Col>
@@ -523,6 +599,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
                             <Option value="winter">Winter</Option>
                             <Option value="spring">Spring</Option>
                             <Option value="autumn">Autumn</Option>
+                            <Option value="monsoon">Monsoon / Rainy</Option>
                             <Option value="all-season">All Season</Option>
                           </Select>
                         </Form.Item>
@@ -538,6 +615,11 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
                             <Option value="slim">Slim Fit</Option>
                             <Option value="oversized">Oversized</Option>
                             <Option value="loose">Loose Fit</Option>
+                            <Option value="skinny">Skinny Fit</Option>
+                            <Option value="relaxed">Relaxed Fit</Option>
+                            <Option value="athletic">Athletic Fit</Option>
+                            <Option value="tailored">Tailored Fit</Option>
+                            <Option value="boxy">Boxy Fit</Option>
                           </Select>
                         </Form.Item>
                       </Col>
