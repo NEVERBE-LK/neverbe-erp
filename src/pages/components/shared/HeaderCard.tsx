@@ -1,5 +1,5 @@
 import React from "react";
-import { Card, Statistic, Skeleton } from "antd";
+import { Card, Statistic, Spin } from "antd";
 
 const HeaderCard = ({
   title,
@@ -30,11 +30,9 @@ const HeaderCard = ({
 
         <div className="mt-1">
           {isLoading ? (
-            <Skeleton.Button
-              active
-              size="small"
-              style={{ width: 120, height: 32 }}
-            />
+            <div className="h-8 flex items-center">
+              <Spin size="small" />
+            </div>
           ) : (
             <span className="text-2xl font-bold text-gray-900">
               LKR{" "}

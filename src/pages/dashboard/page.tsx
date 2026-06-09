@@ -10,13 +10,17 @@ import OrderStatusPanel from "../components/dashboard/OrderStatusPanel";
 import ProfitMargins from "../components/dashboard/ProfitMargins";
 import RevenueByCategory from "../components/dashboard/RevenueByCategory";
 
-import { Tabs, Skeleton } from "antd";
+import { Tabs, Spin } from "antd";
 import { Suspense } from "react";
 
 const Dashboard = () => {
   return (
     <PageContainer title="Dashboard" description="Overview of your business performance">
-      <Suspense fallback={<Skeleton active className="p-6" />}>
+      <Suspense fallback={
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <Spin size="large" />
+        </div>
+      }>
         <div className="flex flex-col gap-6">
           {/* Row 1: High Level Performance (Hero Section) */}
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 items-stretch">

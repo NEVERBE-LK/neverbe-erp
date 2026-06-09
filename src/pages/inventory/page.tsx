@@ -28,10 +28,11 @@ import {
   Card,
   Typography,
   Tag,
+  Image,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
 
-interface StockLocationOption extends DropdownOption {}
+interface StockLocationOption extends DropdownOption { }
 
 const { Option } = Select;
 
@@ -203,29 +204,47 @@ const InventoryPage = () => {
     {
       title: "Product",
       key: "product",
-      render: (_, record) => (
-        <Space>
-          {(record as any).thumbnail ? (
-            <img
-              src={(record as any).thumbnail}
-              alt="thumbnail"
-              className="w-10 h-10 object-cover rounded-xl border border-gray-100 shadow-sm"
-            />
-          ) : (
-            <div className="w-10 h-10 bg-gray-50 flex items-center justify-center rounded-xl border border-gray-100">
-              <IconStack2 size={16} className="text-gray-400" />
+      render: (_, record) => {
+        const imageUrl = (record as any).thumbnail;
+        const productName = (record as any).productName;
+        const variantName = (record as any).variantName || "";
+        const formattedVariant = variantName.replace(/\b\w/g, (char: string) => char.toUpperCase());
+
+        return (
+          <Space size="middle">
+            {imageUrl ? (
+              <div className="w-12 h-12 rounded-lg overflow-hidden border border-gray-100 shadow-sm flex-shrink-0 flex items-center justify-center bg-gray-50 cursor-pointer">
+                <Image
+                  src={imageUrl}
+                  alt={productName}
+                  width={48}
+                  height={48}
+                  className="object-cover rounded-lg"
+                  preview={{
+                    mask: <span className="text-[9px] font-bold">Preview</span>
+                  }}
+                />
+              </div>
+            ) : (
+              <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400 flex-shrink-0 border border-gray-100">
+                <IconStack2 size={20} className="text-gray-400" />
+              </div>
+            )}
+            <div>
+              <Typography.Text strong className="block text-gray-800 text-sm">
+                {productName}
+              </Typography.Text>
+              {formattedVariant ? (
+                <Typography.Text type="secondary" className="text-xs">
+                  {formattedVariant}
+                </Typography.Text>
+              ) : (
+                <span className="text-gray-400 font-semibold text-xs">-</span>
+              )}
             </div>
-          )}
-          <div>
-            <Typography.Text strong className="block text-gray-800 text-sm">
-              {(record as any).productName}
-            </Typography.Text>
-            <Typography.Text type="secondary" className="text-xs">
-              {(record as any).variantName}
-            </Typography.Text>
-          </div>
-        </Space>
-      ),
+          </Space>
+        );
+      },
     },
     {
       title: "Size",
