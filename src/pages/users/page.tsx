@@ -22,6 +22,7 @@ import {
 } from "@/actions/usersActions";
 import toast from "react-hot-toast";
 import { useConfirmationDialog } from "@/contexts/ConfirmationDialogContext";
+import ERPCredentialVerifyAndRequestAuthorizeForm from "@/components/ERPCredentialVerifyAndRequestAuthorizeForm";
 import * as XLSX from "xlsx";
 import { usePermission } from "@/hooks/usePermission";
 import { auth } from "@/firebase/firebaseClient";
@@ -227,11 +228,22 @@ const UsersPage = () => {
 
   const [showUserForm, setShowUserForm] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [authFormOpen, setAuthFormOpen] = useState(false);
+  const [authSuccessCallback, setAuthSuccessCallback] = useState<(() => void) | null>(null);
 
   const { currentUser } = useAppSelector((state) => state.authSlice);
   const canManageUsers = usePermission("manage_users");
   const { showConfirmation } = useConfirmationDialog();
   const [form] = Form.useForm();
+
+  const executeWithPermission = (callback: () => void) => {
+    if (canManageUsers) {
+      callback();
+    } else {
+      setAuthSuccessCallback(() => callback);
+      setAuthFormOpen(true);
+    }
+  };
 
   // Fetch users
   const fetchUsers = useCallback(
@@ -347,7 +359,6 @@ const UsersPage = () => {
   };
 
   const handleDelete = async (userId: string) => {
-    if (!canManageUsers) return;
     showConfirmation({
       title: "DELETE USER?",
       message: "This action cannot be undone.",
@@ -462,25 +473,21 @@ const UsersPage = () => {
       align: "right",
       render: (_, record) => (
         <Space>
-          {canManageUsers && (
-            <>
-              <Tooltip title="Edit">
-                <Button
-                  size="small"
-                  icon={<IconEdit size={16} />}
-                  onClick={() => handleEdit(record)}
-                />
-              </Tooltip>
-              <Tooltip title="Delete">
-                <Button
-                  size="small"
-                  danger
-                  icon={<IconTrash size={16} />}
-                  onClick={() => handleDelete(record.userId)}
-                />
-              </Tooltip>
-            </>
-          )}
+          <Tooltip title="Edit">
+            <Button
+              size="small"
+              icon={<IconEdit size={16} />}
+              onClick={() => executeWithPermission(() => handleEdit(record))}
+            />
+          </Tooltip>
+          <Tooltip title="Delete">
+            <Button
+              size="small"
+              danger
+              icon={<IconTrash size={16} />}
+              onClick={() => executeWithPermission(() => handleDelete(record.userId))}
+            />
+          </Tooltip>
           <Tooltip title="Export">
             <Button
               size="small"
@@ -522,20 +529,20 @@ const UsersPage = () => {
             >
               Export
             </Button>
-            {canManageUsers && (
-              <Button
-                type="primary"
-                size="large"
-                icon={<IconPlus size={18} />}
-                onClick={() => {
+            <Button
+              type="primary"
+              size="large"
+              icon={<IconPlus size={18} />}
+              onClick={() => {
+                executeWithPermission(() => {
                   setSelectedUser(null);
                   setShowUserForm(true);
-                }}
-                className="bg-black hover:bg-gray-800 border-none h-12 px-6 rounded-lg text-sm font-bold shadow-lg shadow-black/10 flex items-center gap-2"
-              >
-                New User
-              </Button>
-            )}
+                });
+              }}
+              className="bg-black hover:bg-gray-800 border-none h-12 px-6 rounded-lg text-sm font-bold shadow-lg shadow-black/10 flex items-center gap-2"
+            >
+              New User
+            </Button>
           </div>
         </div>
 
@@ -621,6 +628,22 @@ const UsersPage = () => {
         }}
         user={selectedUser}
         onSuccess={() => fetchUsers()}
+      />
+
+      <ERPCredentialVerifyAndRequestAuthorizeForm
+        open={authFormOpen}
+        requiredPermission="manage_users"
+        onCancel={() => {
+          setAuthFormOpen(false);
+          setAuthSuccessCallback(null);
+        }}
+        onSuccess={() => {
+          setAuthFormOpen(false);
+          if (authSuccessCallback) {
+            authSuccessCallback();
+            setAuthSuccessCallback(null);
+          }
+        }}
       />
     </PageContainer>
   );
