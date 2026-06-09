@@ -5,11 +5,11 @@ import {
   Button,
   Card,
   Typography,
-  Checkbox,
   Row,
   Col,
   Tag,
-  Divider,
+  Tabs,
+  Badge,
 } from "antd";
 import api from "@/lib/api";
 import React, { useEffect, useState } from "react";
@@ -22,13 +22,12 @@ import {
   IconSearch,
   IconShield,
   IconCheck,
-  IconX,
   IconArrowLeft,
   IconListCheck,
 } from "@tabler/icons-react";
 import PageContainer from "../../components/container/PageContainer";
 
-const { Text, Title } = Typography;
+const { Text } = Typography;
 
 const EditRolePage = () => {
   const { id } = useParams<{ id: string }>();
@@ -38,6 +37,7 @@ const EditRolePage = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [activeTab, setActiveTab] = useState<string>("");
   const [form] = Form.useForm();
   
   // Track selected permissions in a local state for real-time reactivity in summary panels
@@ -54,9 +54,18 @@ const EditRolePage = () => {
           api.get(`/api/v1/erp/users/roles/${id}`),
         ]);
 
-        setPermissionsList(permRes.data.permissions || []);
-        const roleData = roleRes.data as Role;
+        const perms = permRes.data.permissions || [];
+        setPermissionsList(perms);
+        
+        // Set first group as active tab
+        if (perms.length > 0) {
+          const uniqueGroups = Array.from(new Set(perms.map((p: Permission) => p.group)));
+          if (uniqueGroups.length > 0) {
+            setActiveTab(uniqueGroups[0] as string);
+          }
+        }
 
+        const roleData = roleRes.data as Role;
         const initialPerms = roleData.permissions || [];
         form.setFieldsValue({
           name: roleData.name,
@@ -142,15 +151,7 @@ const EditRolePage = () => {
     {} as Record<string, Permission[]>,
   );
 
-  // Group raw permissions list (unfiltered) for the sidebar count
-  const allGroupedPermissions = permissionsList.reduce(
-    (acc, perm) => {
-      if (!acc[perm.group]) acc[perm.group] = [];
-      acc[perm.group].push(perm);
-      return acc;
-    },
-    {} as Record<string, Permission[]>,
-  );
+  const uniqueGroups = Array.from(new Set(permissionsList.map((p) => p.group)));
 
   if (loading) {
     return (
@@ -167,18 +168,9 @@ const EditRolePage = () => {
 
   return (
     <PageContainer title="Edit Role" description={`Editing role: ${roleId}`}>
-      <div className="w-full max-w-7xl mx-auto py-2 space-y-6">
-        {/* PREMIUM BACK HEADER */}
-        <div>
-          <Button
-            type="link"
-            onClick={() => navigate("/roles")}
-            icon={<IconArrowLeft size={16} />}
-            className="px-0 text-emerald-600 hover:text-emerald-700 mb-2 font-bold flex items-center gap-1.5"
-          >
-            Back to Roles
-          </Button>
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+      <div className="w-full mx-auto py-2 space-y-6">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+          <div>
             <div className="flex items-center gap-3">
               <div className="w-1.5 h-10 bg-emerald-600 rounded-full" />
               <div className="flex flex-col">
@@ -190,6 +182,13 @@ const EditRolePage = () => {
                 </h2>
               </div>
             </div>
+          </div>
+
+          <div className="flex items-center gap-3 bg-emerald-50/50 px-4 py-2.5 rounded-xl border border-emerald-100/50">
+            <IconListCheck size={18} className="text-emerald-600" />
+            <span className="text-xs font-bold text-emerald-950 uppercase tracking-wider">
+              {selectedPermissions.length} / {permissionsList.length} Permissions Selected
+            </span>
           </div>
         </div>
 
@@ -204,141 +203,24 @@ const EditRolePage = () => {
             <input type="hidden" />
           </Form.Item>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-            {/* LEFT COLUMN: Permission Matrix & Search */}
-            <div className="lg:col-span-2 space-y-6">
-              {/* SEARCH BAR */}
-              <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-3">
-                <IconSearch size={20} className="text-gray-400" />
-                <Input
-                  placeholder="Search permissions by name, group, or keyword..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  variant="borderless"
-                  className="w-full font-medium text-base placeholder-gray-400"
-                  allowClear
-                />
-              </div>
-
-              {/* PERMISSION GROUPS */}
-              {Object.keys(groupedPermissions).length === 0 ? (
-                <div className="text-center py-16 bg-white border border-gray-100 rounded-3xl shadow-sm space-y-3">
-                  <IconShield size={40} className="text-gray-300 mx-auto" />
-                  <p className="text-gray-500 font-bold uppercase tracking-wider text-xs">
-                    No matching permissions found
-                  </p>
-                </div>
-              ) : (
-                Object.entries(groupedPermissions).map(([group, perms]) => {
-                  const groupKeys = perms.map((p) => p.key);
-                  const selectedGroupKeys = groupKeys.filter((k) =>
-                    selectedPermissions.includes(k)
-                  );
-                  const isAllSelected = selectedGroupKeys.length === groupKeys.length;
-                  const isSomeSelected = selectedGroupKeys.length > 0 && !isAllSelected;
-
-                  return (
-                    <Card
-                      key={group}
-                      bordered={false}
-                      className="border border-gray-100 shadow-sm rounded-2xl overflow-hidden [&_.ant-card-head]:border-b [&_.ant-card-head]:border-gray-50 [&_.ant-card-head]:bg-gray-50/50"
-                      title={
-                        <div className="flex items-center justify-between w-full py-2">
-                          <div className="flex items-center gap-2">
-                            <div className="w-1.5 h-4 bg-emerald-600 rounded-full" />
-                            <span className="text-sm font-extrabold uppercase tracking-wider text-gray-800">
-                              {group.replace(/_/g, " ")}
-                            </span>
-                            <Tag color="emerald" className="font-bold text-[10px] ml-2">
-                              {selectedGroupKeys.length} / {groupKeys.length} SELECTED
-                            </Tag>
-                          </div>
-                          <Button
-                            type="dashed"
-                            size="small"
-                            onClick={() => handleToggleGroup(group, perms)}
-                            className={`rounded-lg text-xs font-bold ${
-                              isAllSelected
-                                ? "border-amber-200 text-amber-600 hover:text-amber-700 hover:border-amber-300"
-                                : "border-emerald-200 text-emerald-600 hover:text-emerald-700 hover:border-emerald-300"
-                            }`}
-                          >
-                            {isAllSelected ? "Deselect All" : "Select All Group"}
-                          </Button>
-                        </div>
-                      }
-                    >
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {perms.map((perm) => {
-                          const isChecked = selectedPermissions.includes(perm.key);
-                          return (
-                            <div
-                              key={perm.key}
-                              onClick={() => handleTogglePermission(perm.key)}
-                              className={`p-4 border rounded-xl cursor-pointer transition-all duration-200 flex items-center justify-between gap-3 select-none ${
-                                isChecked
-                                  ? "border-emerald-500 bg-emerald-50/30 hover:bg-emerald-50/50"
-                                  : "border-gray-100 bg-white hover:border-gray-200 hover:bg-gray-50/20"
-                              }`}
-                            >
-                              <div className="space-y-0.5 flex-1">
-                                <div className="flex items-center gap-2">
-                                  <span
-                                    className={`text-sm font-bold ${
-                                      isChecked ? "text-emerald-950" : "text-gray-800"
-                                    }`}
-                                  >
-                                    {perm.label}
-                                  </span>
-                                </div>
-                                <span className="text-[10px] text-gray-400 font-mono block uppercase tracking-wider">
-                                  {perm.key}
-                                </span>
-                              </div>
-                              <div
-                                className={`w-5 h-5 rounded-md border flex items-center justify-center transition-all ${
-                                  isChecked
-                                    ? "bg-emerald-600 border-emerald-600 text-white"
-                                    : "border-gray-200 bg-white"
-                                }`}
-                              >
-                                {isChecked && <IconCheck size={14} stroke={3.5} />}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </Card>
-                  );
-                })
-              )}
-            </div>
-
-            {/* RIGHT COLUMN: Sticky Control & Stats Panel */}
-            <div className="lg:col-span-1 lg:sticky lg:top-6 space-y-6">
-              {/* ROLE SETTINGS */}
-              <Card
-                bordered={false}
-                className="border border-gray-100 shadow-sm rounded-2xl"
-                title={
-                  <div className="flex items-center gap-2">
-                    <IconShield size={18} className="text-gray-400" />
-                    <span className="text-xs font-bold uppercase tracking-wider text-gray-400">
-                      Role Metadata
-                    </span>
-                  </div>
-                }
-              >
-                <div className="space-y-4">
+          <div className="space-y-6">
+            {/* ROLE SETTINGS */}
+            <Card
+              bordered={false}
+              className="border border-gray-100 shadow-sm rounded-2xl"
+            >
+              <Row gutter={24}>
+                <Col xs={24} md={8}>
                   <div>
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 block mb-1">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 block mb-1.5">
                       Role ID (Constant)
                     </span>
-                    <span className="text-xs font-mono font-black uppercase tracking-widest bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100 text-gray-500 inline-block">
+                    <span className="text-xs font-mono font-black uppercase tracking-widest bg-gray-50 px-3 py-2.5 rounded-xl border border-gray-100 text-gray-500 inline-block w-full">
                       {roleId}
                     </span>
                   </div>
-
+                </Col>
+                <Col xs={24} md={16}>
                   <Form.Item
                     label={
                       <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
@@ -352,82 +234,164 @@ const EditRolePage = () => {
                     <Input
                       placeholder="e.g. Supervisor"
                       size="large"
-                      className="rounded-xl border-gray-200 font-bold"
+                      className="rounded-xl border-gray-200 font-bold h-10"
                     />
                   </Form.Item>
+                </Col>
+              </Row>
+            </Card>
+
+            {/* SEARCH BAR */}
+            <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-3">
+              <IconSearch size={20} className="text-gray-400" />
+              <Input
+                placeholder="Search permissions by name, group, or keyword..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                variant="borderless"
+                className="w-full font-medium text-base placeholder-gray-400"
+                allowClear
+              />
+            </div>
+
+            {/* FULL WIDTH TAB ASSIGNMENT MATRIX */}
+            <Card
+              bordered={false}
+              className="border border-gray-100 shadow-sm rounded-2xl overflow-hidden [&_.ant-card-body]:p-6"
+            >
+              {uniqueGroups.length === 0 ? (
+                <div className="text-center py-16 space-y-3">
+                  <IconShield size={40} className="text-gray-300 mx-auto" />
+                  <p className="text-gray-500 font-bold uppercase tracking-wider text-xs">
+                    No permissions found
+                  </p>
                 </div>
-              </Card>
+              ) : (
+                <Tabs
+                  activeKey={activeTab}
+                  onChange={(key) => setActiveTab(key)}
+                  className="[&_.ant-tabs-nav]:!mb-6 [&_.ant-tabs-tab]:!pb-3 [&_.ant-tabs-tab-btn]:!font-black [&_.ant-tabs-tab-btn]:!text-xs [&_.ant-tabs-tab-btn]:!uppercase [&_.ant-tabs-tab-btn]:!tracking-wider"
+                  items={uniqueGroups.map((group) => {
+                    const perms = permissionsList.filter((p) => p.group === group);
+                    const filteredPerms = groupedPermissions[group] || [];
+                    
+                    const groupKeys = perms.map((p) => p.key);
+                    const selectedGroupKeys = groupKeys.filter((k) =>
+                      selectedPermissions.includes(k)
+                    );
+                    const isAllSelected = selectedGroupKeys.length === groupKeys.length;
 
-              {/* LIVE COUNTER STATS */}
-              <Card
-                bordered={false}
-                className="border border-gray-100 shadow-sm rounded-2xl"
-                title={
-                  <div className="flex items-center gap-2">
-                    <IconListCheck size={18} className="text-gray-400" />
-                    <span className="text-xs font-bold uppercase tracking-wider text-gray-400">
-                      Selection Summary
-                    </span>
-                  </div>
-                }
-              >
-                <div className="space-y-4">
-                  <div className="text-center py-4 bg-emerald-50/30 border border-emerald-100/50 rounded-xl">
-                    <span className="text-3xl font-black text-emerald-950 leading-none">
-                      {selectedPermissions.length}
-                    </span>
-                    <span className="text-xs font-bold text-emerald-600 block mt-1 uppercase tracking-wider">
-                      Selected / {permissionsList.length} Total
-                    </span>
-                  </div>
-
-                  <div className="space-y-2 max-h-[200px] overflow-y-auto pr-1">
-                    {Object.entries(allGroupedPermissions).map(([group, perms]) => {
-                      const groupKeys = perms.map((p) => p.key);
-                      const selectedCount = groupKeys.filter((k) =>
-                        selectedPermissions.includes(k)
-                      ).length;
-
-                      return (
-                        <div
-                          key={group}
-                          className="flex justify-between items-center text-xs font-medium py-1"
-                        >
-                          <span className="text-gray-500 uppercase tracking-wide text-[10px] font-bold">
-                            {group.replace(/_/g, " ")}
-                          </span>
-                          <span className="text-gray-800 font-mono font-bold">
-                            {selectedCount} / {groupKeys.length}
-                          </span>
+                    return {
+                      key: group,
+                      label: (
+                        <div className="flex items-center gap-2">
+                          <span>{group.replace(/_/g, " ")}</span>
+                          <Badge
+                            count={selectedGroupKeys.length}
+                            showZero
+                            className="[&_.ant-badge-count]:bg-emerald-600 [&_.ant-badge-count]:text-[10px] [&_.ant-badge-count]:font-bold"
+                          />
                         </div>
-                      );
-                    })}
-                  </div>
+                      ),
+                      children: (
+                        <div className="space-y-6">
+                          <div className="flex justify-between items-center bg-gray-50/50 p-4 rounded-xl border border-gray-100">
+                            <div>
+                              <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                                Group Actions
+                              </span>
+                              <p className="text-[10px] text-gray-400 font-semibold uppercase mt-0.5">
+                                Toggle all permissions under {group.replace(/_/g, " ")}
+                              </p>
+                            </div>
+                            <Button
+                              type="dashed"
+                              size="middle"
+                              onClick={() => handleToggleGroup(group, perms)}
+                              className={`rounded-xl px-5 font-bold ${
+                                isAllSelected
+                                  ? "border-amber-200 text-amber-600 hover:text-amber-700 hover:border-amber-300 bg-amber-50/20"
+                                  : "border-emerald-200 text-emerald-600 hover:text-emerald-700 hover:border-emerald-300 bg-emerald-50/20"
+                              }`}
+                            >
+                              {isAllSelected ? "Deselect All Group" : "Select All Group"}
+                            </Button>
+                          </div>
 
-                  <Divider className="my-2 border-gray-100" />
+                          {filteredPerms.length === 0 ? (
+                            <div className="text-center py-10">
+                              <p className="text-gray-400 font-bold uppercase tracking-wider text-xs">
+                                No permissions matching "{searchTerm}" in this group
+                              </p>
+                            </div>
+                          ) : (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                              {filteredPerms.map((perm) => {
+                                const isChecked = selectedPermissions.includes(perm.key);
+                                return (
+                                  <div
+                                    key={perm.key}
+                                    onClick={() => handleTogglePermission(perm.key)}
+                                    className={`p-4 border rounded-2xl cursor-pointer transition-all duration-200 flex items-center justify-between gap-3 select-none ${
+                                      isChecked
+                                        ? "border-emerald-500 bg-emerald-50/30 hover:bg-emerald-50/50"
+                                        : "border-gray-100 bg-white hover:border-gray-200 hover:bg-gray-50/20"
+                                    }`}
+                                  >
+                                    <div className="space-y-0.5 flex-1">
+                                      <span
+                                        className={`text-sm font-bold block ${
+                                          isChecked ? "text-emerald-950" : "text-gray-800"
+                                        }`}
+                                      >
+                                        {perm.label}
+                                      </span>
+                                      <span className="text-[10px] text-gray-400 font-mono block uppercase tracking-wider">
+                                        {perm.key}
+                                      </span>
+                                    </div>
+                                    <div
+                                      className={`w-5 h-5 rounded-lg border flex items-center justify-center transition-all ${
+                                        isChecked
+                                          ? "bg-emerald-600 border-emerald-600 text-white"
+                                          : "border-gray-200 bg-white"
+                                      }`}
+                                    >
+                                      {isChecked && <IconCheck size={14} stroke={3.5} />}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      ),
+                    };
+                  })}
+                />
+              )}
+            </Card>
 
-                  <div className="flex flex-col gap-2 pt-2">
-                    <Button
-                      type="primary"
-                      size="large"
-                      htmlType="submit"
-                      loading={saving}
-                      icon={<IconDeviceFloppy size={18} />}
-                      className="h-12 rounded-xl font-bold bg-emerald-600 hover:bg-emerald-500 border-none shadow-md shadow-emerald-500/20"
-                    >
-                      Save Role Settings
-                    </Button>
-                    <Button
-                      size="large"
-                      onClick={() => navigate("/roles")}
-                      disabled={saving}
-                      className="h-12 rounded-xl font-semibold border-gray-200"
-                    >
-                      Cancel
-                    </Button>
-                  </div>
-                </div>
-              </Card>
+            {/* ACTION FOOTER */}
+            <div className="flex justify-end gap-3 bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
+              <Button
+                size="large"
+                onClick={() => navigate("/roles")}
+                disabled={saving}
+                className="h-12 px-6 rounded-xl font-semibold border-gray-200"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="primary"
+                size="large"
+                htmlType="submit"
+                loading={saving}
+                icon={<IconDeviceFloppy size={18} />}
+                className="h-12 px-8 rounded-xl font-bold bg-emerald-600 hover:bg-emerald-500 border-none shadow-md shadow-emerald-500/20"
+              >
+                Save Role
+              </Button>
             </div>
           </div>
         </Form>
