@@ -480,6 +480,7 @@ const PaymentMethodsPage = () => {
                 <Form.Item
                   name="customerFee"
                   label={<span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Customer Fee (Rs)</span>}
+                  rules={[{ required: true, message: "Customer fee is required" }]}
                   tooltip="Flat fee added to the customer's total when they select this payment method"
                 >
                   <InputNumber
