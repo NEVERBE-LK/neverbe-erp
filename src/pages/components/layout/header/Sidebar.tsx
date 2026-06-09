@@ -170,8 +170,8 @@ const Sidebar = ({
 
         {/* User Profile Block */}
         {!collapsed && (
-          <div className="p-4 mx-4 mt-6 mb-2 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-between flex-shrink-0">
-            <div className="flex items-center gap-3 overflow-hidden">
+          <div className="p-4 mx-4 mt-6 mb-2 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-between gap-2 flex-shrink-0">
+            <div className="flex items-center gap-3 min-w-0 flex-1">
               <div className="w-10 h-10 rounded-full bg-green-100 text-green-700 flex items-center justify-center flex-shrink-0 font-bold overflow-hidden">
                 {currentUser?.photoURL ? (
                   <img
@@ -183,8 +183,8 @@ const Sidebar = ({
                   (currentUser?.username?.charAt(0) || currentUser?.email?.charAt(0) || "U").toUpperCase()
                 )}
               </div>
-              <div className="flex flex-col min-w-0">
-                <p className="text-sm font-bold text-gray-800 m-0 truncate w-32" title={currentUser?.username || currentUser?.email}>
+              <div className="flex flex-col min-w-0 flex-1">
+                <p className="text-sm font-bold text-gray-800 m-0 truncate w-full" title={currentUser?.username || currentUser?.email}>
                   {currentUser?.username || currentUser?.email?.split("@")[0] || "User"}
                 </p>
                 <p className="text-[10px] font-black uppercase tracking-wider text-green-600 m-0 truncate">
