@@ -179,7 +179,7 @@ const DailyEarnings = () => {
                 <div className="flex items-center gap-2 mb-1">
                   <IconCurrencyDollar size={18} className="text-green-100" />
                   <span className="text-xs font-bold text-green-100 uppercase tracking-widest">
-                    Net Profit (Real Cash)
+                    Profit
                   </span>
                 </div>
               }

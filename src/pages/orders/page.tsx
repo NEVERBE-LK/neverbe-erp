@@ -10,10 +10,19 @@ import {
   IconSearch,
   IconFilter,
   IconX,
-  IconBellRinging,
   IconCreditCard,
   IconPackageExport,
   IconDeviceFloppy,
+  IconCoin,
+  IconHourglassHigh,
+  IconTruckDelivery,
+  IconShoppingCart,
+  IconCalendar,
+  IconBuildingStore,
+  IconWorld,
+  IconUser,
+  IconShield,
+  IconCamera,
 } from "@tabler/icons-react";
 import PageContainer from "../components/container/PageContainer";
 import toast from "react-hot-toast";
@@ -32,10 +41,12 @@ import {
   Card,
   Typography,
   Divider,
+  Modal,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
 import { formatSLDateTime } from "@/utils/dateUtils";
+import { Html5Qrcode } from "html5-qrcode";
 
 const { Option } = Select;
 const { RangePicker } = DatePicker;
@@ -73,6 +84,84 @@ const OrdersPage = () => {
   // --- Inline Edit State ---
   const [trackingEdits, setTrackingEdits] = useState<Record<string, string>>({});
   const [courierEdits, setCourierEdits] = useState<Record<string, string>>({});
+
+  // --- Barcode Camera Scanner State ---
+  const [scannerActive, setScannerActive] = useState(false);
+  const [scanningOrderId, setScanningOrderId] = useState<string | null>(null);
+  const scannerRef = React.useRef<any>(null);
+  const isStoppingRef = React.useRef(false);
+
+  const startScanner = (orderId: string) => {
+    setScanningOrderId(orderId);
+    setScannerActive(true);
+  };
+
+  const safeStopScanner = async () => {
+    if (isStoppingRef.current) return; // Already stopping — skip
+    isStoppingRef.current = true;
+    try {
+      const instance = scannerRef.current;
+      if (instance) {
+        const state = instance.getState?.();
+        // Only call stop if actually scanning (state 2 = SCANNING)
+        if (state === 2 || state === undefined) {
+          await instance.stop().catch(() => {});
+        }
+        scannerRef.current = null;
+      }
+    } catch (err) {
+      console.warn("Scanner stop error (safe):", err);
+      scannerRef.current = null;
+    } finally {
+      isStoppingRef.current = false;
+      setScannerActive(false);
+      setScanningOrderId(null);
+    }
+  };
+
+  useEffect(() => {
+    if (!scannerActive || !scanningOrderId) return;
+
+    let cancelled = false;
+
+    const timer = setTimeout(async () => {
+      if (cancelled) return;
+      try {
+        const html5Qrcode = new Html5Qrcode("scanner-container");
+        scannerRef.current = html5Qrcode;
+
+        await html5Qrcode.start(
+          { facingMode: "environment" },
+          { fps: 10, qrbox: { width: 300, height: 120 } },
+          (decodedText) => {
+            const cleanText = decodedText.trim().replace(/\s+/g, "");
+            toast.success(`Scanned: ${cleanText}`);
+            setTrackingEdits(prev => ({ ...prev, [scanningOrderId!]: cleanText }));
+            safeStopScanner();
+          },
+          () => {} // Silence per-frame scan misses
+        );
+      } catch (err) {
+        if (!cancelled) {
+          console.error("Camera scan failed to start", err);
+          toast.error("Unable to access camera. Please check media permissions.");
+          setScannerActive(false);
+          setScanningOrderId(null);
+        }
+      }
+    }, 400);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+      // Cleanup: stop if still running (e.g. effect re-fires)
+      const instance = scannerRef.current;
+      if (instance) {
+        instance.stop().catch(() => {});
+        scannerRef.current = null;
+      }
+    };
+  }, [scannerActive, scanningOrderId]);
 
   // --- Fetch dropdown data ---
   const fetchDropdownData = async () => {
@@ -294,48 +383,82 @@ const OrdersPage = () => {
     return dateValue || "-";
   };
 
-  const getStatusTagColor = (status: string | undefined, type: "payment" | "order") => {
-    if (!status) return "default";
-    const s = status.toLowerCase();
-    if (type === "payment") {
-      if (s === "paid") return "success";
-      if (s === "pending") return "default";
-      if (s === "failed") return "error";
-      if (s === "refunded") return "warning";
-    } else {
-      if (s === "completed") return "success";
-      if (s === "processing") return "processing";
+  // Dynamic Metrics Calculation for current view
+  const metrics = useMemo(() => {
+    let totalRevenue = 0;
+    let pendingPaymentsCount = 0;
+    let activeFulfillmentsCount = 0;
+
+    orders.forEach((o) => {
+      totalRevenue += o.total || 0;
+      if (o.paymentStatus?.toLowerCase() === "pending") {
+        pendingPaymentsCount++;
+      }
+      if (o.status?.toLowerCase() === "processing" || o.status?.toLowerCase() === "pending") {
+        activeFulfillmentsCount++;
+      }
+    });
+
+    return {
+      totalRevenue,
+      pendingPaymentsCount,
+      activeFulfillmentsCount,
+    };
+  }, [orders]);
+
+  const getSourceBadge = (source: string | undefined) => {
+    if (!source) return null;
+    const src = source.toLowerCase();
+    if (src === "website") {
+      return (
+        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-blue-600 bg-blue-50 border border-blue-100 rounded-full px-2 py-0.5 uppercase">
+          <IconWorld size={10} /> Website
+        </span>
+      );
     }
-    return "default";
+    if (src === "store") {
+      return (
+        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-purple-600 bg-purple-50 border border-purple-100 rounded-full px-2 py-0.5 uppercase">
+          <IconBuildingStore size={10} /> Store
+        </span>
+      );
+    }
+    return (
+      <span className="inline-flex items-center gap-1 text-[10px] font-bold text-gray-600 bg-gray-50 border border-gray-100 rounded-full px-2 py-0.5 uppercase">
+        <IconUser size={10} /> Admin
+      </span>
+    );
   };
 
   const columns: ColumnsType<Order> = [
     {
       title: "Actions",
       key: "actions",
-      width: 120,
+      width: 140,
       render: (_, order) => (
-        <Space>
-          <Tooltip title="Invoice">
+        <Space size="small">
+          <Tooltip title="View Invoice">
             <Button
               type="text"
-              icon={<IconFileInvoice size={18} />}
+              icon={<IconFileInvoice size={18} className="text-gray-500 hover:text-black" />}
               onClick={() => navigate(`/orders/${order.orderId}/invoice`)}
+              className="hover:bg-gray-100 rounded-lg"
             />
           </Tooltip>
-          <Tooltip title="View">
+          <Tooltip title="View Summary">
             <Button
               type="text"
-              icon={<IconEye size={18} />}
+              icon={<IconEye size={18} className="text-gray-500 hover:text-black" />}
               onClick={() => navigate(`/orders/${order.orderId}/view`)}
+              className="hover:bg-gray-100 rounded-lg"
             />
           </Tooltip>
-          <Tooltip title="Edit">
+          <Tooltip title="Configure/Edit">
             <Button
-              type="primary"
-              icon={<IconEdit size={16} />}
-              size="small"
+              type="text"
+              icon={<IconEdit size={18} className="text-green-600 hover:text-green-700" />}
               onClick={() => navigate(`/orders/${order.orderId}`)}
+              className="hover:bg-green-50 rounded-lg"
             />
           </Tooltip>
         </Space>
@@ -345,12 +468,12 @@ const OrdersPage = () => {
     ...(isProcessingView ? [{
       title: "Delivery Info",
       key: "delivery",
-      width: 250,
+      width: 350,
       render: (_: any, order: Order) => (
         <Space.Compact className="w-full">
           <Select 
             defaultValue={order.courier || "Domex"} 
-            className="w-24 rounded-l-xl"
+            style={{ width: 110, height: 38 }}
             onChange={(val) => setCourierEdits(prev => ({ ...prev, [order.orderId]: val }))}
           >
             <Option value="Domex">Domex</Option>
@@ -360,15 +483,25 @@ const OrdersPage = () => {
           </Select>
           <Input 
             placeholder="Tracking #" 
-            defaultValue={order.trackingNumber}
+            value={trackingEdits[order.orderId] !== undefined ? trackingEdits[order.orderId] : (order.trackingNumber || "")}
+            style={{ height: 38 }}
             className="flex-1"
             onChange={(e) => setTrackingEdits(prev => ({ ...prev, [order.orderId]: e.target.value }))}
           />
+          <Tooltip title="Scan Code via Camera">
+            <Button 
+              icon={<IconCamera size={16} />} 
+              style={{ height: 38, width: 42 }}
+              className="bg-gray-50 border-gray-200 hover:bg-gray-100 text-gray-600 flex items-center justify-center md:!hidden"
+              onClick={() => startScanner(order.orderId)}
+            />
+          </Tooltip>
           <Tooltip title="Update to Completed">
             <Button 
               icon={<IconDeviceFloppy size={16} />} 
               type="primary"
-              className="bg-emerald-600 border-none"
+              style={{ height: 38, width: 42 }}
+              className="bg-emerald-600 border-none flex items-center justify-center"
               onClick={() => handleSingleRowUpdate(order.orderId)}
             />
           </Tooltip>
@@ -379,10 +512,12 @@ const OrdersPage = () => {
       title: "Order Details",
       key: "details",
       render: (_, order) => (
-        <div className="flex flex-col">
-          <Typography.Text strong>#{order.orderId}</Typography.Text>
-          <Typography.Text type="secondary" className="text-xs">{formatDate(order.createdAt)}</Typography.Text>
-          <Typography.Text type="secondary" className="text-[10px] uppercase font-bold text-gray-400">via {order.from}</Typography.Text>
+        <div className="flex flex-col gap-1 py-1">
+          <span className="font-mono font-bold text-gray-900 text-xs">#{order.orderId}</span>
+          <span className="text-[10px] text-gray-400 font-bold flex items-center gap-1">
+            <IconCalendar size={12} /> {formatDate(order.createdAt)}
+          </span>
+          <div>{getSourceBadge(order.from)}</div>
         </div>
       ),
     },
@@ -390,9 +525,11 @@ const OrdersPage = () => {
       title: "Customer",
       key: "customer",
       render: (_, order) => (
-        <div className="flex flex-col">
-          <Typography.Text strong>{order.customer?.name || "N/A"}</Typography.Text>
-          <Typography.Text type="secondary" className="text-xs">{order.items?.length || 0} Items</Typography.Text>
+        <div className="flex flex-col py-1">
+          <span className="font-bold text-xs text-gray-800">{order.customer?.name || "N/A"}</span>
+          <span className="text-[10px] text-gray-400 font-bold">
+            {order.items?.length || 0} items ordered
+          </span>
         </div>
       ),
     },
@@ -400,36 +537,95 @@ const OrdersPage = () => {
       title: "Payment",
       key: "payment",
       align: "center" as const,
-      render: (_: any, order: Order) => (
-        <div className="flex flex-col items-center">
-          <Tag color={getStatusTagColor(order.paymentStatus, "payment")} className="rounded-full text-[10px] font-black uppercase text-center min-w-[80px]">
-            {order.paymentStatus || "N/A"}
-          </Tag>
-          <span className="text-[10px] text-gray-400 mt-1 uppercase font-bold">{order.paymentMethod || "—"}</span>
-        </div>
-      ),
+      render: (_: any, order: Order) => {
+        const status = (order.paymentStatus || "Pending").toLowerCase();
+        let color = "bg-gray-100 text-gray-700 border-gray-200";
+        let dotColor = "bg-gray-400";
+        if (status === "paid") {
+          color = "bg-emerald-50 text-emerald-700 border-emerald-200";
+          dotColor = "bg-emerald-500";
+        } else if (status === "pending") {
+          color = "bg-blue-50 text-blue-700 border-blue-200";
+          dotColor = "bg-blue-500";
+        } else if (status === "failed") {
+          color = "bg-rose-50 text-rose-700 border-rose-200";
+          dotColor = "bg-rose-500";
+        } else if (status === "refunded") {
+          color = "bg-amber-50 text-amber-700 border-amber-200";
+          dotColor = "bg-amber-500";
+        }
+
+        return (
+          <div className="flex flex-col items-center gap-1.5 py-1">
+            <span className={`inline-flex items-center gap-1 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full border ${color}`}>
+              <span className={`w-1.5 h-1.5 rounded-full ${dotColor}`} />
+              {order.paymentStatus || "PENDING"}
+            </span>
+            <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">
+              {order.paymentMethod || "—"}
+            </span>
+          </div>
+        );
+      },
     },
     {
-      title: "Total",
+      title: "Order Total",
       key: "total",
       align: "right" as const,
-      render: (_: any, order: Order) => <Typography.Text strong className="text-emerald-700">LKR {order.total?.toLocaleString()}</Typography.Text>,
-    },
-    {
-      title: "Status",
-      key: "status",
-      align: "center" as const,
       render: (_: any, order: Order) => (
-        <Tag color={getStatusTagColor(order.status, "order")} className="rounded-full text-[10px] font-black uppercase text-center min-w-[100px]">
-          {order.status}
-        </Tag>
+        <span className="font-black text-xs text-emerald-700 font-mono">
+          Rs {(order.total || 0).toLocaleString()}
+        </span>
       ),
     },
     {
-      title: "Check",
+      title: "Fullfilment Status",
+      key: "status",
+      align: "center" as const,
+      render: (_: any, order: Order) => {
+        const state = (order.status || "Pending").toLowerCase();
+        let color = "bg-gray-50 text-gray-700 border-gray-200";
+        let dotColor = "bg-gray-400";
+        if (state === "completed") {
+          color = "bg-green-50 text-green-700 border-green-200";
+          dotColor = "bg-green-500";
+        } else if (state === "processing") {
+          color = "bg-amber-50 text-amber-700 border-amber-200";
+          dotColor = "bg-amber-500";
+        } else if (state === "pending") {
+          color = "bg-blue-50 text-blue-700 border-blue-200";
+          dotColor = "bg-blue-500";
+        } else if (state === "cancelled") {
+          color = "bg-red-50 text-red-700 border-red-200";
+          dotColor = "bg-red-500";
+        }
+
+        return (
+          <span className={`inline-flex items-center gap-1 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full border ${color}`}>
+            <span className={`w-1.5 h-1.5 rounded-full ${dotColor}`} />
+            {order.status}
+          </span>
+        );
+      },
+    },
+    {
+      title: "System Integrity",
       key: "check",
       align: "center" as const,
-      render: (_: any, order: Order) => order.integrity ? <IconCheck size={18} className="text-green-600 mx-auto" /> : <IconAlertCircle size={18} className="text-red-600 mx-auto" />,
+      render: (_: any, order: Order) =>
+        order.integrity ? (
+          <Tooltip title="Security Integrity Verified">
+            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-green-600 bg-green-50 border border-green-200 rounded-full px-2 py-0.5">
+              <IconCheck size={12} /> SECURE
+            </span>
+          </Tooltip>
+        ) : (
+          <Tooltip title="Integrity Check Failed! Check records immediately.">
+            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-rose-600 bg-rose-50 border border-rose-200 rounded-full px-2 py-0.5 animate-pulse">
+              <IconAlertCircle size={12} /> FLAGGED
+            </span>
+          </Tooltip>
+        ),
     },
   ];
 
@@ -439,7 +635,7 @@ const OrdersPage = () => {
     <PageContainer title={`${viewTitle} | NEVERBE ERP`} loading={isLoading} description={`Manage ${viewTitle}`}>
       <Space direction="vertical" size="large" className="w-full">
         {/* PREMIUM HEADER */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 gap-4">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-2 gap-4">
           <div className="flex items-center gap-4">
             <div className={`w-2 h-12 ${isProcessingView ? 'bg-orange-500' : isPaymentPendingView ? 'bg-blue-500' : 'bg-emerald-600'} rounded-full`} />
             <div className="flex flex-col">
@@ -449,21 +645,77 @@ const OrdersPage = () => {
           </div>
         </div>
 
+        {/* METRICS CARDS PANEL */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card size="small" className="rounded-2xl border-gray-100 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Total Count</div>
+                <div className="text-2xl font-black text-gray-900 mt-1">{pagination.total}</div>
+              </div>
+              <div className="p-2 bg-green-50 rounded-xl text-green-600">
+                <IconShoppingCart size={22} />
+              </div>
+            </div>
+          </Card>
+
+          <Card size="small" className="rounded-2xl border-gray-100 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Revenues (Page)</div>
+                <div className="text-2xl font-black text-emerald-700 mt-1">Rs {metrics.totalRevenue.toLocaleString()}</div>
+              </div>
+              <div className="p-2 bg-emerald-50 rounded-xl text-emerald-600">
+                <IconCoin size={22} />
+              </div>
+            </div>
+          </Card>
+
+          <Card size="small" className="rounded-2xl border-gray-100 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Unpaid (Page)</div>
+                <div className="text-2xl font-black text-blue-600 mt-1">{metrics.pendingPaymentsCount}</div>
+              </div>
+              <div className="p-2 bg-blue-50 rounded-xl text-blue-600">
+                <IconHourglassHigh size={22} />
+              </div>
+            </div>
+          </Card>
+
+          <Card size="small" className="rounded-2xl border-gray-100 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Active Fulfillments</div>
+                <div className="text-2xl font-black text-orange-600 mt-1">{metrics.activeFulfillmentsCount}</div>
+              </div>
+              <div className="p-2 bg-orange-50 rounded-xl text-orange-600">
+                <IconTruckDelivery size={22} />
+              </div>
+            </div>
+          </Card>
+        </div>
+
         {/* Filters */}
-        <Card size="small" className="rounded-2xl shadow-sm border-gray-100">
+        <Card size="small" className="rounded-2xl shadow-sm border-gray-100 bg-gray-50/50">
           <Form
             form={form}
             layout="inline"
             onFinish={handleFilterSubmit}
-            className="flex flex-wrap gap-2 w-full p-2"
+            className="flex flex-wrap gap-3 w-full p-2"
           >
-            <Form.Item name="search" className="!mb-0 flex-1 min-w-[200px]">
-              <Input prefix={<IconSearch size={15} className="text-gray-400" />} placeholder="Search order, customer, phone..." allowClear className="rounded-xl h-10" />
+            <Form.Item name="search" className="!mb-0 flex-grow min-w-[240px]">
+              <Input
+                prefix={<IconSearch size={15} className="text-gray-400" />}
+                placeholder="Search order number, customer name, email..."
+                allowClear
+                className="rounded-xl h-10 border-gray-200"
+              />
             </Form.Item>
             {!isPaymentPendingView && (
               <Form.Item name="payment" className="!mb-0 w-40">
-                <Select className="h-10 rounded-xl overflow-hidden">
-                  <Option value="all">All Payment</Option>
+                <Select className="h-10 rounded-xl overflow-hidden border-gray-200">
+                  <Option value="all">All Payments</Option>
                   <Option value="Paid">Paid</Option>
                   <Option value="Pending">Pending</Option>
                   <Option value="Failed">Failed</Option>
@@ -473,8 +725,8 @@ const OrdersPage = () => {
             )}
             {!isProcessingView && (
               <Form.Item name="status" className="!mb-0 w-36">
-                <Select className="h-10 rounded-xl overflow-hidden">
-                  <Option value="all">All Status</Option>
+                <Select className="h-10 rounded-xl overflow-hidden border-gray-200">
+                  <Option value="all">All Statuses</Option>
                   <Option value="Pending">Pending</Option>
                   <Option value="Processing">Processing</Option>
                   <Option value="Completed">Completed</Option>
@@ -483,67 +735,86 @@ const OrdersPage = () => {
               </Form.Item>
             )}
             <Form.Item name="from" className="!mb-0 w-32">
-              <Select className="h-10 rounded-xl overflow-hidden" placeholder="Source">
-                <Option value="all">Sources</Option>
+              <Select className="h-10 rounded-xl overflow-hidden border-gray-200" placeholder="Source">
+                <Option value="all">All Sources</Option>
                 <Option value="website">Website</Option>
                 <Option value="store">Store</Option>
                 <Option value="admin">Admin</Option>
               </Select>
             </Form.Item>
             <Form.Item name="dateRange" className="!mb-0 w-64">
-              <RangePicker className="w-full h-10 rounded-xl" />
+              <RangePicker className="w-full h-10 rounded-xl border-gray-200" />
             </Form.Item>
             <Form.Item className="!mb-0">
               <Space>
-                <Button type="primary" htmlType="submit" icon={<IconFilter size={15} />} className="h-10 px-6 rounded-xl font-bold bg-emerald-600 border-emerald-600">Filter</Button>
-                <Button icon={<IconX size={15} />} onClick={handleClearFilters} className="h-10 px-6 rounded-xl font-bold">Clear</Button>
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  icon={<IconFilter size={15} />}
+                  className="h-10 px-6 rounded-xl font-bold bg-black border-none hover:bg-gray-800 shadow-none"
+                >
+                  Filter
+                </Button>
+                <Button
+                  icon={<IconX size={15} />}
+                  onClick={handleClearFilters}
+                  className="h-10 px-6 rounded-xl font-bold border-gray-200"
+                >
+                  Clear
+                </Button>
               </Space>
             </Form.Item>
           </Form>
         </Card>
 
-        {/* Table + Bulk UI */}
-        <div className="relative">
-          {selectedRowKeys.length > 0 && (
-            <div className="absolute -top-16 left-0 right-0 z-10 animate-in slide-in-from-bottom-4 duration-300">
-              <Card size="small" className={`${isProcessingView ? 'bg-orange-600' : 'bg-blue-600'} border-none shadow-2xl rounded-2xl`}>
-                <div className="flex items-center justify-between px-6 py-2">
-                  <div className="flex items-center gap-6">
-                    <span className="text-white font-black text-xs uppercase tracking-widest">{selectedRowKeys.length} Selected</span>
-                    <Divider type="vertical" className="bg-white/20 h-6" />
-                    <Space size="middle">
-                      {isProcessingView && (
-                        <Button 
-                          type="primary" 
-                          size="middle" 
-                          icon={<IconPackageExport size={16} />}
-                          className="bg-white text-orange-600 hover:bg-orange-50 border-none font-bold rounded-xl h-10 px-6"
-                          onClick={() => handleBulkUpdate("STATUS", "Completed")}
-                          loading={isBulkLoading}
-                        >
-                          Mark as Completed & Notify
-                        </Button>
-                      )}
-                      {isPaymentPendingView && (
-                        <Button 
-                          type="primary" 
-                          size="middle" 
-                          icon={<IconCreditCard size={16} />}
-                          className="bg-white text-blue-600 hover:bg-blue-50 border-none font-bold rounded-xl h-10 px-6"
-                          onClick={() => handleBulkUpdate("PAYMENT", "Paid")}
-                          loading={isBulkLoading}
-                        >
-                          Mark as Paid
-                        </Button>
-                      )}
-                    </Space>
-                  </div>
-                  <Button type="text" icon={<IconX size={18} />} className="text-white/60 hover:text-white" onClick={() => setSelectedRowKeys([])} />
-                </div>
-              </Card>
+        {/* Bulk Action Alert Panel */}
+        {selectedRowKeys.length > 0 && (
+          <div className="animate-in slide-in-from-top-4 duration-300">
+            <div className={`bg-gradient-to-r ${isProcessingView ? 'from-orange-500 to-orange-600' : 'from-blue-500 to-blue-600'} text-white px-6 py-3 rounded-2xl shadow-md flex items-center justify-between border border-transparent`}>
+              <div className="flex items-center gap-6">
+                <span className="text-white font-black text-xs uppercase tracking-widest">
+                  {selectedRowKeys.length} Order{selectedRowKeys.length > 1 ? 's' : ''} Selected
+                </span>
+                <div className="bg-white/20 w-[1px] h-6" />
+                <Space size="middle">
+                  {isProcessingView && (
+                    <Button 
+                      type="primary" 
+                      size="middle" 
+                      icon={<IconPackageExport size={16} />}
+                      className="bg-white text-orange-600 hover:bg-orange-50 border-none font-bold rounded-xl h-9 flex items-center"
+                      onClick={() => handleBulkUpdate("STATUS", "Completed")}
+                      loading={isBulkLoading}
+                    >
+                      Mark as Completed & Notify
+                    </Button>
+                  )}
+                  {isPaymentPendingView && (
+                    <Button 
+                      type="primary" 
+                      size="middle" 
+                      icon={<IconCreditCard size={16} />}
+                      className="bg-white text-blue-600 hover:bg-blue-50 border-none font-bold rounded-xl h-9 flex items-center"
+                      onClick={() => handleBulkUpdate("PAYMENT", "Paid")}
+                      loading={isBulkLoading}
+                    >
+                      Mark as Paid
+                    </Button>
+                  )}
+                </Space>
+              </div>
+              <Button 
+                type="text" 
+                icon={<IconX size={18} />} 
+                className="text-white/80 hover:text-white" 
+                onClick={() => setSelectedRowKeys([])} 
+              />
             </div>
-          )}
-          <Table
+          </div>
+        )}
+
+        {/* Table UI */}
+        <Table
             rowSelection={ (isProcessingView || isPaymentPendingView) ? {
               selectedRowKeys,
               onChange: (keys) => setSelectedRowKeys(keys),
@@ -557,8 +828,54 @@ const OrdersPage = () => {
             scroll={{ x: 1200 }}
             className="custom-table border border-gray-100 rounded-2xl overflow-hidden shadow-sm"
           />
-        </div>
       </Space>
+
+      {/* Barcode Camera Scanner Modal */}
+      <Modal
+        title={
+          <div className="flex items-center gap-2">
+            <IconCamera className="text-emerald-600" size={20} />
+            <span className="font-black text-xs text-gray-800 uppercase tracking-wider">
+              Scan Tracking Barcode
+            </span>
+          </div>
+        }
+        open={scannerActive}
+        onCancel={() => safeStopScanner()}
+        footer={null}
+        width={450}
+        styles={{ body: { padding: "20px" } }}
+        className="rounded-2xl"
+        maskClosable={false}
+      >
+        <div className="flex flex-col gap-4 items-center">
+          <div className="text-xs text-gray-500 font-semibold text-center mb-1">
+            Position the shipping label barcode within the viewfinder below.
+          </div>
+          
+          <div className="relative w-full aspect-[4/3] bg-black rounded-xl overflow-hidden border border-gray-100 shadow-inner flex items-center justify-center">
+            <div id="scanner-container" className="w-full h-full object-cover" />
+            
+            {/* Red scanning laser simulation line */}
+            <div className="absolute inset-x-8 top-1/2 h-0.5 bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)] animate-pulse pointer-events-none" />
+            
+            {/* viewbox targeting overlay */}
+            <div className="absolute inset-x-12 inset-y-16 border-2 border-dashed border-emerald-500 rounded pointer-events-none" />
+          </div>
+          
+          <div className="text-[10px] font-bold text-gray-400 text-center uppercase tracking-wide">
+            Supports standard 1D Barcodes (Code 128, Code 39) & QR Codes.
+          </div>
+
+          <Button 
+            onClick={() => safeStopScanner()} 
+            block 
+            className="mt-2 h-10 font-bold rounded-xl"
+          >
+            Cancel Scan
+          </Button>
+        </div>
+      </Modal>
     </PageContainer>
   );
 };

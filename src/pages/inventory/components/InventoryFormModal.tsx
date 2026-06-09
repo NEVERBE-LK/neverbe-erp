@@ -2,9 +2,11 @@ import React, { useState, useEffect, useMemo } from "react";
 import { DropdownOption } from "@/pages/master/products/page";
 import api from "@/lib/api";
 import { InventoryItem } from "@/model/InventoryItem";
-import { Modal, Form, Select, InputNumber, Button, Spin, Row, Col } from "antd";
+import { Modal, Form, Select, InputNumber, Row, Col, Space, Typography, Spin } from "antd";
+import { IconBox, IconMapPin, IconScale, IconPackage } from "@tabler/icons-react";
 
 const { Option } = Select;
+const { Text } = Typography;
 
 interface StockLocationOption extends DropdownOption {}
 
@@ -202,18 +204,40 @@ const InventoryFormModal: React.FC<StockFormModalProps> = ({
   return (
     <Modal
       open={open}
-      title={isEditing ? "Edit Stock" : "Add Stock"}
+      title={
+        <div className="flex items-center gap-2 pb-2 border-b border-gray-100">
+          <IconBox size={22} className="text-green-600 animate-pulse" />
+          <div>
+            <div className="text-lg font-bold text-gray-900 leading-tight">
+              {isEditing ? "Edit Stock Document" : "New Stock Entry"}
+            </div>
+            <div className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider">
+              Inventory Control
+            </div>
+          </div>
+        </div>
+      }
       onCancel={onClose}
       onOk={() => form.submit()}
       confirmLoading={saving}
       okText="Save Stock"
+      okButtonProps={{ className: "bg-black hover:bg-gray-800 border-none h-10 px-5 rounded-lg text-sm font-bold shadow-none" }}
+      cancelButtonProps={{ className: "h-10 rounded-lg" }}
       maskClosable={false}
+      centered
+      styles={{ body: { padding: "16px 0 8px 0" } }}
     >
-      <Form form={form} layout="vertical" onFinish={onFinish} disabled={saving}>
+      <Form
+        form={form}
+        layout="vertical"
+        onFinish={onFinish}
+        disabled={saving}
+        className="px-1"
+      >
         <Form.Item
           name="productId"
-          label="Product"
-          rules={[{ required: true }]}
+          label={<span className="text-xs font-bold text-gray-500">Product</span>}
+          rules={[{ required: true, message: "Please select a product" }]}
         >
           <Select
             onChange={handleProductChange}
@@ -221,6 +245,7 @@ const InventoryFormModal: React.FC<StockFormModalProps> = ({
             placeholder="Select Product..."
             showSearch
             optionFilterProp="children"
+            className="w-full h-10 rounded-lg"
           >
             {products.map((p) => (
               <Option key={p.id} value={p.id}>
@@ -232,14 +257,15 @@ const InventoryFormModal: React.FC<StockFormModalProps> = ({
 
         <Form.Item
           name="variantId"
-          label="Variant"
-          rules={[{ required: true }]}
+          label={<span className="text-xs font-bold text-gray-500">Variant</span>}
+          rules={[{ required: true, message: "Please select a variant" }]}
         >
           <Select
             onChange={handleVariantChange}
             disabled={isEditing || !productIdValue}
             placeholder="Select Variant..."
             loading={loadingVariants}
+            className="w-full h-10 rounded-lg"
           >
             {variants.map((v) => (
               <Option key={v.id} value={v.id}>
@@ -249,12 +275,17 @@ const InventoryFormModal: React.FC<StockFormModalProps> = ({
           </Select>
         </Form.Item>
 
-        <Row gutter={16}>
-          <Col span={12}>
-            <Form.Item name="size" label="Size" rules={[{ required: true }]}>
+        <Row gutter={[16, 16]}>
+          <Col xs={24} sm={12}>
+            <Form.Item
+              name="size"
+              label={<span className="text-xs font-bold text-gray-500">Size</span>}
+              rules={[{ required: true, message: "Required" }]}
+            >
               <Select
                 disabled={isEditing || !variantIdValue}
-                placeholder="Select Size..."
+                placeholder="Size..."
+                className="w-full h-10 rounded-lg"
               >
                 {availableSizes.map((s) => (
                   <Option key={s} value={s}>
@@ -264,13 +295,17 @@ const InventoryFormModal: React.FC<StockFormModalProps> = ({
               </Select>
             </Form.Item>
           </Col>
-          <Col span={12}>
+          <Col xs={24} sm={12}>
             <Form.Item
               name="stockId"
-              label="Stock Location"
-              rules={[{ required: true }]}
+              label={<span className="text-xs font-bold text-gray-500">Location</span>}
+              rules={[{ required: true, message: "Required" }]}
             >
-              <Select disabled={isEditing} placeholder="Select Location...">
+              <Select
+                disabled={isEditing}
+                placeholder="Warehouse..."
+                className="w-full h-10 rounded-lg"
+              >
                 {stockLocations.map((s) => (
                   <Option key={s.id} value={s.id}>
                     {s.label}
@@ -281,25 +316,28 @@ const InventoryFormModal: React.FC<StockFormModalProps> = ({
           </Col>
         </Row>
 
-        <Form.Item
-          name="quantity"
-          label="Quantity"
-          rules={[{ required: true }]}
-        >
-          <InputNumber
-            min={0}
-            className="w-full"
-            size="large"
-            addonAfter="UNITS"
-            disabled={loadingQuantity}
-          />
-        </Form.Item>
+        <div className="bg-gray-50/50 p-4 rounded-2xl border border-gray-100 mt-2">
+          <Form.Item
+            name="quantity"
+            label={<span className="text-xs font-bold text-gray-500">Physical Stock Count</span>}
+            rules={[{ required: true, message: "Required" }]}
+            className="!mb-0"
+          >
+            <InputNumber
+              min={0}
+              className="w-full h-12 flex items-center rounded-xl"
+              size="large"
+              addonAfter={<span className="font-bold text-xs text-gray-500">UNITS</span>}
+              disabled={loadingQuantity}
+            />
+          </Form.Item>
 
-        {loadingQuantity && (
-          <div className="text-xs text-gray-500 mb-4">
-            <Spin size="small" /> Checking existing stock...
-          </div>
-        )}
+          {loadingQuantity && (
+            <div className="text-[11px] text-gray-400 mt-2 flex items-center gap-1.5 font-semibold">
+              <Spin size="small" /> Checking current database records...
+            </div>
+          )}
+        </div>
       </Form>
     </Modal>
   );

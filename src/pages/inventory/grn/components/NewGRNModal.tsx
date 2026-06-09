@@ -8,9 +8,12 @@ import {
   Input,
   InputNumber,
   Space,
+  DatePicker,
+  Card,
+  Descriptions,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { IconPackage, IconShoppingCart } from "@tabler/icons-react";
+import { IconPackage, IconShoppingCart, IconInfoCircle } from "@tabler/icons-react";
 import api from "@/lib/api";
 import toast from "react-hot-toast";
 import { dayjs } from "@/utils/dateUtils";
@@ -40,6 +43,7 @@ interface PurchaseOrder {
   supplierName: string;
   items: POItem[];
   stockId?: string;
+  expectedDate?: string;
 }
 
 interface Stock {
@@ -128,7 +132,7 @@ const NewGRNModal: React.FC<NewGRNModalProps> = ({
           ),
           api.get<Stock[]>("/api/v1/erp/master/stocks/dropdown"),
         ]);
-        
+
         setPendingPOs(posRes.data);
         setStocks(stocksRes.data);
 
@@ -146,7 +150,7 @@ const NewGRNModal: React.FC<NewGRNModalProps> = ({
     };
 
     initData();
-  }, [open, currentUser, initialPOId]); // Added initialPOId but removed fetchData and state deps
+  }, [open, currentUser, initialPOId]);
 
   // Reset form when modal closes
   useEffect(() => {
@@ -280,7 +284,7 @@ const NewGRNModal: React.FC<NewGRNModalProps> = ({
       ),
     },
     {
-      title: "Rem.",
+      title: "Remaining",
       key: "rem",
       align: "center",
       render: (_, i) => (
@@ -290,7 +294,7 @@ const NewGRNModal: React.FC<NewGRNModalProps> = ({
       ),
     },
     {
-      title: "Receiving",
+      title: "Receiving Qty",
       key: "receiving",
       render: (_, item, index) => {
         const remaining = item.orderedQuantity - item.previouslyReceived;
@@ -300,20 +304,20 @@ const NewGRNModal: React.FC<NewGRNModalProps> = ({
             max={remaining}
             value={item.receivedQuantity}
             onChange={(val) => handleQuantityChange(index, Number(val))}
-            className="w-20"
-            size="small"
+            className="w-full rounded-lg"
+            size="middle"
           />
         );
       },
     },
     {
-      title: "Location",
+      title: "Warehouse Location",
       key: "location",
       render: (_, item, index) => (
         <Select
-          className="w-32"
-          size="small"
-          placeholder="Location"
+          className="w-full h-10 rounded-lg"
+          size="middle"
+          placeholder="Select Location"
           value={item.stockId || undefined}
           onChange={(val) => handleStockChange(index, val)}
           options={stocks.map((s) => ({ value: s.id, label: s.label }))}
@@ -321,7 +325,7 @@ const NewGRNModal: React.FC<NewGRNModalProps> = ({
       ),
     },
     {
-      title: "Total",
+      title: "Line Total",
       key: "total",
       align: "right",
       render: (_, item) => (
@@ -335,7 +339,7 @@ const NewGRNModal: React.FC<NewGRNModalProps> = ({
   return (
     <Modal
       title={
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 pb-2 border-b border-gray-100">
           <IconPackage size={20} className="text-green-600" />
           <span className="text-xl font-bold tracking-tight">
             Receive Goods (GRN)
@@ -347,7 +351,7 @@ const NewGRNModal: React.FC<NewGRNModalProps> = ({
       width={1200}
       footer={null}
       centered
-      bodyStyle={{ padding: "24px", maxHeight: "85vh", overflowY: "auto" }}
+      styles={{ body: { padding: "24px 0", maxHeight: "85vh", overflowY: "auto" } }}
       className="fluid-modal"
     >
       {loading ? (
@@ -365,7 +369,7 @@ const NewGRNModal: React.FC<NewGRNModalProps> = ({
               <div>
                 <label className={labelClass}>Purchase Order *</label>
                 <Select
-                  className="w-full"
+                  className="w-full h-10 rounded-lg"
                   showSearch
                   optionFilterProp="children"
                   placeholder="Select Pending Order"
@@ -379,11 +383,15 @@ const NewGRNModal: React.FC<NewGRNModalProps> = ({
               </div>
               <div>
                 <label className={labelClass}>Received Date</label>
-                <input
-                  type="date"
-                  value={receivedDate}
-                  onChange={(e) => setReceivedDate(e.target.value)}
-                  className="w-full px-3 py-1.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-green-400 transition-colors bg-[#f5f5f5]"
+                <DatePicker
+                  className="w-full h-10 rounded-lg"
+                  placeholder="Select Date"
+                  value={receivedDate ? dayjs(receivedDate) : null}
+                  onChange={(_, dateString) =>
+                    setReceivedDate(
+                      Array.isArray(dateString) ? dateString[0] : dateString,
+                    )
+                  }
                 />
               </div>
               <div>
@@ -392,11 +400,39 @@ const NewGRNModal: React.FC<NewGRNModalProps> = ({
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder="Optional notes..."
-                  size="small"
+                  className="rounded-lg h-10"
                 />
               </div>
             </div>
           </div>
+
+          {/* PO Summary Card */}
+          {selectedPO && (
+            <Card
+              size="small"
+              className="border-none bg-blue-50/40 rounded-2xl"
+              title={
+                <Space>
+                  <IconInfoCircle size={16} className="text-blue-500" />
+                  <span className="text-xs font-bold text-blue-700 uppercase tracking-wider">
+                    Purchase Order Details
+                  </span>
+                </Space>
+              }
+            >
+              <Descriptions size="small" column={{ xs: 1, sm: 2, md: 3 }} className="p-2">
+                <Descriptions.Item label={<span className="font-bold text-gray-500">PO Number</span>}>
+                  <span className="font-mono font-bold text-gray-900">{selectedPO.poNumber}</span>
+                </Descriptions.Item>
+                <Descriptions.Item label={<span className="font-bold text-gray-500">Supplier</span>}>
+                  <span className="font-bold text-gray-900">{selectedPO.supplierName}</span>
+                </Descriptions.Item>
+                <Descriptions.Item label={<span className="font-bold text-gray-500">Expected Date</span>}>
+                  <span className="font-bold text-gray-900">{selectedPO.expectedDate || "Not Specified"}</span>
+                </Descriptions.Item>
+              </Descriptions>
+            </Card>
+          )}
 
           {/* Items Table */}
           {selectedPO && items.length > 0 && (

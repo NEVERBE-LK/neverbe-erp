@@ -1,14 +1,12 @@
 import React, { useState, useEffect } from "react";
 import {
   Card,
-  Timeline,
   Typography,
   Tag,
   Tabs,
   Form,
   Input,
   Button,
-  Space,
   Empty,
   Spin,
   Tooltip,
@@ -19,13 +17,16 @@ import {
   IconSend,
   IconHistory,
   IconTemplate,
+  IconRefresh,
+  IconCheck,
+  IconAlertCircle,
+  IconLoader,
 } from "@tabler/icons-react";
 import api from "@/lib/api";
 import toast from "react-hot-toast";
 import dayjs from "dayjs";
 
 const { Text, Title, Paragraph } = Typography;
-const { TabPane } = Tabs;
 
 interface CommunicationLog {
   id: string;
@@ -50,12 +51,12 @@ const CommunicationHub: React.FC<CommunicationHubProps> = ({
   const [sending, setSending] = useState(false);
   const [form] = Form.useForm();
   const [activeTab, setActiveTab] = useState("sms");
+  const [messageText, setMessageText] = useState("");
 
   const fetchLogs = async () => {
     try {
       setLoading(true);
       const response = await api.get(`/api/v1/erp/orders/${orderId}/notifications`);
-      // Standardized response format: { success: true, data: [...] }
       const logsData = response.data?.data || response.data || [];
       setLogs(Array.isArray(logsData) ? logsData : []);
     } catch (error) {
@@ -79,6 +80,7 @@ const CommunicationHub: React.FC<CommunicationHubProps> = ({
       });
       toast.success("Notification sent successfully");
       form.resetFields();
+      setMessageText("");
       fetchLogs();
     } catch (error: any) {
       toast.error(error.response?.data?.message || "Failed to send notification");
@@ -99,6 +101,7 @@ const CommunicationHub: React.FC<CommunicationHubProps> = ({
     }
 
     form.setFieldsValue({ content });
+    setMessageText(content);
   };
 
   const formatDate = (dateValue: any) => {
@@ -106,145 +109,257 @@ const CommunicationHub: React.FC<CommunicationHubProps> = ({
     return dayjs(dateValue).format("DD MMM, hh:mm A");
   };
 
+  // Live SMS Counter calculations
+  const getSMSCount = (text: string) => {
+    if (!text) return { chars: 0, parts: 0, limit: 160, isUnicode: false };
+    const chars = text.length;
+    // Check if message has Unicode characters (like Sinhala characters)
+    const isUnicode = /[^\u0000-\u007F]/.test(text);
+    const limit = isUnicode ? 70 : 160;
+    const parts = Math.ceil(chars / limit) || 1;
+    return { chars, parts, limit, isUnicode };
+  };
+
+  const smsMetrics = getSMSCount(messageText);
+
   return (
     <Card
-      className="shadow-xl shadow-gray-200/50 border-gray-100 overflow-hidden"
+      className="shadow-sm border border-gray-100 overflow-hidden rounded-2xl bg-white"
       bodyStyle={{ padding: 0 }}
     >
       <div className="flex flex-col md:flex-row min-h-[500px]">
-        {/* Sidebar: Message Form */}
-        <div className="w-full md:w-1/2 p-4 md:p-8 border-b md:border-b-0 md:border-r border-gray-100 bg-gray-50/30 overflow-hidden">
-          <div className="flex items-center gap-3 mb-6 md:mb-8">
-            <div className="p-2 bg-emerald-100 text-emerald-600 rounded-lg">
-              <IconMessage2 size={24} />
+        {/* Left Side: Message Dispatch Form */}
+        <div className="w-full md:w-1/2 p-6 md:p-8 border-b md:border-b-0 md:border-r border-gray-100 bg-gray-50/20">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-2.5 bg-emerald-50 text-emerald-600 rounded-xl">
+              <IconMessage2 size={22} />
             </div>
             <div>
-              <Title level={4} className="!mb-0">Communication Hub</Title>
-              <Text type="secondary" className="text-xs uppercase tracking-widest font-bold">Direct Messaging</Text>
+              <span className="block text-[9px] font-black uppercase tracking-wider text-gray-400">
+                COMMS CENTER
+              </span>
+              <h4 className="text-base font-black text-gray-800 leading-tight">
+                Send Notification
+              </h4>
             </div>
           </div>
 
-          <Tabs activeKey={activeTab} onChange={setActiveTab} className="mb-6">
-            <TabPane
+          <Tabs
+            activeKey={activeTab}
+            onChange={(key) => {
+              setActiveTab(key);
+              form.resetFields();
+              setMessageText("");
+            }}
+            className="mb-5 custom-erp-tabs"
+          >
+            <Tabs.TabPane
               tab={
-                <span>
-                  <IconMessage2 size={16} className="inline mr-2" />
-                  SMS
+                <span className="flex items-center gap-1.5 text-xs font-bold">
+                  <IconMessage2 size={16} />
+                  SMS MESSAGE
                 </span>
               }
               key="sms"
             />
-            <TabPane
+            <Tabs.TabPane
               tab={
-                <span>
-                  <IconMail size={16} className="inline mr-2" />
-                  Email
+                <span className="flex items-center gap-1.5 text-xs font-bold">
+                  <IconMail size={16} />
+                  EMAIL DISPATCH
                 </span>
               }
               key="email"
             />
           </Tabs>
 
-          <Form form={form} layout="vertical" onFinish={onFinish}>
+          <Form form={form} layout="vertical" onFinish={onFinish} requiredMark={false}>
             {activeTab === "email" && (
-              <Form.Item name="subject" label="Subject" rules={[{ required: true }]}>
-                <Input placeholder="Enter email subject..." />
+              <Form.Item
+                name="subject"
+                label={<span className="text-[10px] font-bold text-gray-400 uppercase">Subject</span>}
+                rules={[{ required: true, message: "Please enter email subject" }]}
+              >
+                <Input
+                  placeholder="Enter email subject..."
+                  className="h-10 rounded-xl border-gray-200 focus:border-black hover:border-gray-300"
+                />
               </Form.Item>
             )}
 
             <Form.Item
               name="content"
-              label="Message Content"
-              rules={[{ required: true, message: "Please enter message content" }]}
-              extra={
-                <div className="mt-3 flex gap-2 overflow-x-auto pb-2">
-                  <Button 
-                    size="small" 
-                    icon={<IconTemplate size={14} />} 
-                    onClick={() => applyTemplate("quick_update")}
-                    className="text-[10px] uppercase font-bold"
-                  >
-                    Quick Update
-                  </Button>
-                  <Button 
-                    size="small" 
-                    icon={<IconTemplate size={14} />} 
-                    onClick={() => applyTemplate("delay")}
-                    className="text-[10px] uppercase font-bold"
-                  >
-                    Delay Note
-                  </Button>
+              label={
+                <div className="flex justify-between items-center w-full">
+                  <span className="text-[10px] font-bold text-gray-400 uppercase">Message Content</span>
+                  {activeTab === "sms" && messageText.length > 0 && (
+                    <span className={`text-[9px] font-bold ${smsMetrics.parts > 1 ? "text-amber-600" : "text-gray-400"}`}>
+                      {smsMetrics.chars}/{smsMetrics.limit} Chars ({smsMetrics.parts} part{smsMetrics.parts > 1 ? "s" : ""})
+                    </span>
+                  )}
                 </div>
               }
+              rules={[{ required: true, message: "Please enter message content" }]}
             >
-              <Input.TextArea 
-                rows={6} 
-                placeholder={`Type ${activeTab.toUpperCase()} message here...`}
-                className="rounded-xl border-gray-200 focus:border-emerald-500"
+              <Input.TextArea
+                rows={6}
+                onChange={(e) => setMessageText(e.target.value)}
+                placeholder={`Type your ${activeTab === "sms" ? "SMS body" : "email message"} here...`}
+                className="rounded-xl border-gray-200 focus:border-black hover:border-gray-300 p-3"
               />
             </Form.Item>
+
+            {activeTab === "sms" && (
+              <div className="flex justify-between items-center text-[9px] font-bold text-gray-400 mb-4 px-1">
+                <span>
+                  {smsMetrics.isUnicode
+                    ? "✨ Unicode mode (Sinhala character detected)"
+                    : "Standard GSM 7-bit alphabet"}
+                </span>
+                <span>
+                  Limit per part: {smsMetrics.limit} chars
+                </span>
+              </div>
+            )}
+
+            {/* Quick Templates Panel */}
+            <div className="bg-white p-3 border border-gray-100 rounded-xl mb-5">
+              <span className="block text-[9px] font-black uppercase text-gray-400 tracking-wider mb-2">
+                Use Templates
+              </span>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => applyTemplate("quick_update")}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold rounded-lg border border-emerald-100 hover:border-emerald-300 text-emerald-700 bg-emerald-50/30 hover:bg-emerald-50 transition cursor-pointer"
+                >
+                  <IconTemplate size={12} />
+                  QUICK UPDATE
+                </button>
+                <button
+                  type="button"
+                  onClick={() => applyTemplate("delay")}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold rounded-lg border border-amber-100 hover:border-amber-300 text-amber-700 bg-amber-50/30 hover:bg-amber-50 transition cursor-pointer"
+                >
+                  <IconTemplate size={12} />
+                  DELAY NOTE
+                </button>
+              </div>
+            </div>
 
             <Button
               type="primary"
               htmlType="submit"
               block
-              size="large"
               loading={sending}
-              icon={<IconSend size={18} />}
-              style={{ background: "#16a34a", borderColor: "#16a34a" }}
-              className="h-12 font-bold rounded-xl mt-4"
+              icon={<IconSend size={16} />}
+              className="h-11 font-bold rounded-xl bg-black border-none text-white flex items-center justify-center gap-1.5 shadow-none mt-2"
             >
               Send {activeTab.toUpperCase()}
             </Button>
           </Form>
         </div>
 
-        {/* Timeline: History */}
-        <div className="w-full md:w-1/2 p-4 md:p-8 bg-white overflow-hidden">
-          <div className="flex items-center justify-between mb-6 md:mb-8">
+        {/* Right Side: Threads & Logs History */}
+        <div className="w-full md:w-1/2 p-6 md:p-8 bg-white flex flex-col">
+          <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
-                <IconHistory size={24} />
+              <div className="p-2.5 bg-blue-50 text-blue-600 rounded-xl">
+                <IconHistory size={22} />
               </div>
-              <Title level={4} className="!mb-0">History</Title>
+              <div>
+                <span className="block text-[9px] font-black uppercase tracking-wider text-gray-400">
+                  DISPATCH FEED
+                </span>
+                <h4 className="text-base font-black text-gray-800 leading-tight">
+                  Notification History
+                </h4>
+              </div>
             </div>
-            <Button size="small" type="text" onClick={fetchLogs} icon={<IconHistory size={14} />}>
-              Refresh
-            </Button>
+
+            <button
+              type="button"
+              onClick={fetchLogs}
+              disabled={loading}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold border border-gray-100 rounded-xl hover:bg-gray-50 text-gray-500 cursor-pointer disabled:opacity-50 transition"
+            >
+              {loading ? (
+                <IconLoader size={12} className="animate-spin" />
+              ) : (
+                <IconRefresh size={12} />
+              )}
+              REFRESH
+            </button>
           </div>
 
-          <div className="max-h-[400px] overflow-y-auto pr-4 custom-scrollbar">
-            {loading ? (
-              <div className="flex justify-center py-20">
+          {/* Redesigned Thread Feed List */}
+          <div className="flex-1 max-h-[420px] overflow-y-auto pr-1 flex flex-col gap-4 custom-scrollbar">
+            {loading && logs.length === 0 ? (
+              <div className="flex items-center justify-center py-20 flex-col gap-3">
                 <Spin />
+                <span className="text-xs font-bold text-gray-400">Loading history thread...</span>
               </div>
             ) : logs.length === 0 ? (
-              <Empty description="No communication history yet" className="py-10" />
+              <div className="py-16">
+                <Empty description="No notifications dispatched for this order." />
+              </div>
             ) : (
-              <Timeline mode="left">
-                {logs.map((log) => (
-                  <Timeline.Item 
-                    key={log.id}
-                    color={log.type.includes("sms") ? "green" : "blue"}
-                    label={<Text type="secondary" className="text-[10px] uppercase font-bold">{formatDate(log.createdAt)}</Text>}
-                  >
-                    <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 mb-2 overflow-hidden break-words">
-                      <div className="flex justify-between items-start mb-2">
-                        <Tag color={log.type.includes("sms") ? "green" : "blue"} className="text-[10px] uppercase font-bold rounded-full px-3">
-                          {log.type.toUpperCase()}
-                        </Tag>
-                        {log.status && <Tag className="text-[10px] uppercase font-bold">{log.status}</Tag>}
+              <div className="flex flex-col gap-3">
+                {logs.map((log) => {
+                  const isSms = log.type.includes("sms");
+                  return (
+                    <div
+                      key={log.id}
+                      className="border border-gray-100 rounded-xl p-4 bg-gray-50/35 hover:bg-gray-50/80 transition flex flex-col gap-2.5"
+                    >
+                      {/* Thread header */}
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center gap-2">
+                          <span className={`p-1.5 rounded-lg text-xs ${isSms ? "bg-emerald-50 text-emerald-600" : "bg-blue-50 text-blue-600"}`}>
+                            {isSms ? <IconMessage2 size={14} /> : <IconMail size={14} />}
+                          </span>
+                          <span className="text-[10px] font-black uppercase tracking-wider text-gray-700">
+                            {isSms ? "SMS Text" : "Email Dispatch"}
+                          </span>
+                        </div>
+
+                        {log.status === "COMPLETED" ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black bg-green-50 text-green-700 border border-green-100">
+                            <IconCheck size={10} />
+                            SENT
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black bg-amber-50 text-amber-700 border border-amber-100">
+                            <IconAlertCircle size={10} />
+                            {log.status || "PENDING"}
+                          </span>
+                        )}
                       </div>
-                      <Paragraph className="!mb-0 text-sm text-gray-700 italic break-words whitespace-pre-wrap">
-                        "{log.content}"
-                      </Paragraph>
-                      <div className="mt-2 text-[10px] text-gray-400">
-                        To: {log.to}
+
+                      {/* Thread body */}
+                      <div className="text-xs text-gray-700 leading-relaxed font-medium bg-white p-3 rounded-lg border border-gray-50/50 break-words whitespace-pre-wrap">
+                        {log.content?.trim() ? (
+                          log.content
+                        ) : (
+                          <span className="text-gray-400 italic font-normal">
+                            No dispatch content captured.
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Thread footer */}
+                      <div className="flex justify-between items-center text-[9px] font-bold text-gray-400">
+                        <span className="font-mono">
+                          To: {log.to}
+                        </span>
+                        <span>
+                          {formatDate(log.createdAt)}
+                        </span>
                       </div>
                     </div>
-                  </Timeline.Item>
-                ))}
-              </Timeline>
+                  );
+                })}
+              </div>
             )}
           </div>
         </div>

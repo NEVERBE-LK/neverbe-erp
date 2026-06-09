@@ -19,6 +19,8 @@ import {
   Col,
   Upload,
   Divider,
+  Tabs,
+  Tag,
 } from "antd";
 
 const { Option } = Select;
@@ -88,6 +90,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
 
   // Watch fields for calculations
   const sellingPrice = Form.useWatch("sellingPrice", form) || 0;
+  const buyingPrice = Form.useWatch("buyingPrice", form) || 0;
   const discount = Form.useWatch("discount", form) || 0;
   const watchedName = Form.useWatch("name", form) || "";
   const watchedCategory = Form.useWatch("category", form) || "";
@@ -205,7 +208,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
     <>
       <Modal
         open={open}
-        title={isEditing ? "Modify Product" : "New Entry"}
+        title={isEditing ? (product?.productId ? "Modify Product" : "Duplicate Product") : "New Entry"}
         onCancel={onClose}
         onOk={() => form.submit()}
         confirmLoading={saving}
@@ -220,338 +223,415 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
           onFinish={handleValidSubmit}
           disabled={saving}
         >
-          <Row gutter={[24, 24]}>
-            <Col xs={24} lg={8}>
-              <Form.Item label="Main Visual" required={!isEditing}>
-                <Upload
-                  beforeUpload={handleFileChange}
-                  maxCount={1}
-                  showUploadList={false} // Custom preview
-                >
-                  <Button icon={<IconUpload size={16} />} block>
-                    Select Image
-                  </Button>
-                </Upload>
+          <Tabs
+            defaultActiveKey="1"
+            type="card"
+            className="product-tabs pt-2"
+            items={[
+              {
+                key: "1",
+                label: "General Info",
+                children: (
+                  <Row gutter={[24, 24]} className="pt-2">
+                    <Col xs={24} lg={8}>
+                      <Form.Item label="Main Visual" required={!isEditing}>
+                        <Upload
+                          beforeUpload={handleFileChange}
+                          maxCount={1}
+                          showUploadList={false} // Custom preview
+                        >
+                          <Button icon={<IconUpload size={16} />} block>
+                            Select Image
+                          </Button>
+                        </Upload>
 
-                <div className="mt-4 border border-gray-200 bg-gray-50 h-64 flex items-center justify-center relative overflow-hidden rounded-md">
-                  {thumbnailFile ? (
-                    <img
-                      src={URL.createObjectURL(thumbnailFile)}
-                      alt="Preview"
-                      className="w-full h-full object-contain"
-                    />
-                  ) : isEditing && product?.thumbnail?.url ? (
-                    <img
-                      src={product.thumbnail.url}
-                      alt="Current"
-                      className="w-full h-full object-contain"
-                    />
-                  ) : (
-                    <div className="text-gray-400 text-center px-4">
-                      <IconPackage
-                        size={48}
-                        className="mx-auto mb-2 opacity-20"
-                      />
-                      <span className="text-xs">No Image Selected</span>
+                        <div className="mt-4 border border-gray-200 bg-gray-50 h-64 flex items-center justify-center relative overflow-hidden rounded-md">
+                          {thumbnailFile ? (
+                            <img
+                              src={URL.createObjectURL(thumbnailFile)}
+                              alt="Preview"
+                              className="w-full h-full object-contain"
+                            />
+                          ) : isEditing && product?.thumbnail?.url ? (
+                            <img
+                              src={product.thumbnail.url}
+                              alt="Current"
+                              className="w-full h-full object-contain"
+                            />
+                          ) : (
+                            <div className="text-gray-400 text-center px-4">
+                              <IconPackage
+                                size={48}
+                                className="mx-auto mb-2 opacity-20"
+                              />
+                              <span className="text-xs">No Image Selected</span>
+                            </div>
+                          )}
+                        </div>
+                        <div className="text-xs text-gray-400 mt-2 text-center">
+                          {thumbnailFile
+                            ? thumbnailFile.name
+                            : isEditing
+                              ? "Current Image"
+                              : ""}
+                        </div>
+                      </Form.Item>
+                    </Col>
+
+                    <Col xs={24} lg={16}>
+                      <div className="bg-white p-4 rounded-xl border border-gray-100 mb-4">
+                        <Row gutter={[16, 16]}>
+                          <Col xs={24} md={16}>
+                            <Form.Item
+                              name="name"
+                              label="Product Name"
+                              rules={[{ required: true }]}
+                            >
+                              <Input placeholder="Enter product name..." size="large" />
+                            </Form.Item>
+                          </Col>
+                          <Col xs={24} md={8}>
+                            <Form.Item
+                              name="weight"
+                              label="Weight (g)"
+                              rules={[{ required: true }]}
+                            >
+                              <InputNumber
+                                style={{ width: "100%" }}
+                                size="large"
+                                min={0}
+                              />
+                            </Form.Item>
+                          </Col>
+                        </Row>
+
+                        <Row gutter={[16, 16]}>
+                          <Col xs={24} md={8}>
+                            <Form.Item
+                              name="category"
+                              label="Category"
+                              rules={[{ required: true }]}
+                            >
+                              <Select showSearch optionFilterProp="children">
+                                {categories.map((c) => (
+                                  <Option key={c.id} value={c.label}>
+                                    {c.label}
+                                  </Option>
+                                ))}
+                              </Select>
+                            </Form.Item>
+                          </Col>
+                          <Col xs={24} md={8}>
+                            <Form.Item
+                              name="brand"
+                              label="Brand"
+                              rules={[{ required: true }]}
+                            >
+                              <Select showSearch optionFilterProp="children">
+                                {brands.map((b) => (
+                                  <Option key={b.id} value={b.label}>
+                                    {b.label}
+                                  </Option>
+                                ))}
+                              </Select>
+                            </Form.Item>
+                          </Col>
+                          <Col xs={24} md={8}>
+                            <Form.Item
+                              name="material"
+                              label="Material"
+                            >
+                              <Select placeholder="Select Material">
+                                <Option value="cotton">Cotton</Option>
+                                <Option value="polyester">Polyester</Option>
+                                <Option value="leather">Leather</Option>
+                                <Option value="denim">Denim</Option>
+                                <Option value="silk">Silk</Option>
+                                <Option value="wool">Wool</Option>
+                              </Select>
+                            </Form.Item>
+                          </Col>
+                        </Row>
+
+                        <Row gutter={[16, 16]}>
+                          <Col xs={12}>
+                            <Form.Item
+                              name="listing"
+                              label="Public Listing"
+                              valuePropName="checked"
+                              className="mb-0"
+                            >
+                              <Switch checkedChildren="VISIBLE" unCheckedChildren="HIDDEN" />
+                            </Form.Item>
+                          </Col>
+                          <Col xs={12}>
+                            <Form.Item
+                              name="status"
+                              label="Active Status"
+                              valuePropName="checked"
+                              className="mb-0"
+                            >
+                              <Switch checkedChildren="ACTIVE" unCheckedChildren="INACTIVE" />
+                            </Form.Item>
+                          </Col>
+                        </Row>
+                      </div>
+                    </Col>
+                  </Row>
+                )
+              },
+              {
+                key: "2",
+                label: "Financials",
+                children: (
+                  <div className="bg-gray-50 p-6 rounded-xl border border-gray-100 my-2">
+                    <Row gutter={[24, 16]}>
+                      <Col xs={24} sm={12} md={6}>
+                        <Form.Item
+                          name="sellingPrice"
+                          label="Selling Price"
+                          rules={[{ required: true }]}
+                        >
+                          <InputNumber style={{ width: "100%" }} min={0} size="large" prefix="Rs." />
+                        </Form.Item>
+                      </Col>
+                      <Col xs={24} sm={12} md={6}>
+                        <Form.Item name="marketPrice" label="Market Price">
+                          <InputNumber style={{ width: "100%" }} min={0} size="large" prefix="Rs." />
+                        </Form.Item>
+                      </Col>
+                      <Col xs={24} sm={12} md={6}>
+                        <Form.Item name="buyingPrice" label="Cost Price">
+                          <InputNumber style={{ width: "100%" }} min={0} size="large" prefix="Rs." />
+                        </Form.Item>
+                      </Col>
+                      <Col xs={24} sm={12} md={6}>
+                        <Form.Item name="discount" label="Discount %">
+                          <InputNumber style={{ width: "100%" }} min={0} max={100} size="large" suffix="%" />
+                        </Form.Item>
+                      </Col>
+                    </Row>
+                    {(sellingPrice > 0 || buyingPrice > 0) && (
+                      <div className="mt-4 p-4 bg-white rounded-lg border border-gray-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                        <div className="flex flex-wrap gap-4 items-center">
+                          <div>
+                            <span className="text-[10px] uppercase font-black tracking-wider text-gray-400 block">Net Revenue</span>
+                            <span className="font-bold text-gray-800 text-sm">
+                              Rs. {Math.round((sellingPrice * (1 - discount / 100)) / 10) * 10}
+                            </span>
+                          </div>
+                          {buyingPrice > 0 && (
+                            <>
+                              <div className="w-[1px] bg-gray-200 h-8 self-center" />
+                              <div>
+                                <span className="text-[10px] uppercase font-black tracking-wider text-gray-400 block">Est. Profit</span>
+                                <span className={`font-bold text-sm ${(sellingPrice * (1 - discount / 100) - buyingPrice) >= 0 ? "text-green-600" : "text-red-500"}`}>
+                                  Rs. {Math.round((sellingPrice * (1 - discount / 100) - buyingPrice))}
+                                </span>
+                              </div>
+                              <div className="w-[1px] bg-gray-200 h-8 self-center" />
+                              <div>
+                                <span className="text-[10px] uppercase font-black tracking-wider text-gray-400 block">Margin</span>
+                                {(() => {
+                                  const netRev = sellingPrice * (1 - discount / 100);
+                                  const profit = netRev - buyingPrice;
+                                  const marginPercent = netRev > 0 ? Math.round((profit / netRev) * 100) : 0;
+                                  
+                                  let marginColor = "red";
+                                  if (marginPercent >= 40) marginColor = "green";
+                                  else if (marginPercent >= 20) marginColor = "orange";
+                                  
+                                  return (
+                                    <Tag color={marginColor} className="m-0 font-bold mt-0.5">
+                                      {marginPercent}%
+                                    </Tag>
+                                  );
+                                })()}
+                              </div>
+                            </>
+                          )}
+                        </div>
+                        {buyingPrice > 0 && sellingPrice > 0 && (sellingPrice * (1 - discount / 100) < buyingPrice) && (
+                          <div className="text-xs text-red-500 font-bold bg-red-50 px-2.5 py-1 rounded-md border border-red-100 uppercase">
+                            Negative Margin Warning
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )
+              },
+              {
+                key: "3",
+                label: "Categorization Details",
+                children: (
+                  <div className="bg-blue-50/30 p-6 rounded-xl border border-blue-100/50 my-2">
+                    <Row gutter={[24, 16]}>
+                      <Col xs={24} md={8}>
+                        <Form.Item
+                          name="gender"
+                          label="Target Gender"
+                          className="mb-0"
+                        >
+                          <Select mode="multiple" placeholder="Select Gender Tags" size="large">
+                            <Option value="men">Men</Option>
+                            <Option value="women">Women</Option>
+                            <Option value="kids">Kids</Option>
+                            <Option value="unisex">Unisex</Option>
+                          </Select>
+                        </Form.Item>
+                      </Col>
+                      <Col xs={24} md={8}>
+                        <Form.Item
+                          name="occasion"
+                          label="Occasion"
+                          className="mb-0"
+                        >
+                          <Select mode="multiple" placeholder="Select Occasions" size="large">
+                            <Option value="casual">Casual</Option>
+                            <Option value="formal">Formal</Option>
+                            <Option value="sport">Sport</Option>
+                            <Option value="party">Party</Option>
+                            <Option value="office">Office</Option>
+                            <Option value="beach">Beach</Option>
+                          </Select>
+                        </Form.Item>
+                      </Col>
+                      <Col xs={24} md={8}>
+                        <Form.Item
+                          name="style"
+                          label="Style"
+                          className="mb-0"
+                        >
+                          <Select mode="multiple" placeholder="Select Styles" size="large">
+                            <Option value="modern">Modern</Option>
+                            <Option value="vintage">Vintage</Option>
+                            <Option value="streetwear">Streetwear</Option>
+                            <Option value="minimalist">Minimalist</Option>
+                            <Option value="boho">Boho</Option>
+                          </Select>
+                        </Form.Item>
+                      </Col>
+                      <Col xs={24} md={12}>
+                        <Form.Item
+                          name="season"
+                          label="Season"
+                          className="mb-0"
+                        >
+                          <Select mode="multiple" placeholder="Select Seasons" size="large">
+                            <Option value="summer">Summer</Option>
+                            <Option value="winter">Winter</Option>
+                            <Option value="spring">Spring</Option>
+                            <Option value="autumn">Autumn</Option>
+                            <Option value="all-season">All Season</Option>
+                          </Select>
+                        </Form.Item>
+                      </Col>
+                      <Col xs={24} md={12}>
+                        <Form.Item
+                          name="fit"
+                          label="Fit"
+                          className="mb-0"
+                        >
+                          <Select placeholder="Select Fit" size="large">
+                            <Option value="regular">Regular Fit</Option>
+                            <Option value="slim">Slim Fit</Option>
+                            <Option value="oversized">Oversized</Option>
+                            <Option value="loose">Loose Fit</Option>
+                          </Select>
+                        </Form.Item>
+                      </Col>
+                    </Row>
+                  </div>
+                )
+              },
+              {
+                key: "4",
+                label: "Description",
+                children: (
+                  <div className="bg-white p-6 rounded-xl border border-gray-100 my-2">
+                    <div className="flex justify-between items-center mb-4">
+                      <span className="text-sm font-semibold text-gray-800 uppercase tracking-wider">
+                        Product Content
+                      </span>
+                      <div className="flex items-center gap-3 bg-red-50 px-3 py-1.5 rounded-full border border-red-100">
+                        <span className="text-xs text-red-600 font-bold">
+                          NON-GENUINE DISCLAIMER
+                        </span>
+                        <Switch
+                          size="small"
+                          checked={(form.getFieldValue("description") || "").includes(
+                            "high-quality replica product",
+                          )}
+                          onChange={(checked) => {
+                            const currentDesc =
+                              form.getFieldValue("description") || "";
+                            const disclaimer =
+                              '\n\n<u style="color:red; font-weight:bold;">Disclaimer: This is a high-quality replica product, not a genuine original.</u>';
+
+                            if (checked) {
+                              if (
+                                !currentDesc.includes("high-quality replica product")
+                              ) {
+                                form.setFieldsValue({
+                                  description: currentDesc.trim()
+                                    ? currentDesc.trim() + disclaimer
+                                    : disclaimer.trim(),
+                                });
+                                toast.success("Disclaimer added");
+                              }
+                            } else {
+                              form.setFieldsValue({
+                                description: currentDesc
+                                  .replace(disclaimer, "")
+                                  .replace(disclaimer.trim(), "")
+                                  .trim(),
+                              });
+                              toast.success("Disclaimer removed");
+                            }
+                          }}
+                        />
+                      </div>
                     </div>
-                  )}
-                </div>
-                <div className="text-xs text-gray-400 mt-2 text-center">
-                  {thumbnailFile
-                    ? thumbnailFile.name
-                    : isEditing
-                      ? "Current Image"
-                      : ""}
-                </div>
-              </Form.Item>
-            </Col>
-
-            <Col xs={24} lg={16}>
-              <div className="bg-white p-4 rounded-xl border border-gray-100 mb-4">
-                <Row gutter={[16, 16]}>
-                  <Col xs={24} md={16}>
-                    <Form.Item
-                      name="name"
-                      label="Product Name"
-                      rules={[{ required: true }]}
-                    >
-                      <Input placeholder="Enter product name..." size="large" />
-                    </Form.Item>
-                  </Col>
-                  <Col xs={24} md={8}>
-                    <Form.Item
-                      name="weight"
-                      label="Weight (g)"
-                      rules={[{ required: true }]}
-                    >
-                      <InputNumber
-                        style={{ width: "100%" }}
-                        size="large"
-                        min={0}
+                    <Form.Item name="description" className="mb-0">
+                      <MarkdownDescriptionEditor
+                        productContext={{
+                          name: watchedName,
+                          category: watchedCategory,
+                          brand: watchedBrand,
+                          gender: watchedGender,
+                        }}
+                        disabled={saving}
                       />
                     </Form.Item>
-                  </Col>
-                </Row>
-
-                <Row gutter={[16, 16]}>
-                  <Col xs={24} md={8}>
-                    <Form.Item
-                      name="category"
-                      label="Category"
-                      rules={[{ required: true }]}
-                    >
-                      <Select showSearch optionFilterProp="children">
-                        {categories.map((c) => (
-                          <Option key={c.id} value={c.label}>
-                            {c.label}
-                          </Option>
-                        ))}
-                      </Select>
-                    </Form.Item>
-                  </Col>
-                  <Col xs={24} md={8}>
-                    <Form.Item
-                      name="brand"
-                      label="Brand"
-                      rules={[{ required: true }]}
-                    >
-                      <Select showSearch optionFilterProp="children">
-                        {brands.map((b) => (
-                          <Option key={b.id} value={b.label}>
-                            {b.label}
-                          </Option>
-                        ))}
-                      </Select>
-                    </Form.Item>
-                  </Col>
-                  <Col xs={24} md={8}>
-                    <Form.Item
-                      name="material"
-                      label="Material"
-                    >
-                      <Select placeholder="Select Material">
-                        <Option value="cotton">Cotton</Option>
-                        <Option value="polyester">Polyester</Option>
-                        <Option value="leather">Leather</Option>
-                        <Option value="denim">Denim</Option>
-                        <Option value="silk">Silk</Option>
-                        <Option value="wool">Wool</Option>
-                      </Select>
-                    </Form.Item>
-                  </Col>
-                </Row>
-
-                <Row gutter={[16, 16]}>
-                  <Col xs={12}>
-                    <Form.Item
-                      name="listing"
-                      label="Public Listing"
-                      valuePropName="checked"
-                      className="mb-0"
-                    >
-                      <Switch checkedChildren="VISIBLE" unCheckedChildren="HIDDEN" />
-                    </Form.Item>
-                  </Col>
-                  <Col xs={12}>
-                    <Form.Item
-                      name="status"
-                      label="Active Status"
-                      valuePropName="checked"
-                      className="mb-0"
-                    >
-                      <Switch checkedChildren="ACTIVE" unCheckedChildren="INACTIVE" />
-                    </Form.Item>
-                  </Col>
-                </Row>
-              </div>
-            </Col>
-          </Row>
-
-          <Divider orientation={"left" as any}>Categorization Details (Questionnaire)</Divider>
-          <div className="bg-blue-50/30 p-6 rounded-xl border border-blue-100/50 mb-6">
-            <Row gutter={[24, 16]}>
-              <Col xs={24} md={8}>
-                <Form.Item
-                  name="gender"
-                  label="Target Gender"
-                  className="mb-0"
-                >
-                  <Select mode="multiple" placeholder="Select Gender Tags" size="large">
-                    <Option value="men">Men</Option>
-                    <Option value="women">Women</Option>
-                    <Option value="kids">Kids</Option>
-                    <Option value="unisex">Unisex</Option>
-                  </Select>
-                </Form.Item>
-              </Col>
-              <Col xs={24} md={8}>
-                <Form.Item
-                  name="occasion"
-                  label="Occasion"
-                  className="mb-0"
-                >
-                  <Select mode="multiple" placeholder="Select Occasions" size="large">
-                    <Option value="casual">Casual</Option>
-                    <Option value="formal">Formal</Option>
-                    <Option value="sport">Sport</Option>
-                    <Option value="party">Party</Option>
-                    <Option value="office">Office</Option>
-                    <Option value="beach">Beach</Option>
-                  </Select>
-                </Form.Item>
-              </Col>
-              <Col xs={24} md={8}>
-                <Form.Item
-                  name="style"
-                  label="Style"
-                  className="mb-0"
-                >
-                  <Select mode="multiple" placeholder="Select Styles" size="large">
-                    <Option value="modern">Modern</Option>
-                    <Option value="vintage">Vintage</Option>
-                    <Option value="streetwear">Streetwear</Option>
-                    <Option value="minimalist">Minimalist</Option>
-                    <Option value="boho">Boho</Option>
-                  </Select>
-                </Form.Item>
-              </Col>
-              <Col xs={24} md={12}>
-                <Form.Item
-                  name="season"
-                  label="Season"
-                  className="mb-0"
-                >
-                  <Select mode="multiple" placeholder="Select Seasons" size="large">
-                    <Option value="summer">Summer</Option>
-                    <Option value="winter">Winter</Option>
-                    <Option value="spring">Spring</Option>
-                    <Option value="autumn">Autumn</Option>
-                    <Option value="all-season">All Season</Option>
-                  </Select>
-                </Form.Item>
-              </Col>
-              <Col xs={24} md={12}>
-                <Form.Item
-                  name="fit"
-                  label="Fit"
-                  className="mb-0"
-                >
-                  <Select placeholder="Select Fit" size="large">
-                    <Option value="regular">Regular Fit</Option>
-                    <Option value="slim">Slim Fit</Option>
-                    <Option value="oversized">Oversized</Option>
-                    <Option value="loose">Loose Fit</Option>
-                  </Select>
-                </Form.Item>
-              </Col>
-            </Row>
-          </div>
-
-          <Divider orientation={"left" as any}>Pricing & Financials</Divider>
-          <div className="bg-gray-50 p-6 rounded-xl border border-gray-100 mb-6">
-            <Row gutter={[24, 16]}>
-              <Col xs={24} sm={12} md={6}>
-                <Form.Item
-                  name="sellingPrice"
-                  label="Selling Price"
-                  rules={[{ required: true }]}
-                >
-                  <InputNumber style={{ width: "100%" }} min={0} size="large" prefix="Rs." />
-                </Form.Item>
-              </Col>
-              <Col xs={24} sm={12} md={6}>
-                <Form.Item name="marketPrice" label="Market Price">
-                  <InputNumber style={{ width: "100%" }} min={0} size="large" prefix="Rs." />
-                </Form.Item>
-              </Col>
-              <Col xs={24} sm={12} md={6}>
-                <Form.Item name="buyingPrice" label="Cost Price">
-                  <InputNumber style={{ width: "100%" }} min={0} size="large" prefix="Rs." />
-                </Form.Item>
-              </Col>
-              <Col xs={24} sm={12} md={6}>
-                <Form.Item name="discount" label="Discount %">
-                  <InputNumber style={{ width: "100%" }} min={0} max={100} size="large" suffix="%" />
-                </Form.Item>
-              </Col>
-            </Row>
-            {discount > 0 && sellingPrice > 0 && (
-              <div className="mt-2 text-right text-green-600 font-bold text-lg">
-                Final Price: Rs.{" "}
-                {Math.round((sellingPrice * (1 - discount / 100)) / 10) * 10}
-              </div>
-            )}
-          </div>
-
-          <Divider orientation={"left" as any}>Rich Description</Divider>
-          <div className="bg-white p-6 rounded-xl border border-gray-100 mb-6">
-            <div className="flex justify-between items-center mb-4">
-              <span className="text-sm font-semibold text-gray-800 uppercase tracking-wider">
-                Product Content
-              </span>
-              <div className="flex items-center gap-3 bg-red-50 px-3 py-1.5 rounded-full border border-red-100">
-                <span className="text-xs text-red-600 font-bold">
-                  NON-GENUINE DISCLAIMER
-                </span>
-                <Switch
-                  size="small"
-                  checked={(form.getFieldValue("description") || "").includes(
-                    "high-quality replica product",
-                  )}
-                  onChange={(checked) => {
-                    const currentDesc =
-                      form.getFieldValue("description") || "";
-                    const disclaimer =
-                      '\n\n<u style="color:red; font-weight:bold;">Disclaimer: This is a high-quality replica product, not a genuine original.</u>';
-
-                    if (checked) {
-                      if (
-                        !currentDesc.includes("high-quality replica product")
-                      ) {
-                        form.setFieldsValue({
-                          description: currentDesc.trim()
-                            ? currentDesc.trim() + disclaimer
-                            : disclaimer.trim(),
-                        });
-                        toast.success("Disclaimer added");
-                      }
-                    } else {
-                      form.setFieldsValue({
-                        description: currentDesc
-                          .replace(disclaimer, "")
-                          .replace(disclaimer.trim(), "")
-                          .trim(),
-                      });
-                      toast.success("Disclaimer removed");
-                    }
-                  }}
-                />
-              </div>
-            </div>
-            <Form.Item name="description" className="mb-0">
-              <MarkdownDescriptionEditor
-                productContext={{
-                  name: watchedName,
-                  category: watchedCategory,
-                  brand: watchedBrand,
-                  gender: watchedGender,
-                }}
-                disabled={saving}
-              />
-            </Form.Item>
-          </div>
-
-          {isEditing && (
-            <>
-              <Divider orientation={"left" as any}>Variants</Divider>
-              <VariantList
-                variants={variants}
-                onAddVariant={handleOpenAddVariant}
-                onEditVariant={handleOpenEditVariant}
-                onDeleteVariant={handleDeleteVariant}
-              />
-            </>
-          )}
+                  </div>
+                )
+              },
+              {
+                key: "5",
+                label: "Variants",
+                children: (isEditing && product?.productId) ? (
+                  <div className="pt-2">
+                    <VariantList
+                      variants={variants}
+                      onAddVariant={handleOpenAddVariant}
+                      onEditVariant={handleOpenEditVariant}
+                      onDeleteVariant={handleDeleteVariant}
+                    />
+                  </div>
+                ) : (
+                  <div className="p-8 text-center bg-gray-50 border border-dashed border-gray-200 rounded-xl my-2">
+                    <p className="text-gray-500 font-medium mb-1">
+                      Configure Variants After Saving
+                    </p>
+                    <p className="text-xs text-gray-400">
+                      To manage colors, sizes, and specific stock lists, please save the product first, then edit it.
+                    </p>
+                  </div>
+                )
+              }
+            ]}
+          />
         </Form>
       </Modal>
 

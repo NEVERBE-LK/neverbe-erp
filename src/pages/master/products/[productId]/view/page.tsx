@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import rehypeRaw from "rehype-raw";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   Card,
@@ -21,6 +22,7 @@ import {
 } from "antd";
 
 import dayjs from "dayjs";
+import { parseToDayjs } from "@/utils/dateUtils";
 
 const { Text } = Typography;
 
@@ -435,7 +437,10 @@ const ProductViewPage = () => {
                 style={{ whiteSpace: "pre-wrap" }}
               >
                 {product.description ? (
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm]}
+                    rehypePlugins={[rehypeRaw]}
+                  >
                     {product.description}
                   </ReactMarkdown>
                 ) : (
@@ -580,7 +585,10 @@ const ProductViewPage = () => {
                   Created On
                 </div>
                 <div className="text-[11px] font-bold text-gray-600">
-                  {product.createdAt}
+                  {(() => {
+                    const parsed = parseToDayjs(product.createdAt);
+                    return parsed ? parsed.format("DD MMM YYYY, hh:mm A") : "N/A";
+                  })()}
                 </div>
               </div>
             </div>

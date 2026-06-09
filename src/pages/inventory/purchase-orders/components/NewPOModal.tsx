@@ -8,17 +8,21 @@ import {
   Input,
   InputNumber,
   Space,
+  DatePicker,
+  Card,
+  Divider,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { IconPlus, IconTrash, IconShoppingCart } from "@tabler/icons-react";
+import { IconPlus, IconTrash, IconShoppingCart, IconTruck, IconFileText, IconCalendar } from "@tabler/icons-react";
 import api from "@/lib/api";
 import toast from "react-hot-toast";
 import { useAppSelector } from "@/lib/hooks";
 import { RootState } from "@/lib/store";
 import { useConfirmationDialog } from "@/contexts/ConfirmationDialogContext";
+import dayjs from "dayjs";
 
 // Fluid label style
-const labelClass = "block text-xs font-bold text-gray-500 mb-2";
+const labelClass = "block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2";
 
 interface Supplier {
   id: string;
@@ -291,33 +295,40 @@ const NewPOModal: React.FC<NewPOModalProps> = ({
       dataIndex: "productName",
       key: "productName",
       render: (text) => (
-        <span className="font-bold text-black text-xs">{text}</span>
+        <span className="font-bold text-gray-900 text-xs">{text}</span>
       ),
     },
     {
       title: "Variant/Size",
       key: "variantSize",
       render: (_, item) => (
-        <span className="text-gray-600 text-[10px]">
+        <span className="text-gray-500 text-[10px] font-semibold uppercase">
           {item.variantName ? `${item.variantName} / ` : ""}
           {item.size}
         </span>
       ),
     },
     {
+      title: "Unit Cost",
+      dataIndex: "unitCost",
+      key: "unitCost",
+      align: "right",
+      render: (cost) => <span className="font-semibold text-xs text-gray-700">Rs {cost.toLocaleString()}</span>,
+    },
+    {
       title: "Qty",
       dataIndex: "quantity",
       key: "quantity",
       align: "center",
-      render: (qty) => <span className="font-bold text-xs">{qty}</span>,
+      render: (qty) => <span className="font-bold text-xs text-gray-800 bg-gray-100 px-2 py-0.5 rounded">{qty}</span>,
     },
     {
-      title: "Total",
+      title: "Subtotal",
       dataIndex: "totalCost",
       key: "totalCost",
       align: "right",
       render: (total) => (
-        <span className="font-bold text-xs">Rs {total.toLocaleString()}</span>
+        <span className="font-bold text-xs text-black">Rs {total.toLocaleString()}</span>
       ),
     },
     {
@@ -339,107 +350,69 @@ const NewPOModal: React.FC<NewPOModalProps> = ({
   return (
     <Modal
       title={
-        <div className="flex items-center gap-2">
-          <IconShoppingCart size={20} className="text-green-600" />
-          <span className="text-xl font-bold tracking-tight">
-            New Purchase Order
-          </span>
+        <div className="flex items-center gap-2 pb-2 border-b border-gray-100">
+          <IconShoppingCart size={22} className="text-green-600 animate-pulse" />
+          <div>
+            <div className="text-lg font-bold text-gray-900 leading-tight">
+              New Purchase Order
+            </div>
+            <div className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider">
+              Procurement & Supplier Requisition
+            </div>
+          </div>
         </div>
       }
       open={open}
       onCancel={onClose}
-      width={1000}
+      width={1200}
       footer={null}
       centered
-      bodyStyle={{ padding: "24px", maxHeight: "85vh", overflowY: "auto" }}
+      styles={{ body: { padding: "24px 0", maxHeight: "85vh", overflowY: "auto" } }}
       className="fluid-modal"
     >
       {loading ? (
         <div className="flex justify-center py-20">
-          <Spin size="large" />
+          <Spin size="large" tip="Loading PO parameters..." />
         </div>
       ) : (
-        <div className="space-y-6">
-          {/* Logistics */}
-          <div className="bg-white p-5 border border-gray-100 rounded-2xl shadow-sm">
-            <h3 className="text-[10px] font-bold text-gray-400 mb-4 uppercase tracking-wider border-b border-gray-50 pb-2">
-              Logistics & Details
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className={labelClass}>Supplier *</label>
-                <Select
-                  className="w-full"
-                  showSearch
-                  optionFilterProp="children"
-                  placeholder="Select Supplier"
-                  value={supplierId || undefined}
-                  onChange={handleSupplierChange}
-                  options={suppliers.map((s) => ({
-                    value: s.id,
-                    label: s.label,
-                  }))}
-                />
-              </div>
-              <div>
-                <label className={labelClass}>Receive to Stock</label>
-                <Select
-                  className="w-full"
-                  placeholder="Select Warehouse"
-                  value={stockId || undefined}
-                  onChange={setStockId}
-                  options={stocks.map((s) => ({ value: s.id, label: s.label }))}
-                />
-              </div>
-              <div>
-                <label className={labelClass}>Expected Date</label>
-                <input
-                  type="date"
-                  value={expectedDate}
-                  onChange={(e) => setExpectedDate(e.target.value)}
-                  className="block w-full px-3 py-1.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-green-400 transition-colors"
-                />
-              </div>
-            </div>
-            <div className="mt-4">
-              <label className={labelClass}>Notes</label>
-              <Input
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="Optional notes..."
-                size="small"
-              />
-            </div>
-          </div>
-
-          {/* Item Entry & Table */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2 space-y-4">
-              <div className="bg-gray-50 p-5 border border-gray-100 rounded-2xl">
-                <h3 className="text-[10px] font-bold text-gray-400 mb-4 uppercase tracking-wider border-b border-gray-100 pb-2">
-                  Add Items
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
-                  <div className="md:col-span-5">
-                    <label className={labelClass}>Product</label>
-                    <Select
-                      className="w-full"
-                      showSearch
-                      optionFilterProp="children"
-                      placeholder="Product..."
-                      value={selectedProduct || undefined}
-                      onChange={handleProductChange}
-                      options={products.map((p) => ({
-                        value: p.id,
-                        label: p.label,
-                      }))}
-                    />
-                  </div>
-                  <div className="md:col-span-3">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          {/* LEFT COLUMN: Item configuration & Selected list */}
+          <div className="lg:col-span-8 space-y-6">
+            {/* Add Items Card */}
+            <Card
+              size="small"
+              className="border border-gray-100 rounded-2xl shadow-sm bg-gray-50/50"
+              title={
+                <div className="flex items-center gap-2">
+                  <IconPlus size={16} className="text-gray-400" />
+                  <span className="text-xs font-bold text-gray-600 uppercase tracking-wider">
+                    Add Items to Requisition
+                  </span>
+                </div>
+              }
+            >
+              <div className="space-y-4">
+                <div>
+                  <label className={labelClass}>Select Product</label>
+                  <Select
+                    className="w-full h-10 rounded-lg"
+                    showSearch
+                    optionFilterProp="children"
+                    placeholder="Search and choose product..."
+                    value={selectedProduct || undefined}
+                    onChange={handleProductChange}
+                    options={products.map((p) => ({
+                      value: p.id,
+                      label: p.label,
+                    }))}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
                     <label className={labelClass}>Variant</label>
                     <Select
-                      className="w-full"
-                      placeholder="Variant"
+                      className="w-full h-10 rounded-lg"
+                      placeholder="Select Variant"
                       value={selectedVariant || undefined}
                       onChange={setSelectedVariant}
                       disabled={availableVariants.length === 0}
@@ -449,11 +422,11 @@ const NewPOModal: React.FC<NewPOModalProps> = ({
                       }))}
                     />
                   </div>
-                  <div className="md:col-span-2">
+                  <div>
                     <label className={labelClass}>Size</label>
                     <Select
-                      className="w-full"
-                      placeholder="Size"
+                      className="w-full h-10 rounded-lg"
+                      placeholder="Select Size"
                       value={selectedSize || undefined}
                       onChange={setSelectedSize}
                       disabled={!selectedProduct}
@@ -463,82 +436,161 @@ const NewPOModal: React.FC<NewPOModalProps> = ({
                       }))}
                     />
                   </div>
-                  <div className="md:col-span-2">
-                    <Button
-                      type="primary"
-                      icon={<IconPlus size={16} />}
-                      onClick={handleAddItem}
-                      block
-                      className="rounded-lg h-9"
-                    >
-                      Add
-                    </Button>
-                  </div>
                 </div>
-                <div className="mt-3 grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className={labelClass}>Unit Cost (Rs)</label>
                     <InputNumber
-                      className="w-full"
+                      className="w-full h-10 flex items-center rounded-lg"
                       min={0}
                       value={unitCost}
                       onChange={(val) => setUnitCost(val || 0)}
-                      size="small"
+                      placeholder="Cost"
                     />
                   </div>
                   <div>
-                    <label className={labelClass}>Quantity</label>
+                    <label className={labelClass}>Quantity (Units)</label>
                     <InputNumber
-                      className="w-full"
+                      className="w-full h-10 flex items-center rounded-lg"
                       min={1}
                       value={quantity}
                       onChange={(val) => setQuantity(Math.max(1, val || 0))}
-                      size="small"
+                      placeholder="Quantity"
                     />
                   </div>
                 </div>
+                <Button
+                  type="primary"
+                  icon={<IconPlus size={16} />}
+                  onClick={handleAddItem}
+                  block
+                  className="h-10 rounded-xl bg-black hover:bg-gray-800 border-none font-bold"
+                >
+                  Add Line Item
+                </Button>
               </div>
+            </Card>
 
-              <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden min-h-[200px]">
-                <Table
-                  bordered
-                  size="small"
-                  scroll={{ y: 300, x: 800 }}
-                  columns={columns}
-                  dataSource={items}
-                  rowKey={(_, idx) => idx as number}
-                  pagination={false}
-                />
+            {/* Added Items List */}
+            <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
+              <div className="px-4 py-3 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                  Requisition Line Items
+                </span>
+                <span className="text-xs font-bold text-gray-900 bg-white border border-gray-100 px-2.5 py-0.5 rounded-full">
+                  {items.length} unique items
+                </span>
               </div>
+              <Table
+                bordered
+                size="small"
+                scroll={{ y: 280, x: 700 }}
+                columns={columns}
+                dataSource={items}
+                rowKey={(_, idx) => idx as number}
+                pagination={false}
+              />
             </div>
+          </div>
 
+          {/* RIGHT COLUMN: Logistics & Summary (4 cols) */}
+          <div className="lg:col-span-4 space-y-6">
+            {/* Logistics Card */}
+            <Card
+              size="small"
+              className="border border-gray-100 rounded-2xl shadow-sm"
+              title={
+                <div className="flex items-center gap-2">
+                  <IconTruck size={16} className="text-gray-400" />
+                  <span className="text-xs font-bold text-gray-600 uppercase tracking-wider">
+                    Logistics & Route
+                  </span>
+                </div>
+              }
+            >
+              <div className="space-y-4">
+                <div>
+                  <label className={labelClass}>Supplier *</label>
+                  <Select
+                    className="w-full h-10 rounded-lg"
+                    showSearch
+                    optionFilterProp="children"
+                    placeholder="Choose Supplier"
+                    value={supplierId || undefined}
+                    onChange={handleSupplierChange}
+                    options={suppliers.map((s) => ({
+                      value: s.id,
+                      label: s.label,
+                    }))}
+                  />
+                </div>
+                <div>
+                  <label className={labelClass}>Destination Warehouse</label>
+                  <Select
+                    className="w-full h-10 rounded-lg"
+                    placeholder="Choose Location"
+                    value={stockId || undefined}
+                    onChange={setStockId}
+                    options={stocks.map((s) => ({ value: s.id, label: s.label }))}
+                  />
+                </div>
+                <div>
+                  <label className={labelClass}>Expected Delivery Date</label>
+                  <DatePicker
+                    className="w-full h-10 rounded-lg"
+                    placeholder="Choose Delivery Date"
+                    value={expectedDate ? dayjs(expectedDate) : null}
+                    onChange={(_, dateString) =>
+                      setExpectedDate(
+                        Array.isArray(dateString) ? dateString[0] : dateString,
+                      )
+                    }
+                  />
+                </div>
+                <div>
+                  <label className={labelClass}>Requisition Notes</label>
+                  <Input.TextArea
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    placeholder="Enter any supplier instructions..."
+                    rows={3}
+                    className="rounded-lg"
+                  />
+                </div>
+              </div>
+            </Card>
+
+            {/* Total and Actions Card */}
             <div className="space-y-4">
-              <div className="bg-green-600 text-white p-6 rounded-2xl shadow-lg">
-                <h4 className="text-[10px] font-bold mb-1 uppercase opacity-70">
-                  Order Total
+              <div className="bg-gradient-to-br from-green-600 to-emerald-700 text-white p-6 rounded-2xl shadow-lg relative overflow-hidden">
+                <div className="absolute right-0 bottom-0 opacity-10 translate-x-2 translate-y-2">
+                  <IconShoppingCart size={120} />
+                </div>
+                <h4 className="text-[10px] font-bold mb-1 uppercase tracking-widest opacity-70">
+                  Total Requisition Cost
                 </h4>
-                <div className="text-3xl font-bold tracking-tight leading-none">
+                <div className="text-3xl font-black tracking-tight leading-none">
                   Rs {totalAmount.toLocaleString()}
                 </div>
               </div>
 
-              <div className="bg-white border border-gray-100 p-5 space-y-3 rounded-2xl shadow-sm">
+              <div className="bg-white border border-gray-100 p-4 space-y-3 rounded-2xl shadow-sm">
                 <Button
                   type="primary"
                   size="large"
                   block
                   onClick={() => handleSave("SUBMITTED")}
                   loading={saving}
-                  className="h-12 rounded-xl font-bold"
+                  className="h-12 rounded-xl font-bold bg-green-600 hover:bg-green-700 border-none shadow-none"
                 >
-                  Submit
+                  Submit Order
                 </Button>
                 <Button
                   size="large"
                   block
                   onClick={() => handleSave("DRAFT")}
                   disabled={saving}
-                  className="h-12 rounded-xl font-bold border-gray-100 bg-gray-50"
+                  className="h-12 rounded-xl font-bold border-gray-100 bg-gray-50 text-gray-700 hover:text-black"
                 >
                   Save as Draft
                 </Button>
@@ -546,15 +598,17 @@ const NewPOModal: React.FC<NewPOModalProps> = ({
                   block
                   onClick={onClose}
                   disabled={saving}
-                  className="border-none text-gray-400 text-xs hover:text-gray-600"
+                  className="border-none text-gray-400 text-xs hover:text-gray-600 font-bold"
                 >
                   Discard Changes
                 </Button>
               </div>
 
-              <div className="p-4 bg-yellow-50 border border-yellow-100 rounded-2xl text-[10px] text-yellow-800 font-bold leading-relaxed">
-                Confirm all items before sending. Distinct GRNs will be required
-                for receiving.
+              <div className="p-4 bg-yellow-50 border border-yellow-100 rounded-2xl text-[10px] text-yellow-800 font-bold leading-relaxed flex gap-2">
+                <div>⚠️</div>
+                <div>
+                  Ensure correct supplier and unit costs are reviewed. Stock will only adjust once goods are received (GRN).
+                </div>
               </div>
             </div>
           </div>

@@ -4,17 +4,17 @@ import api from "@/lib/api";
 import toast from "react-hot-toast";
 import {
   Modal,
-  Form,
   Select,
   Button,
   Spin,
   Card,
   Typography,
-  Statistic,
   Row,
   Col,
   InputNumber,
+  Tag,
 } from "antd";
+import { IconStack2, IconScale, IconPackage, IconAlertCircle } from "@tabler/icons-react";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -55,7 +55,7 @@ const BulkInventoryFormModal: React.FC<BulkInventoryFormModalProps> = ({
   const [loadingStock, setLoadingStock] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  // Form selections (handled outside AntD Form for grid logic, but can use state)
+  // Form selections
   const [productId, setProductId] = useState("");
   const [variantId, setVariantId] = useState("");
   const [stockId, setStockId] = useState("");
@@ -204,36 +204,58 @@ const BulkInventoryFormModal: React.FC<BulkInventoryFormModalProps> = ({
   return (
     <Modal
       open={open}
-      title="Bulk Stock Entry"
+      title={
+        <div className="flex items-center gap-2 pb-2 border-b border-gray-100">
+          <IconStack2 size={22} className="text-green-600 animate-pulse" />
+          <div>
+            <div className="text-lg font-bold text-gray-900 leading-tight">
+              Bulk Stock Entry
+            </div>
+            <div className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider">
+              Inventory Distribution Form
+            </div>
+          </div>
+        </div>
+      }
       onCancel={onClose}
       onOk={handleSubmit}
       confirmLoading={saving}
       okText={`Save Updates (${changedCount})`}
+      okButtonProps={{
+        disabled: changedCount === 0,
+        className: "bg-black hover:bg-gray-800 border-none h-10 px-5 rounded-lg text-sm font-bold shadow-none",
+      }}
+      cancelButtonProps={{ className: "h-10 rounded-lg" }}
       width={800}
       maskClosable={false}
-      okButtonProps={{ disabled: changedCount === 0 }}
+      centered
+      styles={{ body: { padding: "16px 0 8px 0" } }}
     >
       <div className="space-y-4">
-        <Select
-          className="w-full"
-          placeholder="Select Product..."
-          value={productId || undefined}
-          onChange={handleProductChange}
-          showSearch
-          optionFilterProp="children"
-          disabled={saving}
-        >
-          {products.map((p) => (
-            <Option key={p.id} value={p.id}>
-              {p.label}
-            </Option>
-          ))}
-        </Select>
-
-        <Row gutter={16}>
-          <Col span={12}>
+        <Row gutter={[16, 16]}>
+          <Col span={24}>
+            <span className="block text-xs font-bold text-gray-500 mb-1.5">Product</span>
             <Select
-              className="w-full"
+              className="w-full h-10"
+              placeholder="Select Product..."
+              value={productId || undefined}
+              onChange={handleProductChange}
+              showSearch
+              optionFilterProp="children"
+              disabled={saving}
+            >
+              {products.map((p) => (
+                <Option key={p.id} value={p.id}>
+                  {p.label}
+                </Option>
+              ))}
+            </Select>
+          </Col>
+
+          <Col xs={24} sm={12}>
+            <span className="block text-xs font-bold text-gray-500 mb-1.5">Variant</span>
+            <Select
+              className="w-full h-10"
               placeholder="Select Variant..."
               value={variantId || undefined}
               onChange={handleVariantChange}
@@ -247,9 +269,10 @@ const BulkInventoryFormModal: React.FC<BulkInventoryFormModalProps> = ({
               ))}
             </Select>
           </Col>
-          <Col span={12}>
+          <Col xs={24} sm={12}>
+            <span className="block text-xs font-bold text-gray-500 mb-1.5">Stock Location</span>
             <Select
-              className="w-full"
+              className="w-full h-10"
               placeholder="Select Stock Location..."
               value={stockId || undefined}
               onChange={setStockId}
@@ -264,18 +287,20 @@ const BulkInventoryFormModal: React.FC<BulkInventoryFormModalProps> = ({
           </Col>
         </Row>
 
-        <div className="pt-4 border-t border-gray-200">
+        <div className="pt-4 border-t border-gray-100">
           {loadingStock ? (
-            <div className="text-center py-8">
+            <div className="text-center py-10">
               <Spin tip="Loading Stock Data..." />
             </div>
           ) : selectedVariant && stockId ? (
             <div>
               <div className="mb-4 flex justify-between items-center">
-                <Title level={5} className="!m-0">
-                  Size Distribution
-                </Title>
-                <Text type="secondary">{changedCount} Sizes Changed</Text>
+                <Text className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                  Size Distribution Grid
+                </Text>
+                <Tag color="cyan" className="rounded-full px-2.5 font-bold">
+                  {changedCount} sizes changed
+                </Tag>
               </div>
 
               {selectedVariant.sizes.length > 0 ? (
@@ -289,18 +314,21 @@ const BulkInventoryFormModal: React.FC<BulkInventoryFormModalProps> = ({
                       <Card
                         key={size}
                         size="small"
-                        className={`${isChanged ? "border-gray-200 bg-green-50" : "bg-gray-50"}`}
-                        bordered={isChanged}
+                        className={`rounded-2xl border ${
+                          isChanged
+                            ? "border-green-200 bg-green-50/50 shadow-sm"
+                            : "border-gray-100 bg-gray-50/50"
+                        } transition-all duration-200`}
                       >
                         <div className="flex justify-between items-center mb-2">
-                          <Text strong>{size}</Text>
-                          <Text type="secondary" className="text-xs">
-                            Prev: {current}
+                          <Text className="text-xs font-bold text-gray-700">{size}</Text>
+                          <Text type="secondary" className="text-[10px] font-bold">
+                            Current: {current}
                           </Text>
                         </div>
                         <InputNumber
                           min={0}
-                          className="w-full"
+                          className="w-full rounded-lg"
                           value={sizeQuantities[size]}
                           onChange={(val) => handleQuantityChange(size, val)}
                         />
@@ -309,14 +337,15 @@ const BulkInventoryFormModal: React.FC<BulkInventoryFormModalProps> = ({
                   })}
                 </div>
               ) : (
-                <div className="text-center py-8 text-gray-400">
+                <div className="text-center py-8 text-gray-400 font-semibold text-xs bg-gray-50 rounded-2xl border border-gray-100">
                   No sizes defined for this variant.
                 </div>
               )}
             </div>
           ) : (
-            <div className="text-center py-12 text-gray-400 border border-dashed rounded-lg bg-gray-50">
-              Select Product, Variant and Location to manage stock.
+            <div className="text-center py-12 text-gray-400 font-bold text-xs border border-dashed border-gray-200 rounded-2xl bg-gray-50/50 flex flex-col items-center justify-center gap-2">
+              <IconAlertCircle size={24} className="text-gray-300" />
+              <span>SELECT PRODUCT, VARIANT AND STOCK LOCATION TO CONFIGURE SIZES</span>
             </div>
           )}
         </div>

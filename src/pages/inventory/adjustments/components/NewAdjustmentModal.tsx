@@ -300,7 +300,7 @@ const NewAdjustmentModal: React.FC<NewAdjustmentModalProps> = ({
   return (
     <Modal
       title={
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 pb-2 border-b border-gray-100">
           <IconAdjustments size={20} className="text-green-600" />
           <span className="text-xl font-bold tracking-tight">
             New Inventory Adjustment
@@ -312,7 +312,7 @@ const NewAdjustmentModal: React.FC<NewAdjustmentModalProps> = ({
       width={1000}
       footer={null}
       centered
-      bodyStyle={{ padding: "24px", maxHeight: "85vh", overflowY: "auto" }}
+      styles={{ body: { padding: "24px 0", maxHeight: "85vh", overflowY: "auto" } }}
       className="fluid-modal"
     >
       {loading ? (
