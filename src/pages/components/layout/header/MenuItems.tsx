@@ -209,7 +209,7 @@ const Menuitems = [
     permission: "view_reports",
   },
   {
-    subHeader: "System",
+    subHeader: "Security",
     navLabel: true,
   },
   {
@@ -225,6 +225,10 @@ const Menuitems = [
     icon: IconShield,
     href: "/roles",
     permission: "manage_roles",
+  },
+  {
+    subHeader: "System",
+    navLabel: true,
   },
   {
     id: uniqueId(),
