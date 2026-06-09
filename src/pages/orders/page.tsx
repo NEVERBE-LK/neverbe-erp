@@ -645,56 +645,6 @@ const OrdersPage = () => {
           </div>
         </div>
 
-        {/* METRICS CARDS PANEL */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card size="small" className="rounded-2xl border-gray-100 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Total Count</div>
-                <div className="text-2xl font-black text-gray-900 mt-1">{pagination.total}</div>
-              </div>
-              <div className="p-2 bg-green-50 rounded-xl text-green-600">
-                <IconShoppingCart size={22} />
-              </div>
-            </div>
-          </Card>
-
-          <Card size="small" className="rounded-2xl border-gray-100 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Revenues (Page)</div>
-                <div className="text-2xl font-black text-emerald-700 mt-1">Rs {metrics.totalRevenue.toLocaleString()}</div>
-              </div>
-              <div className="p-2 bg-emerald-50 rounded-xl text-emerald-600">
-                <IconCoin size={22} />
-              </div>
-            </div>
-          </Card>
-
-          <Card size="small" className="rounded-2xl border-gray-100 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Unpaid (Page)</div>
-                <div className="text-2xl font-black text-blue-600 mt-1">{metrics.pendingPaymentsCount}</div>
-              </div>
-              <div className="p-2 bg-blue-50 rounded-xl text-blue-600">
-                <IconHourglassHigh size={22} />
-              </div>
-            </div>
-          </Card>
-
-          <Card size="small" className="rounded-2xl border-gray-100 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Active Fulfillments</div>
-                <div className="text-2xl font-black text-orange-600 mt-1">{metrics.activeFulfillmentsCount}</div>
-              </div>
-              <div className="p-2 bg-orange-50 rounded-xl text-orange-600">
-                <IconTruckDelivery size={22} />
-              </div>
-            </div>
-          </Card>
-        </div>
 
         {/* Filters */}
         <Card size="small" className="rounded-2xl shadow-sm border-gray-100 bg-gray-50/50">
