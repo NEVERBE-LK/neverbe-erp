@@ -12,6 +12,7 @@ import {
   IconShield,
   IconMessage2,
   IconTruck,
+  IconReceipt,
 } from "@tabler/icons-react";
 import { uniqueId } from "lodash";
 
@@ -73,7 +74,7 @@ const Menuitems = [
   {
     id: uniqueId(),
     title: "Purchase Orders",
-    icon: IconShoppingCart,
+    icon: IconReceipt,
     permission: "view_purchase_orders",
     children: [
       {

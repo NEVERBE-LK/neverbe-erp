@@ -144,7 +144,15 @@ export default function AppLayout() {
         {/* Footer */}
         <footer className="w-full py-4 text-center border-t border-gray-100 mt-auto bg-[#f9fafb]">
           <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest m-0">
-            NeverBe Internal Systems v2.0
+            &copy; {new Date().getFullYear()} Developed by{" "}
+            <a
+              href="https://www.novaxis.com.lk"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-gray-400 hover:text-black transition-colors underline"
+            >
+              Novaxis
+            </a>
           </p>
         </footer>
       </Layout>
