@@ -11,6 +11,7 @@ import {
   IconSettings,
   IconShield,
   IconMessage2,
+  IconTruck,
 } from "@tabler/icons-react";
 import { uniqueId } from "lodash";
 
@@ -67,9 +68,23 @@ const Menuitems = [
         href: "/inventory/suppliers",
         permission: "view_suppliers",
       },
+    ],
+  },
+  {
+    id: uniqueId(),
+    title: "Purchase Orders",
+    icon: IconShoppingCart,
+    permission: "view_purchase_orders",
+    children: [
       {
         id: uniqueId(),
-        title: "Purchase Orders",
+        title: "Create PO",
+        href: "/inventory/purchase-orders/create",
+        permission: "create_purchase_orders",
+      },
+      {
+        id: uniqueId(),
+        title: "PO List",
         href: "/inventory/purchase-orders",
         permission: "view_purchase_orders",
       },
@@ -79,9 +94,23 @@ const Menuitems = [
         href: "/inventory/purchase-orders/approvals",
         permission: "approve_po",
       },
+    ],
+  },
+  {
+    id: uniqueId(),
+    title: "Goods Received",
+    icon: IconTruck,
+    permission: "view_grn",
+    children: [
       {
         id: uniqueId(),
-        title: "Goods Received",
+        title: "Create GRN",
+        href: "/inventory/grn/create",
+        permission: "create_grn",
+      },
+      {
+        id: uniqueId(),
+        title: "GRN List",
         href: "/inventory/grn",
         permission: "view_grn",
       },

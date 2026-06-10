@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Card, Form, Input, Select, Button, Space, Table, Col, Row, Typography } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import {
@@ -19,7 +19,6 @@ import toast from "react-hot-toast";
 import { useAppSelector } from "@/lib/hooks";
 import { RootState } from "@/lib/store";
 import { PO_STATUS_LABELS, PurchaseOrderStatus } from "@/model/PurchaseOrder";
-import NewPOModal from "./components/NewPOModal";
 
 interface PurchaseOrder {
   id: string;
@@ -64,11 +63,11 @@ const PO_STATUS_STYLING: Record<
 };
 
 const PurchaseOrdersPage = () => {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [orders, setOrders] = useState<PurchaseOrder[]>([]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("");
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [form] = Form.useForm();
 
   const handleFilterSubmit = (values: any) => {
@@ -83,6 +82,16 @@ const PurchaseOrdersPage = () => {
   };
 
   const { currentUser } = useAppSelector((state: RootState) => state.authSlice);
+
+  const canCreate = useMemo(() => {
+    if (!currentUser) return false;
+    return (
+      currentUser.role === "ADMIN" ||
+      currentUser.role === "SUPERADMIN" ||
+      currentUser.role === "Manager" ||
+      currentUser.permissions?.includes("create_purchase_orders")
+    );
+  }, [currentUser]);
 
   const fetchOrders = async () => {
     setLoading(true);
@@ -227,23 +236,13 @@ const PurchaseOrdersPage = () => {
           <Button
             type="primary"
             icon={<IconPlus size={18} />}
-            onClick={() => setIsModalOpen(true)}
+            onClick={() => navigate("/inventory/purchase-orders/create")}
+            disabled={!canCreate}
             className="bg-black hover:bg-gray-800 border-none h-12 px-6 rounded-lg text-sm font-bold shadow-lg shadow-black/10 flex items-center gap-2 self-start sm:self-auto"
           >
             New Order
           </Button>
         </div>
-
-        <NewPOModal
-          open={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          onSuccess={() => {
-            setIsModalOpen(false);
-            fetchOrders();
-          }}
-        />
-
-        {/* Metric Cards */}
         <Row gutter={[16, 16]} className="mb-4">
           <Col xs={24} sm={8}>
             <Card className="border-none shadow-sm bg-gradient-to-br from-blue-50/50 to-indigo-50/20 rounded-2xl">

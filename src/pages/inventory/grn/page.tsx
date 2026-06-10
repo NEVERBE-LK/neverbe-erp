@@ -1,6 +1,6 @@
 import type { ColumnsType } from "antd/es/table";
 import React, { useState, useEffect, useMemo } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Card, Form, Input, Button, Space, Table, Select, Col, Row, Typography } from "antd";
 import {
   IconEye,
@@ -23,7 +23,6 @@ import {
   GRN_STATUS_LABELS,
   GRNStatus,
 } from "@/model/GRN";
-import NewGRNModal from "./components/NewGRNModal";
 
 interface GRN {
   id: string;
@@ -68,11 +67,11 @@ const GRN_STATUS_STYLING: Record<
 };
 
 const GRNListPage = () => {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [grns, setGRNs] = useState<GRN[]>([]);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [form] = Form.useForm();
 
   const handleFilterSubmit = (values: { search: string; status: string }) => {
@@ -87,6 +86,16 @@ const GRNListPage = () => {
   };
 
   const { currentUser } = useAppSelector((state: RootState) => state.authSlice);
+
+  const canCreate = useMemo(() => {
+    if (!currentUser) return false;
+    return (
+      currentUser.role === "ADMIN" ||
+      currentUser.role === "SUPERADMIN" ||
+      currentUser.role === "Manager" ||
+      currentUser.permissions?.includes("create_grn")
+    );
+  }, [currentUser]);
 
   const fetchGRNs = async () => {
     setLoading(true);
@@ -236,23 +245,13 @@ const GRNListPage = () => {
           <Button
             type="primary"
             icon={<IconPlus size={18} />}
-            onClick={() => setIsModalOpen(true)}
+            onClick={() => navigate("/inventory/grn/create")}
+            disabled={!canCreate}
             className="bg-black hover:bg-gray-800 border-none h-12 px-6 rounded-lg text-sm font-bold shadow-lg shadow-black/10 flex items-center gap-2 self-start sm:self-auto"
           >
             New GRN
           </Button>
         </div>
-
-        <NewGRNModal
-          open={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          onSuccess={() => {
-            setIsModalOpen(false);
-            fetchGRNs();
-          }}
-        />
-
-        {/* Metric Cards */}
         <Row gutter={[16, 16]} className="mb-4">
           <Col xs={24} sm={8}>
             <Card className="border-none shadow-sm bg-gradient-to-br from-blue-50/50 to-indigo-50/20 rounded-2xl">

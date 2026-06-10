@@ -36,11 +36,15 @@ const PurchaseOrders = lazy(
 const PurchaseOrderDetail = lazy(
   () => import("@/pages/inventory/purchase-orders/[id]/page"),
 );
+const POCreate = lazy(
+  () => import("@/pages/inventory/purchase-orders/create/page"),
+);
 const POApprovals = lazy(
   () => import("@/pages/inventory/purchase-orders/approvals/page"),
 );
 const GRNList = lazy(() => import("@/pages/inventory/grn/page"));
 const GRNDetail = lazy(() => import("@/pages/inventory/grn/[id]/page"));
+const GRNCreate = lazy(() => import("@/pages/inventory/grn/create/page"));
 const GRNApprovals = lazy(
   () => import("@/pages/inventory/grn/approvals/page"),
 );
@@ -202,6 +206,10 @@ export default function App() {
             element={<ProtectedRoute permission="view_purchase_orders"><PurchaseOrders /></ProtectedRoute>}
           />
           <Route
+            path="inventory/purchase-orders/create"
+            element={<ProtectedRoute permission="create_purchase_orders"><POCreate /></ProtectedRoute>}
+          />
+          <Route
             path="inventory/purchase-orders/:id"
             element={<ProtectedRoute permission="view_purchase_orders"><PurchaseOrderDetail /></ProtectedRoute>}
           />
@@ -210,6 +218,10 @@ export default function App() {
             element={<ProtectedRoute permission="approve_po"><POApprovals /></ProtectedRoute>}
           />
           <Route path="inventory/grn" element={<ProtectedRoute permission="view_grn"><GRNList /></ProtectedRoute>} />
+          <Route
+            path="inventory/grn/create"
+            element={<ProtectedRoute permission="create_grn"><GRNCreate /></ProtectedRoute>}
+          />
           <Route path="inventory/grn/:id" element={<ProtectedRoute permission="view_grn"><GRNDetail /></ProtectedRoute>} />
           <Route
             path="inventory/grn/approvals"
