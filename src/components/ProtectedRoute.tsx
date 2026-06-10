@@ -4,8 +4,10 @@ import { Spin } from "antd";
 
 export default function ProtectedRoute({
   children,
+  permission,
 }: {
   children: React.ReactNode;
+  permission?: string;
 }) {
   const { currentUser, loading } = useAppSelector((state) => state.authSlice);
   const location = useLocation();
@@ -20,6 +22,17 @@ export default function ProtectedRoute({
 
   if (!currentUser) {
     return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  if (permission) {
+    const isSpecialRole =
+      currentUser.role === "ADMIN" ||
+      currentUser.role === "SUPERADMIN" ||
+      currentUser.role === "Manager";
+
+    if (!isSpecialRole && !currentUser.permissions?.includes(permission)) {
+      return <Navigate to="/unauthorized" replace />;
+    }
   }
 
   return <>{children}</>;

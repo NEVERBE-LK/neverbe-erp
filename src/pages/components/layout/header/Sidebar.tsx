@@ -60,33 +60,28 @@ const Sidebar = ({
         const hasPermission = checkPermission(item);
 
         if (item.children) {
-          const visibleChildren = item.children.filter((child: any) =>
-            checkPermission(child),
-          );
-
-          if (!hasPermission && visibleChildren.length === 0) {
-            return null;
-          }
-
           const childrenItems = transformMenuItems(item.children);
           if (!childrenItems || childrenItems.length === 0) return null;
+
+          const allChildrenDisabled = childrenItems.every((child: any) => child?.disabled);
+          const isParentDisabled = !hasPermission || allChildrenDisabled;
 
           return {
             key: item.id || item.title,
             icon: item.icon ? <item.icon size={20} stroke={2} /> : null,
             label: <span className="font-medium">{item.title}</span>,
             children: childrenItems,
+            disabled: isParentDisabled,
           };
         }
-
-        if (!hasPermission) return null;
 
         return {
           key: item.href || item.id,
           icon: item.icon ? <item.icon size={20} stroke={2} /> : null,
           label: <span className="font-medium">{item.title}</span>,
+          disabled: !hasPermission,
           onClick: () => {
-            if (item.href) {
+            if (hasPermission && item.href) {
               navigate(item.href);
               if (isMobile && onClose) {
                 onClose();

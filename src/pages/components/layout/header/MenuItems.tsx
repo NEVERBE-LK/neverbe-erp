@@ -75,9 +75,21 @@ const Menuitems = [
       },
       {
         id: uniqueId(),
+        title: "PO Approvals",
+        href: "/inventory/purchase-orders/approvals",
+        permission: "approve_po",
+      },
+      {
+        id: uniqueId(),
         title: "Goods Received",
         href: "/inventory/grn",
         permission: "view_grn",
+      },
+      {
+        id: uniqueId(),
+        title: "GRN Approvals",
+        href: "/inventory/grn/approvals",
+        permission: "approve_grn",
       },
     ],
   },

@@ -36,8 +36,14 @@ const PurchaseOrders = lazy(
 const PurchaseOrderDetail = lazy(
   () => import("@/pages/inventory/purchase-orders/[id]/page"),
 );
+const POApprovals = lazy(
+  () => import("@/pages/inventory/purchase-orders/approvals/page"),
+);
 const GRNList = lazy(() => import("@/pages/inventory/grn/page"));
 const GRNDetail = lazy(() => import("@/pages/inventory/grn/[id]/page"));
+const GRNApprovals = lazy(
+  () => import("@/pages/inventory/grn/approvals/page"),
+);
 const Adjustments = lazy(() => import("@/pages/inventory/adjustments/page"));
 const AdjustmentDetail = lazy(
   () => import("@/pages/inventory/adjustments/[id]/page"),
@@ -166,144 +172,152 @@ export default function App() {
           }
         >
           {/* Dashboard */}
-          <Route path="dashboard" element={<Dashboard />} />
+          <Route path="dashboard" element={<ProtectedRoute permission="view_dashboard"><Dashboard /></ProtectedRoute>} />
 
           {/* Orders */}
           <Route path="orders" element={<Navigate to="/orders/all" replace />} />
-          <Route path="orders/all" element={<Orders />} />
-          <Route path="orders/processing" element={<Orders />} />
-          <Route path="orders/payment-pending" element={<Orders />} />
-          <Route path="orders/:orderId" element={<OrderDetail />} />
-          <Route path="orders/:orderId/view" element={<OrderView />} />
-          <Route path="orders/:orderId/invoice" element={<OrderInvoice />} />
+          <Route path="orders/all" element={<ProtectedRoute permission="view_orders"><Orders /></ProtectedRoute>} />
+          <Route path="orders/processing" element={<ProtectedRoute permission="view_orders"><Orders /></ProtectedRoute>} />
+          <Route path="orders/payment-pending" element={<ProtectedRoute permission="view_orders"><Orders /></ProtectedRoute>} />
+          <Route path="orders/:orderId" element={<ProtectedRoute permission="view_orders"><OrderDetail /></ProtectedRoute>} />
+          <Route path="orders/:orderId/view" element={<ProtectedRoute permission="view_orders"><OrderView /></ProtectedRoute>} />
+          <Route path="orders/:orderId/invoice" element={<ProtectedRoute permission="view_orders"><OrderInvoice /></ProtectedRoute>} />
 
           {/* Master Data */}
-          <Route path="master/products" element={<Products />} />
+          <Route path="master/products" element={<ProtectedRoute permission="view_master_data"><Products /></ProtectedRoute>} />
           <Route
             path="master/products/:productId/view"
-            element={<ProductView />}
+            element={<ProtectedRoute permission="view_master_data"><ProductView /></ProtectedRoute>}
           />
-          <Route path="master/categories" element={<Categories />} />
-          <Route path="master/brands" element={<Brands />} />
-          <Route path="master/sizes" element={<Sizes />} />
-          <Route path="master/stocks" element={<Stocks />} />
+          <Route path="master/categories" element={<ProtectedRoute permission="view_master_data"><Categories /></ProtectedRoute>} />
+          <Route path="master/brands" element={<ProtectedRoute permission="view_master_data"><Brands /></ProtectedRoute>} />
+          <Route path="master/sizes" element={<ProtectedRoute permission="view_master_data"><Sizes /></ProtectedRoute>} />
+          <Route path="master/stocks" element={<ProtectedRoute permission="view_master_data"><Stocks /></ProtectedRoute>} />
 
           {/* Inventory */}
-          <Route path="inventory" element={<Inventory />} />
-          <Route path="inventory/suppliers" element={<Suppliers />} />
+          <Route path="inventory" element={<ProtectedRoute permission="view_inventory"><Inventory /></ProtectedRoute>} />
+          <Route path="inventory/suppliers" element={<ProtectedRoute permission="view_suppliers"><Suppliers /></ProtectedRoute>} />
           <Route
             path="inventory/purchase-orders"
-            element={<PurchaseOrders />}
+            element={<ProtectedRoute permission="view_purchase_orders"><PurchaseOrders /></ProtectedRoute>}
           />
           <Route
             path="inventory/purchase-orders/:id"
-            element={<PurchaseOrderDetail />}
+            element={<ProtectedRoute permission="view_purchase_orders"><PurchaseOrderDetail /></ProtectedRoute>}
           />
-          <Route path="inventory/grn" element={<GRNList />} />
-          <Route path="inventory/grn/:id" element={<GRNDetail />} />
-          <Route path="inventory/adjustments" element={<Adjustments />} />
+          <Route
+            path="inventory/purchase-orders/approvals"
+            element={<ProtectedRoute permission="approve_po"><POApprovals /></ProtectedRoute>}
+          />
+          <Route path="inventory/grn" element={<ProtectedRoute permission="view_grn"><GRNList /></ProtectedRoute>} />
+          <Route path="inventory/grn/:id" element={<ProtectedRoute permission="view_grn"><GRNDetail /></ProtectedRoute>} />
+          <Route
+            path="inventory/grn/approvals"
+            element={<ProtectedRoute permission="approve_grn"><GRNApprovals /></ProtectedRoute>}
+          />
+          <Route path="inventory/adjustments" element={<ProtectedRoute permission="view_adjustments"><Adjustments /></ProtectedRoute>} />
           <Route
             path="inventory/adjustments/:id"
-            element={<AdjustmentDetail />}
+            element={<ProtectedRoute permission="view_adjustments"><AdjustmentDetail /></ProtectedRoute>}
           />
 
           {/* Finance */}
-          <Route path="finance" element={<Finance />} />
-          <Route path="finance/bank-accounts" element={<BankAccounts />} />
+          <Route path="finance" element={<ProtectedRoute permission="view_finance"><Finance /></ProtectedRoute>} />
+          <Route path="finance/bank-accounts" element={<ProtectedRoute permission="view_bank_accounts"><BankAccounts /></ProtectedRoute>} />
           <Route
             path="finance/expense-categories"
-            element={<ExpenseCategories />}
+            element={<ProtectedRoute permission="view_expense_categories"><ExpenseCategories /></ProtectedRoute>}
           />
-          <Route path="finance/petty-cash" element={<PettyCash />} />
+          <Route path="finance/petty-cash" element={<ProtectedRoute permission="view_petty_cash"><PettyCash /></ProtectedRoute>} />
           <Route
             path="finance/supplier-invoices"
-            element={<SupplierInvoices />}
+            element={<ProtectedRoute permission="view_supplier_invoices"><SupplierInvoices /></ProtectedRoute>}
           />
 
           {/* Campaign */}
-          <Route path="campaign/combos" element={<Combos />} />
-          <Route path="campaign/coupons" element={<Coupons />} />
-          <Route path="campaign/promotions" element={<Promotions />} />
+          <Route path="campaign/combos" element={<ProtectedRoute permission="view_combos"><Combos /></ProtectedRoute>} />
+          <Route path="campaign/coupons" element={<ProtectedRoute permission="view_coupons"><Coupons /></ProtectedRoute>} />
+          <Route path="campaign/promotions" element={<ProtectedRoute permission="view_promotions"><Promotions /></ProtectedRoute>} />
 
           {/* Reports */}
-          <Route path="reports" element={<Reports />} />
+          <Route path="reports" element={<ProtectedRoute permission="view_reports"><Reports /></ProtectedRoute>} />
           <Route
             path="reports/sales/daily-summary"
-            element={<DailySummary />}
+            element={<ProtectedRoute permission="view_reports"><DailySummary /></ProtectedRoute>}
           />
           <Route
             path="reports/sales/monthly-summary"
-            element={<MonthlySummary />}
+            element={<ProtectedRoute permission="view_reports"><MonthlySummary /></ProtectedRoute>}
           />
           <Route
             path="reports/sales/yearly-summary"
-            element={<YearlySummary />}
+            element={<ProtectedRoute permission="view_reports"><YearlySummary /></ProtectedRoute>}
           />
-          <Route path="reports/sales/top-products" element={<TopProducts />} />
-          <Route path="reports/sales/by-category" element={<ByCategory />} />
-          <Route path="reports/sales/by-brand" element={<ByBrand />} />
+          <Route path="reports/sales/top-products" element={<ProtectedRoute permission="view_reports"><TopProducts /></ProtectedRoute>} />
+          <Route path="reports/sales/by-category" element={<ProtectedRoute permission="view_reports"><ByCategory /></ProtectedRoute>} />
+          <Route path="reports/sales/by-brand" element={<ProtectedRoute permission="view_reports"><ByBrand /></ProtectedRoute>} />
           <Route
             path="reports/sales/by-payment-method"
-            element={<ByPaymentMethod />}
+            element={<ProtectedRoute permission="view_reports"><ByPaymentMethod /></ProtectedRoute>}
           />
           <Route
             path="reports/sales/sales-vs-discount"
-            element={<SalesVsDiscount />}
+            element={<ProtectedRoute permission="view_reports"><SalesVsDiscount /></ProtectedRoute>}
           />
           <Route
             path="reports/sales/refunds-returns"
-            element={<RefundsReturns />}
+            element={<ProtectedRoute permission="view_reports"><RefundsReturns /></ProtectedRoute>}
           />
           <Route
             path="reports/revenues/daily-revenue"
-            element={<DailyRevenue />}
+            element={<ProtectedRoute permission="view_reports"><DailyRevenue /></ProtectedRoute>}
           />
           <Route
             path="reports/revenues/monthly-revenue"
-            element={<MonthlyRevenue />}
+            element={<ProtectedRoute permission="view_reports"><MonthlyRevenue /></ProtectedRoute>}
           />
           <Route
             path="reports/revenues/yearly-revenue"
-            element={<YearlyRevenue />}
+            element={<ProtectedRoute permission="view_reports"><YearlyRevenue /></ProtectedRoute>}
           />
-          <Route path="reports/stocks/live-stock" element={<LiveStock />} />
-          <Route path="reports/stocks/low-stock" element={<LowStock />} />
-          <Route path="reports/stocks/valuation" element={<Valuation />} />
-          <Route path="reports/cash/cashflow" element={<Cashflow />} />
-          <Route path="reports/customers" element={<Customers />} />
-          <Route path="reports/expenses" element={<Expenses />} />
-          <Route path="reports/pnl" element={<PnL />} />
-          <Route path="reports/tax" element={<Tax />} />
+          <Route path="reports/stocks/live-stock" element={<ProtectedRoute permission="view_reports"><LiveStock /></ProtectedRoute>} />
+          <Route path="reports/stocks/low-stock" element={<ProtectedRoute permission="view_reports"><LowStock /></ProtectedRoute>} />
+          <Route path="reports/stocks/valuation" element={<ProtectedRoute permission="view_reports"><Valuation /></ProtectedRoute>} />
+          <Route path="reports/cash/cashflow" element={<ProtectedRoute permission="view_reports"><Cashflow /></ProtectedRoute>} />
+          <Route path="reports/customers" element={<ProtectedRoute permission="view_reports"><Customers /></ProtectedRoute>} />
+          <Route path="reports/expenses" element={<ProtectedRoute permission="view_reports"><Expenses /></ProtectedRoute>} />
+          <Route path="reports/pnl" element={<ProtectedRoute permission="view_reports"><PnL /></ProtectedRoute>} />
+          <Route path="reports/tax" element={<ProtectedRoute permission="view_reports"><Tax /></ProtectedRoute>} />
 
           {/* Settings */}
-          <Route path="settings" element={<Settings />} />
-          <Route path="settings/payment-methods" element={<PaymentMethods />} />
-          <Route path="settings/shipping" element={<Shipping />} />
-          <Route path="settings/tax" element={<TaxSettings />} />
-          <Route path="settings/templates" element={<TemplatesSettings />} />
+          <Route path="settings" element={<ProtectedRoute permission="view_settings"><Settings /></ProtectedRoute>} />
+          <Route path="settings/payment-methods" element={<ProtectedRoute permission="view_payment_methods"><PaymentMethods /></ProtectedRoute>} />
+          <Route path="settings/shipping" element={<ProtectedRoute permission="view_shipping"><Shipping /></ProtectedRoute>} />
+          <Route path="settings/tax" element={<ProtectedRoute permission="view_tax_settings"><TaxSettings /></ProtectedRoute>} />
+          <Route path="settings/templates" element={<ProtectedRoute permission="view_settings"><TemplatesSettings /></ProtectedRoute>} />
           <Route
             path="settings/email-templates"
-            element={<EmailTemplatesSettings />}
+            element={<ProtectedRoute permission="view_settings"><EmailTemplatesSettings /></ProtectedRoute>}
           />
 
           {/* Users & Roles */}
-          <Route path="users" element={<Users />} />
-          <Route path="roles" element={<Roles />} />
-          <Route path="roles/create" element={<RoleCreate />} />
-          <Route path="roles/:id" element={<RoleEdit />} />
+          <Route path="users" element={<ProtectedRoute permission="view_users"><Users /></ProtectedRoute>} />
+          <Route path="roles" element={<ProtectedRoute permission="manage_roles"><Roles /></ProtectedRoute>} />
+          <Route path="roles/create" element={<ProtectedRoute permission="manage_roles"><RoleCreate /></ProtectedRoute>} />
+          <Route path="roles/:id" element={<ProtectedRoute permission="manage_roles"><RoleEdit /></ProtectedRoute>} />
 
           {/* Website */}
-          <Route path="website" element={<Website />} />
-          <Route path="website/banner" element={<Banner />} />
-          <Route path="website/navigation" element={<Navigation />} />
-          <Route path="website/collections" element={<Collections />} />
+          <Route path="website" element={<ProtectedRoute permission="view_website"><Website /></ProtectedRoute>} />
+          <Route path="website/banner" element={<ProtectedRoute permission="view_website"><Banner /></ProtectedRoute>} />
+          <Route path="website/navigation" element={<ProtectedRoute permission="view_website"><Navigation /></ProtectedRoute>} />
+          <Route path="website/collections" element={<ProtectedRoute permission="view_website"><Collections /></ProtectedRoute>} />
 
 
           {/* Profile */}
           <Route path="profile" element={<Profile />} />
 
           {/* Communications */}
-          <Route path="communications" element={<Communications />} />
+          <Route path="communications" element={<ProtectedRoute permission="view_communications"><Communications /></ProtectedRoute>} />
 
           {/* Fallback inner match */}
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
