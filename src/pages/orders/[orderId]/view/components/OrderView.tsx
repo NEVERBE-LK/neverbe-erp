@@ -80,9 +80,9 @@ const OrderView = ({ orderId }: { orderId: string }) => {
       const uniqueProductIds = Array.from(
         new Set(order.items.map((item: any) => item.itemId).filter(Boolean))
       );
-      
+
       const imageMap: Record<string, string> = {};
-      
+
       await Promise.all(
         uniqueProductIds.map(async (productId: any) => {
           try {
@@ -104,7 +104,7 @@ const OrderView = ({ orderId }: { orderId: string }) => {
           }
         })
       );
-      
+
       setItemImages(imageMap);
     } catch (error) {
       console.error("Failed to fetch item images", error);
@@ -257,7 +257,7 @@ const OrderView = ({ orderId }: { orderId: string }) => {
       render: (text: string, record: Record<string, any>) => {
         const key = `${record.itemId}_${record.variantId}`;
         const imageUrl = itemImages[key] || itemImages[`${record.itemId}_fallback`] || "";
-        
+
         return (
           <div className="flex items-center gap-3">
             {imageUrl ? (
@@ -498,13 +498,13 @@ const OrderView = ({ orderId }: { orderId: string }) => {
             />
           </Card>
 
-          {/* Transaction Info Grid */}
+          {/* Order Overview Card */}
           <Card
             title={
               <div className="flex items-center gap-2">
                 <IconShieldCheck size={18} className="text-gray-400" />
                 <span className="text-xs font-bold text-gray-600 uppercase tracking-wider">
-                  Transaction & Fulfillment Logs
+                  Order Overview
                 </span>
               </div>
             }
@@ -534,6 +534,8 @@ const OrderView = ({ orderId }: { orderId: string }) => {
                   </span>
                 </div>
               </div>
+
+
 
               <div className="flex items-start gap-3">
                 <div className="p-2 bg-gray-50 text-gray-500 rounded-xl">
@@ -694,8 +696,8 @@ const OrderView = ({ orderId }: { orderId: string }) => {
                   color: historyItem.status.toLowerCase() === "completed"
                     ? "green"
                     : historyItem.status.toLowerCase() === "cancelled"
-                    ? "gray"
-                    : "blue",
+                      ? "gray"
+                      : "blue",
                 }))}
               />
             </Card>
@@ -762,7 +764,7 @@ const OrderView = ({ orderId }: { orderId: string }) => {
               <div className="flex items-center gap-2">
                 <IconCoin size={18} className="text-gray-400" />
                 <span className="text-xs font-bold text-gray-600 uppercase tracking-wider">
-                  Financial Ledger
+                  Finance Overview
                 </span>
               </div>
             }
@@ -840,29 +842,6 @@ const OrderView = ({ orderId }: { orderId: string }) => {
                     <span className={`font-mono font-black ${balanceDue <= 0 ? 'text-green-600' : 'text-rose-600'}`}>
                       {balanceDue <= 0 ? "PAID" : `Rs ${balanceDue.toLocaleString()}`}
                     </span>
-                  </div>
-                  
-                  {/* Payments Log */}
-                  <div className="bg-gray-50/70 border border-gray-100/70 rounded-xl p-3 space-y-2">
-                    <span className="text-[9px] font-black uppercase text-gray-400 tracking-wider">Payments Ledger</span>
-                    {order.paymentReceived && order.paymentReceived.length > 0 ? (
-                      order.paymentReceived.map((p) => (
-                        <div key={p.id} className="flex justify-between items-center text-[10px] text-gray-700 bg-white px-2.5 py-1.5 rounded-lg border border-gray-50 shadow-sm">
-                          <span className="font-semibold">{p.paymentMethod}</span>
-                          <span className="font-bold font-mono text-gray-900">Rs {p.amount.toLocaleString()}</span>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="flex justify-between items-center text-[10px] text-gray-700 bg-white px-2.5 py-1.5 rounded-lg border border-gray-50 shadow-sm">
-                        <span className="font-semibold">{order?.paymentMethod || "IPG Payment"}</span>
-                        <div className="text-right">
-                          <span className="font-bold font-mono text-gray-900 block">Rs {order?.total?.toLocaleString()}</span>
-                          {order?.paymentId && (
-                            <span className="text-[8px] font-bold text-gray-400 block font-mono">Ref: {order.paymentId}</span>
-                          )}
-                        </div>
-                      </div>
-                    )}
                   </div>
                 </div>
               )}
@@ -950,7 +929,7 @@ const OrderView = ({ orderId }: { orderId: string }) => {
           )}
         </div>
       </div>
-      
+
       {/* Dynamic Interaction Sub-cards */}
       <CommunicationHub orderId={orderId} customerName={order?.customer?.name} />
       <OrderExchangeHistory orderId={orderId} />
