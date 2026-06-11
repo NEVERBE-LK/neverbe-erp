@@ -13,6 +13,7 @@ import {
   Switch,
   Divider,
   Space,
+  Select,
 } from "antd";
 
 const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
@@ -45,7 +46,7 @@ const VariantFormModal: React.FC<VariantFormModalProps> = ({
   const [newImageFiles, setNewImageFiles] = useState<File[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [currentImages, setCurrentImages] = useState<any[]>([]);
-  const selectedSizes = Form.useWatch("sizes", form) || [];
+
 
   const isEditing = !!variant;
   const isNewVariant =
@@ -95,17 +96,7 @@ const VariantFormModal: React.FC<VariantFormModalProps> = ({
     setCurrentImages((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const toggleSize = (sizeLabel: string) => {
-    const current = form.getFieldValue("sizes") || [];
-    if (current.includes(sizeLabel)) {
-      form.setFieldValue(
-        "sizes",
-        current.filter((s: string) => s !== sizeLabel),
-      );
-    } else {
-      form.setFieldValue("sizes", [...current, sizeLabel]);
-    }
-  };
+
 
   const handleSubmit = async (values: Record<string, unknown>) => {
     setIsSaving(true);
@@ -169,21 +160,18 @@ const VariantFormModal: React.FC<VariantFormModalProps> = ({
         </Form.Item>
 
         <Form.Item label="Size Availability" name="sizes">
-          <Space wrap size={[8, 8]}>
-            {sizes.map((s) => {
-              const isSelected = selectedSizes.includes(s.label);
-              return (
-                <Button
-                  key={s.id}
-                  size="small"
-                  type={isSelected ? "primary" : "default"}
-                  onClick={() => toggleSize(s.label)}
-                >
-                  {s.label}
-                </Button>
-              );
-            })}
-          </Space>
+          <Select
+            mode="multiple"
+            placeholder="Select available sizes..."
+            style={{ width: "100%" }}
+            allowClear
+          >
+            {sizes.map((s) => (
+              <Select.Option key={s.id} value={s.label}>
+                {s.label}
+              </Select.Option>
+            ))}
+          </Select>
         </Form.Item>
 
         <Form.Item name="status" label="Active Status" valuePropName="checked">
