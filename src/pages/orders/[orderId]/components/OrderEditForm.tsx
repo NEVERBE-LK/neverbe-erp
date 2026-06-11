@@ -916,41 +916,84 @@ export const OrderEditForm: React.FC<OrderEditFormProps> = ({
 
               {/* Payments Ledger */}
               <div className="space-y-2">
-                {payments.length === 0 ? (
-                  <div className="text-center py-6 text-gray-400 text-xs font-semibold bg-gray-50/50 rounded-xl border border-dashed border-gray-100">
-                    No payment transactions recorded for this order.
-                  </div>
-                ) : (
-                  <div className="border border-gray-100 rounded-xl overflow-hidden divide-y divide-gray-100 bg-white">
-                    {payments.map((p) => (
-                      <div key={p.id} className="flex justify-between items-center px-4 py-3 hover:bg-gray-50 transition duration-150">
-                        <div className="flex items-center gap-3">
-                          <div className="p-1.5 bg-green-50 text-green-600 rounded-lg">
-                            <IconCoin size={16} />
-                          </div>
-                          <div>
-                            <span className="font-bold text-xs text-gray-800">Rs {p.amount.toLocaleString()}</span>
-                            <span className="inline-block text-[9px] font-black text-gray-400 uppercase tracking-widest ml-2 bg-gray-100 px-1.5 py-0.5 rounded">
-                              {p.paymentMethod}
-                            </span>
-                            {p.cardNumber && (
-                              <span className="block text-[10px] text-gray-400 font-bold mt-0.5">
-                                Card/Ref: {p.cardNumber}
-                              </span>
-                            )}
-                          </div>
+                <Form.Item noStyle shouldUpdate>
+                  {() => {
+                    const paymentStatus = form.getFieldValue("paymentStatus") || order?.paymentStatus;
+                    const isPaidWebsite = order?.from?.toLowerCase() === "website" && paymentStatus?.toLowerCase() === "paid";
+                    
+                    if (payments.length === 0 && !isPaidWebsite) {
+                      return (
+                        <div className="text-center py-6 text-gray-400 text-xs font-semibold bg-gray-50/50 rounded-xl border border-dashed border-gray-100">
+                          No payment transactions recorded for this order.
                         </div>
-                        <Button
-                          type="text"
-                          danger
-                          icon={<IconTrash size={14} />}
-                          onClick={() => handleRemovePayment(p.id)}
-                          className="hover:bg-red-50 rounded-lg flex items-center justify-center h-8 w-8"
-                        />
+                      );
+                    }
+
+                    const shipping = form.getFieldValue("shippingFee") || 0;
+                    const discount = form.getFieldValue("discount") || 0;
+                    const payMethod = form.getFieldValue("paymentMethod");
+                    const selectedMethodObj = paymentMethods.find((m) => m.name.toUpperCase() === payMethod?.toUpperCase());
+                    const fee = selectedMethodObj ? (selectedMethodObj.customerFee || 0) : (order?.fee || 0);
+                    const totalVal = itemsTotal + Number(shipping) + Number(fee) - Number(discount);
+
+                    return (
+                      <div className="border border-gray-100 rounded-xl overflow-hidden divide-y divide-gray-100 bg-white">
+                        {isPaidWebsite && (
+                          <div className="flex justify-between items-center px-4 py-3 hover:bg-gray-50 transition duration-150">
+                            <div className="flex items-center gap-3">
+                              <div className="p-1.5 bg-green-50 text-green-600 rounded-lg">
+                                <IconCoin size={16} />
+                              </div>
+                              <div>
+                                <span className="font-bold text-xs text-gray-800">
+                                  Rs {totalVal.toLocaleString()}
+                                </span>
+                                <span className="inline-block text-[9px] font-black text-gray-400 uppercase tracking-widest ml-2 bg-gray-100 px-1.5 py-0.5 rounded">
+                                  {form.getFieldValue("paymentMethod") || order?.paymentMethod || "IPG Payment"}
+                                </span>
+                                {order?.paymentId && (
+                                  <span className="block text-[10px] text-gray-400 font-bold mt-0.5">
+                                    Card/Ref: {order.paymentId}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            <span className="text-[10px] font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded uppercase">
+                              Website Paid
+                            </span>
+                          </div>
+                        )}
+                        {payments.map((p) => (
+                          <div key={p.id} className="flex justify-between items-center px-4 py-3 hover:bg-gray-50 transition duration-150">
+                            <div className="flex items-center gap-3">
+                              <div className="p-1.5 bg-green-50 text-green-600 rounded-lg">
+                                <IconCoin size={16} />
+                              </div>
+                              <div>
+                                <span className="font-bold text-xs text-gray-800">Rs {p.amount.toLocaleString()}</span>
+                                <span className="inline-block text-[9px] font-black text-gray-400 uppercase tracking-widest ml-2 bg-gray-100 px-1.5 py-0.5 rounded">
+                                  {p.paymentMethod}
+                                </span>
+                                {p.cardNumber && (
+                                  <span className="block text-[10px] text-gray-400 font-bold mt-0.5">
+                                    Card/Ref: {p.cardNumber}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            <Button
+                              type="text"
+                              danger
+                              icon={<IconTrash size={14} />}
+                              onClick={() => handleRemovePayment(p.id)}
+                              className="hover:bg-red-50 rounded-lg flex items-center justify-center h-8 w-8"
+                            />
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
-                )}
+                    );
+                  }}
+                </Form.Item>
               </div>
             </Card>
 
@@ -1186,9 +1229,25 @@ export const OrderEditForm: React.FC<OrderEditFormProps> = ({
 
                     <div className="flex justify-between items-center">
                       <span className="text-[10px] font-bold text-gray-400 uppercase">Total Paid</span>
-                      <span className="text-xs font-mono font-black text-blue-600">
-                        Rs {totalPaidAmount.toLocaleString()}
-                      </span>
+                      <Form.Item noStyle shouldUpdate>
+                        {() => {
+                          const shipping = form.getFieldValue("shippingFee") || 0;
+                          const discount = form.getFieldValue("discount") || 0;
+                          const payMethod = form.getFieldValue("paymentMethod");
+                          const selectedMethodObj = paymentMethods.find((m) => m.name.toUpperCase() === payMethod?.toUpperCase());
+                          const fee = selectedMethodObj ? (selectedMethodObj.customerFee || 0) : (order?.fee || 0);
+                          const totalVal = itemsTotal + Number(shipping) + Number(fee) - Number(discount);
+                          const paymentStatus = form.getFieldValue("paymentStatus") || order?.paymentStatus;
+                          const isPaidWebsite = order?.from?.toLowerCase() === "website" && paymentStatus?.toLowerCase() === "paid";
+                          
+                          const paidVal = isPaidWebsite ? totalVal : totalPaidAmount;
+                          return (
+                            <span className="text-xs font-mono font-black text-blue-600">
+                              Rs {paidVal.toLocaleString()}
+                            </span>
+                          );
+                        }}
+                      </Form.Item>
                     </div>
 
                     <div className="flex justify-between items-center">
@@ -1201,7 +1260,9 @@ export const OrderEditForm: React.FC<OrderEditFormProps> = ({
                           const selectedMethodObj = paymentMethods.find((m) => m.name.toUpperCase() === payMethod?.toUpperCase());
                           const fee = selectedMethodObj ? (selectedMethodObj.customerFee || 0) : (order?.fee || 0);
                           const totalVal = itemsTotal + Number(shipping) + Number(fee) - Number(discount);
-                          const due = totalVal - totalPaidAmount;
+                          const paymentStatus = form.getFieldValue("paymentStatus") || order?.paymentStatus;
+                          const isPaidWebsite = order?.from?.toLowerCase() === "website" && paymentStatus?.toLowerCase() === "paid";
+                          const due = isPaidWebsite ? 0 : totalVal - totalPaidAmount;
                           return (
                             <span className={`text-xs font-mono font-black ${due <= 0 ? 'text-green-600' : 'text-rose-600'}`}>
                               {due <= 0 ? "PAID" : `Rs ${due.toLocaleString()}`}

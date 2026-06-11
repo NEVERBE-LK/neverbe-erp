@@ -150,8 +150,13 @@ const OrderView = ({ orderId }: { orderId: string }) => {
 
   const fee = order?.fee || 0;
   const shippingFee = order?.shippingFee || 0;
-  const totalPaid = order?.paymentReceived?.reduce((sum, p) => sum + p.amount, 0) || 0;
-  const balanceDue = (order?.total || 0) - totalPaid;
+  const isPaidWebsiteOrder =
+    order?.from?.toLowerCase() === "website" &&
+    order?.paymentStatus?.toLowerCase() === "paid";
+  const totalPaid = isPaidWebsiteOrder
+    ? (order?.total || 0)
+    : (order?.paymentReceived?.reduce((sum, p) => sum + p.amount, 0) || 0);
+  const balanceDue = isPaidWebsiteOrder ? 0 : (order?.total || 0) - totalPaid;
 
   if (loadingOrder) {
     return (
@@ -580,8 +585,121 @@ const OrderView = ({ orderId }: { orderId: string }) => {
                   </span>
                 </div>
               </div>
+
+              {order?.estimatedDelivery && (
+                <div className="flex items-start gap-3">
+                  <div className="p-2 bg-gray-50 text-gray-500 rounded-xl">
+                    <IconCalendar size={18} />
+                  </div>
+                  <div>
+                    <span className="block text-[9px] font-bold text-gray-400 uppercase">Estimated Delivery</span>
+                    <span className="text-xs font-bold text-gray-800">
+                      {formatSLDateTime(order.estimatedDelivery)}
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {order?.transactionFeeCharge !== undefined && order?.transactionFeeCharge > 0 && (
+                <div className="flex items-start gap-3">
+                  <div className="p-2 bg-rose-50 text-rose-600 rounded-xl">
+                    <IconCoin size={18} />
+                  </div>
+                  <div>
+                    <span className="block text-[9px] font-bold text-rose-500 uppercase">IPG Transaction Cost</span>
+                    <span className="text-xs font-bold text-rose-800 font-mono">
+                      Rs {order.transactionFeeCharge.toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {order?.restocked && (
+                <div className="flex items-start gap-3 col-span-2 border-t border-gray-100 pt-3 mt-1">
+                  <div className="p-2 bg-emerald-50 text-emerald-600 rounded-xl">
+                    <IconPackage size={18} />
+                  </div>
+                  <div>
+                    <span className="block text-[9px] font-bold text-emerald-600 uppercase">Stock Returned / Restocked</span>
+                    <span className="text-xs font-bold text-emerald-800">
+                      Restocked {order.restockedAt ? `on ${formatSLDateTime(order.restockedAt)}` : "Yes"}
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {order?.couponCode && (
+                <div className="flex items-start gap-3 col-span-2 border-t border-gray-100 pt-3 mt-1">
+                  <div className="p-2 bg-green-50 text-green-600 rounded-xl">
+                    <IconShieldCheck size={18} />
+                  </div>
+                  <div>
+                    <span className="block text-[9px] font-bold text-green-600 uppercase">Applied Coupon Code</span>
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded text-xs font-bold bg-green-50 text-green-700 border border-green-100 mt-0.5">
+                      {order.couponCode}
+                    </span>
+                    {order.appliedCouponId && (
+                      <span className="block text-[8px] text-gray-400 font-bold uppercase mt-0.5">ID: {order.appliedCouponId}</span>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {order?.appliedPromotionIds && order.appliedPromotionIds.length > 0 && (
+                <div className="flex items-start gap-3 col-span-2 border-t border-gray-100 pt-3 mt-1">
+                  <div className="p-2 bg-blue-50 text-blue-600 rounded-xl">
+                    <IconPackage size={18} />
+                  </div>
+                  <div>
+                    <span className="block text-[9px] font-bold text-blue-600 uppercase">Applied Campaign Promotions</span>
+                    <div className="flex flex-wrap gap-1.5 mt-1">
+                      {order.appliedPromotionIds.map((promoId) => (
+                        <span key={promoId} className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-100 uppercase">
+                          {promoId}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </Card>
+
+          {/* Internal Order History */}
+          {order?.statusHistory && order.statusHistory.length > 0 && (
+            <Card
+              title={
+                <div className="flex items-center gap-2">
+                  <IconCalendar size={18} className="text-gray-400" />
+                  <span className="text-xs font-bold text-gray-600 uppercase tracking-wider">
+                    Internal Order History
+                  </span>
+                </div>
+              }
+              className="shadow-sm border-gray-100 rounded-2xl bg-white"
+            >
+              <Timeline
+                className="mt-4"
+                items={order.statusHistory.map((historyItem) => ({
+                  children: (
+                    <div className="flex flex-col">
+                      <span className="text-xs font-bold text-gray-800 uppercase">
+                        {historyItem.status}
+                      </span>
+                      <span className="text-[10px] text-gray-400 font-semibold">
+                        {formatSLDateTime(historyItem.date)}
+                      </span>
+                    </div>
+                  ),
+                  color: historyItem.status.toLowerCase() === "completed"
+                    ? "green"
+                    : historyItem.status.toLowerCase() === "cancelled"
+                    ? "gray"
+                    : "blue",
+                }))}
+              />
+            </Card>
+          )}
 
           {/* Tracking History Timeline */}
           {order?.trackingNumber && (
@@ -709,7 +827,7 @@ const OrderView = ({ orderId }: { orderId: string }) => {
               </div>
 
               {/* Payment Tally Summary */}
-              {order?.paymentReceived && order.paymentReceived.length > 0 && (
+              {((order?.paymentReceived && order.paymentReceived.length > 0) || isPaidWebsiteOrder) && (
                 <div className="pt-4 border-t border-dashed border-gray-100 space-y-3">
                   <div className="flex justify-between items-center text-xs">
                     <span className="font-semibold text-gray-500 uppercase">Total Paid</span>
@@ -727,12 +845,24 @@ const OrderView = ({ orderId }: { orderId: string }) => {
                   {/* Payments Log */}
                   <div className="bg-gray-50/70 border border-gray-100/70 rounded-xl p-3 space-y-2">
                     <span className="text-[9px] font-black uppercase text-gray-400 tracking-wider">Payments Ledger</span>
-                    {order.paymentReceived.map((p) => (
-                      <div key={p.id} className="flex justify-between items-center text-[10px] text-gray-700 bg-white px-2.5 py-1.5 rounded-lg border border-gray-50 shadow-sm">
-                        <span className="font-semibold">{p.paymentMethod}</span>
-                        <span className="font-bold font-mono text-gray-900">Rs {p.amount.toLocaleString()}</span>
+                    {order.paymentReceived && order.paymentReceived.length > 0 ? (
+                      order.paymentReceived.map((p) => (
+                        <div key={p.id} className="flex justify-between items-center text-[10px] text-gray-700 bg-white px-2.5 py-1.5 rounded-lg border border-gray-50 shadow-sm">
+                          <span className="font-semibold">{p.paymentMethod}</span>
+                          <span className="font-bold font-mono text-gray-900">Rs {p.amount.toLocaleString()}</span>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="flex justify-between items-center text-[10px] text-gray-700 bg-white px-2.5 py-1.5 rounded-lg border border-gray-50 shadow-sm">
+                        <span className="font-semibold">{order?.paymentMethod || "IPG Payment"}</span>
+                        <div className="text-right">
+                          <span className="font-bold font-mono text-gray-900 block">Rs {order?.total?.toLocaleString()}</span>
+                          {order?.paymentId && (
+                            <span className="text-[8px] font-bold text-gray-400 block font-mono">Ref: {order.paymentId}</span>
+                          )}
+                        </div>
                       </div>
-                    ))}
+                    )}
                   </div>
                 </div>
               )}
