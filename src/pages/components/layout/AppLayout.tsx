@@ -146,12 +146,12 @@ export default function AppLayout() {
           <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest m-0">
             &copy; {new Date().getFullYear()} Developed by{" "}
             <a
-              href="https://www.novaxis.com.lk"
+              href="https://vx9studio.com"
               target="_blank"
               rel="noopener noreferrer"
               className="text-gray-400 hover:text-black transition-colors underline"
             >
-              Novaxis
+              VX9Studio
             </a>
           </p>
         </footer>
