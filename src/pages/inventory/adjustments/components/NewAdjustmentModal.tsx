@@ -9,7 +9,7 @@ import { RootState } from "@/lib/store";
 import { useConfirmationDialog } from "@/contexts/ConfirmationDialogContext";
 
 // Fluid label style
-const labelClass = "block text-xs font-bold text-gray-500 mb-2";
+const labelClass = "block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-0.5";
 
 type AdjustmentType = "add" | "remove" | "damage" | "return" | "transfer";
 
@@ -353,8 +353,9 @@ const NewAdjustmentModal: React.FC<NewAdjustmentModalProps> = ({
           type="text"
           size="small"
           danger
-          icon={<IconTrash size={14} />}
+          icon={<IconTrash size={15} />}
           onClick={() => handleRemoveItem(idx as number)}
+          className="inline-flex items-center justify-center w-8 h-8 rounded-full text-gray-400 hover:text-red-655 hover:bg-red-50 transition-all border-none"
         />
       ),
     },
@@ -363,19 +364,26 @@ const NewAdjustmentModal: React.FC<NewAdjustmentModalProps> = ({
   return (
     <Modal
       title={
-        <div className="flex items-center gap-2 pb-2 border-b border-gray-100">
-          <IconAdjustments size={20} className="text-green-600" />
-          <span className="text-xl font-bold tracking-tight">
-            New Inventory Adjustment
-          </span>
+        <div className="flex items-center gap-3 pb-3 border-b border-gray-100">
+          <div className="w-10 h-10 rounded-xl bg-black text-white flex items-center justify-center shadow-md shadow-black/10">
+            <IconAdjustments size={20} />
+          </div>
+          <div>
+            <h2 className="text-lg font-black text-gray-900 leading-tight">
+              New Inventory Adjustment
+            </h2>
+            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-0.5">
+              Create a stock adjustment entry
+            </p>
+          </div>
         </div>
       }
       open={open}
       onCancel={onClose}
-      width={1000}
+      width={1100}
       footer={null}
       centered
-      styles={{ body: { padding: "24px 0", maxHeight: "85vh", overflowY: "auto" } }}
+      styles={{ body: { padding: "24px 0 0 0", maxHeight: "85vh", overflowY: "auto" } }}
       className="fluid-modal"
     >
       {loading ? (
@@ -384,55 +392,21 @@ const NewAdjustmentModal: React.FC<NewAdjustmentModalProps> = ({
         </div>
       ) : (
         <div className="space-y-6">
-          {/* Header Info */}
-          <div className="bg-white p-5 border border-gray-100 rounded-2xl">
-            <h3 className="text-[10px] font-bold text-gray-400 mb-4 uppercase tracking-wider border-b border-gray-50 pb-2">
-              Adjustment Details
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className={labelClass}>Adjustment Type *</label>
-                <Select
-                  className="w-full"
-                  value={type}
-                  onChange={(val) => {
-                    setType(val as AdjustmentType);
-                    setItems([]); // Clear items if type changes to prevent confusion
-                  }}
-                  options={TYPE_OPTIONS}
-                />
-              </div>
-              <div>
-                <label className={labelClass}>Reason *</label>
-                <Input
-                  value={reason}
-                  onChange={(e) => setReason(e.target.value)}
-                  placeholder="e.g., Physical count correction"
-                />
-              </div>
-            </div>
-            <div className="mt-4">
-              <label className={labelClass}>Notes</label>
-              <Input
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="Optional additional notes..."
-                size="small"
-              />
-            </div>
-          </div>
-
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2 space-y-4">
-              {/* Item Entry */}
-              <div className="bg-gray-50 p-5 border border-gray-100 rounded-2xl">
-                <h3 className="text-[10px] font-bold text-gray-400 mb-4 uppercase tracking-wider border-b border-gray-100 pb-2">
-                  Add Items
-                </h3>
+            {/* Left Panel: Items Builder and Table */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* Item Builder Block */}
+              <div className="bg-gray-50/50 p-6 border border-gray-100 rounded-3xl space-y-4">
+                <div className="flex items-center gap-2 border-b border-gray-100 pb-3 mb-2">
+                  <span className="w-1.5 h-3 bg-black rounded-full" />
+                  <h3 className="text-xs font-bold text-gray-800 uppercase tracking-widest">
+                    Add Items to List
+                  </h3>
+                </div>
                 
                 {currentProduct && (
-                  <div className="mb-4 bg-white border border-gray-150 rounded-2xl p-4 flex gap-4 items-center shadow-sm relative overflow-hidden transition-all duration-300">
-                    <div className="absolute top-0 right-0 w-24 h-24 bg-green-500/5 rounded-full blur-xl pointer-events-none" />
+                  <div className="mb-4 bg-white border border-gray-150/80 rounded-2xl p-4 flex gap-4 items-center shadow-sm relative overflow-hidden transition-all duration-300">
+                    <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full blur-xl pointer-events-none" />
                     <div className="w-16 h-16 rounded-xl overflow-hidden border border-gray-200 bg-white flex-shrink-0 flex items-center justify-center shadow-inner relative group">
                       {currentVariant?.images?.[0]?.url || currentProduct?.thumbnail?.url ? (
                         <img
@@ -446,14 +420,14 @@ const NewAdjustmentModal: React.FC<NewAdjustmentModalProps> = ({
                     </div>
                     
                     <div className="flex-1 min-w-0">
-                      <div className="flex flex-wrap gap-1 items-center mb-1">
+                      <div className="flex flex-wrap gap-1.5 items-center mb-1">
                         {currentProduct.brand && (
-                          <span className="bg-slate-200/60 text-[8px] font-extrabold uppercase text-slate-600 px-1.5 py-0.5 rounded">
+                          <span className="bg-gray-100 text-[9px] font-extrabold uppercase text-gray-600 px-2 py-0.5 rounded-md">
                             {currentProduct.brand}
                           </span>
                         )}
                         {currentProduct.category && (
-                          <span className="bg-emerald-50 text-[8px] font-extrabold uppercase text-emerald-700 px-1.5 py-0.5 rounded">
+                          <span className="bg-green-50 text-[9px] font-extrabold uppercase text-green-700 px-2 py-0.5 rounded-md">
                             {currentProduct.category}
                           </span>
                         )}
@@ -465,18 +439,18 @@ const NewAdjustmentModal: React.FC<NewAdjustmentModalProps> = ({
                       
                       <div className="flex flex-wrap items-center gap-2 mt-1">
                         {currentVariant && (
-                          <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded">
+                          <span className="text-[9px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md">
                             Variant: {currentVariant.variantName}
                           </span>
                         )}
                         {size && (
-                          <span className="text-[10px] font-bold text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded">
+                          <span className="text-[9px] font-bold text-gray-600 bg-gray-100 px-2 py-0.5 rounded-md">
                             Size: {size}
                           </span>
                         )}
                         {currentStockQty !== null && (
-                          <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${currentStockQty > 0 ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700 animate-pulse"}`}>
-                            In Stock: {currentStockQty} Units
+                          <span className={`text-[9px] font-black px-2.5 py-0.5 rounded-full ${currentStockQty > 0 ? "bg-green-50 text-green-700 border border-green-100" : "bg-red-50 text-red-700 border border-red-100"}`}>
+                            Current Stock: {currentStockQty} Units
                           </span>
                         )}
                         {loadingStock && <Spin size="small" />}
@@ -579,78 +553,128 @@ const NewAdjustmentModal: React.FC<NewAdjustmentModalProps> = ({
                     </div>
                   )}
                 </div>
-                <div className="mt-4">
+                <div className="mt-4 pt-2">
                   <Button
                     type="primary"
                     icon={<IconPlus size={16} />}
                     onClick={handleAddItem}
                     block
-                    className="h-10 rounded-xl"
+                    className="h-11 rounded-xl bg-black hover:bg-gray-800 border-none shadow-sm flex items-center justify-center gap-2 font-bold"
                   >
                     Add Item to Adjustment
                   </Button>
                 </div>
               </div>
 
-              {/* Items Table */}
-              <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden min-h-[200px]">
+              {/* Items Table Box */}
+              <div className="bg-white border border-gray-100 rounded-3xl overflow-hidden min-h-[220px]">
                 <Table
-                  bordered
-                  scroll={{ y: 300, x: 800 }}
+                  bordered={false}
+                  scroll={{ y: 250, x: 800 }}
                   columns={columns}
                   dataSource={items}
-                  size="small"
+                  size="middle"
                   rowKey={(_, idx) => idx as number}
                   pagination={false}
+                  className="[&_.ant-table-thead_th]:!bg-gray-50/50 [&_.ant-table-thead_th]:!font-bold [&_.ant-table-thead_th]:!text-gray-500 [&_.ant-table-thead_th]:!text-[10px] [&_.ant-table-thead_th]:!uppercase [&_.ant-table-thead_th]:!tracking-widest [&_.ant-table-thead_th]:!border-b [&_.ant-table-thead_th]:!border-gray-100"
                 />
               </div>
             </div>
 
-            {/* Sidebar Actions */}
-            <div className="space-y-4">
-              <div className="bg-green-600 text-white p-6 rounded-2xl">
-                <h4 className="text-[10px] font-bold mb-1 uppercase opacity-70">
-                  Total Items
-                </h4>
-                <div className="text-3xl font-bold tracking-tight leading-none">
-                  {items.length}
+            {/* Right Panel: Metadata & Action Sidebar */}
+            <div className="space-y-6">
+              {/* Metadata Details Card */}
+              <div className="bg-white p-6 border border-gray-100 rounded-3xl shadow-sm space-y-4">
+                <div className="flex items-center gap-2 border-b border-gray-150/40 pb-3 mb-2">
+                  <span className="w-1.5 h-3 bg-black rounded-full" />
+                  <h3 className="text-xs font-bold text-gray-850 uppercase tracking-widest">
+                    General Info
+                  </h3>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className={labelClass}>Adjustment Type *</label>
+                    <Select
+                      className="w-full h-11"
+                      value={type}
+                      onChange={(val) => {
+                        setType(val as AdjustmentType);
+                        setItems([]); // Clear items if type changes to prevent confusion
+                      }}
+                      options={TYPE_OPTIONS}
+                    />
+                  </div>
+                  <div>
+                    <label className={labelClass}>Reason *</label>
+                    <Input
+                      className="h-11 rounded-xl border-gray-200"
+                      value={reason}
+                      onChange={(e) => setReason(e.target.value)}
+                      placeholder="e.g., Physical count correction"
+                    />
+                  </div>
+                  <div>
+                    <label className={labelClass}>Notes</label>
+                    <Input
+                      className="h-11 rounded-xl border-gray-200"
+                      value={notes}
+                      onChange={(e) => setNotes(e.target.value)}
+                      placeholder="Optional additional notes..."
+                    />
+                  </div>
                 </div>
               </div>
 
-              <div className="bg-white border border-gray-100 p-5 space-y-3 rounded-2xl">
-                <Button
-                  type="primary"
-                  size="large"
-                  block
-                  icon={<IconAdjustments size={18} />}
-                  onClick={() => handleSave("SUBMITTED")}
-                  loading={saving}
-                  className="h-14 rounded-xl font-bold"
-                >
-                  SUBMIT ADJUSTMENT
-                </Button>
-                <Button
-                  size="large"
-                  block
-                  onClick={() => handleSave("DRAFT")}
-                  disabled={saving}
-                  className="h-12 rounded-xl font-bold border-gray-100 bg-gray-50"
-                >
-                  Save as Draft
-                </Button>
-                <Button
-                  block
-                  onClick={onClose}
-                  disabled={saving}
-                  className="border-none text-gray-400 text-xs hover:text-gray-600"
-                >
-                  Discard Changes
-                </Button>
+              {/* Action Summary Card */}
+              <div className="bg-white border border-gray-100 p-6 space-y-4 rounded-3xl shadow-sm">
+                <div className="flex justify-between items-center bg-gray-50/50 p-4 rounded-2xl border border-gray-100/40">
+                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                    Total Items Selected
+                  </span>
+                  <span className="text-xl font-black text-black">
+                    {items.length}
+                  </span>
+                </div>
+
+                <div className="space-y-3 pt-2">
+                  <Button
+                    type="primary"
+                    size="large"
+                    block
+                    icon={<IconAdjustments size={18} />}
+                    onClick={() => handleSave("SUBMITTED")}
+                    loading={saving}
+                    className="h-14 rounded-xl font-bold bg-black hover:bg-gray-800 border-none shadow-md shadow-black/10 flex items-center justify-center gap-2"
+                  >
+                    SUBMIT ADJUSTMENT
+                  </Button>
+                  <Button
+                    size="large"
+                    block
+                    onClick={() => handleSave("DRAFT")}
+                    disabled={saving}
+                    className="h-12 rounded-xl font-bold border-gray-200 hover:border-gray-300 text-gray-700 bg-gray-50"
+                  >
+                    Save as Draft
+                  </Button>
+                  <Button
+                    block
+                    onClick={onClose}
+                    disabled={saving}
+                    className="border-none text-gray-400 text-xs hover:text-gray-600 font-bold mt-1 shadow-none hover:bg-transparent"
+                  >
+                    Discard Changes
+                  </Button>
+                </div>
               </div>
 
-              <div className="p-4 bg-yellow-50 border border-yellow-100 rounded-2xl text-[10px] text-yellow-800 font-bold leading-relaxed">
-                Adjustments directly update inventory levels. Please ensure
-                accuracy before submitting.
+              {/* Warning notice */}
+              <div className="p-4 bg-amber-50/40 border border-amber-100 rounded-2xl text-[10px] text-amber-800 font-bold leading-relaxed flex gap-2">
+                <span className="text-base leading-none">⚠️</span>
+                <span>
+                  Adjustments directly update inventory levels. Please ensure accuracy before submitting.
+                </span>
               </div>
             </div>
           </div>
