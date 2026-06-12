@@ -16,6 +16,9 @@ import { DropdownOption } from "../master/products/page";
 import { InventoryItem } from "@/model/InventoryItem";
 import InventoryFormModal from "./components/InventoryFormModal";
 import BulkInventoryFormModal from "./components/BulkInventoryFormModal";
+import { usePermission } from "@/hooks/usePermission";
+import ERPCredentialVerifyAndRequestAuthorizeForm from "@/components/ERPCredentialVerifyAndRequestAuthorizeForm";
+import { useConfirmationDialog } from "@/contexts/ConfirmationDialogContext";
 import toast from "react-hot-toast";
 import {
   Table,
@@ -29,8 +32,19 @@ import {
   Typography,
   Tag,
   Image,
+  Input,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
+
+export interface ProductDropdownOption extends DropdownOption {
+  buyingPrice?: number;
+  sellingPrice?: number;
+  variants?: any[];
+  availableSizes?: string[];
+  thumbnail?: { url: string; file: string; order: number };
+  brand?: string;
+  category?: string;
+}
 
 interface StockLocationOption extends DropdownOption { }
 
@@ -39,9 +53,46 @@ const { Option } = Select;
 const InventoryPage = () => {
   const [form] = Form.useForm();
   const { currentUser } = useAppSelector((state) => state.authSlice);
+  const { showConfirmation } = useConfirmationDialog();
+  const canUpdateInventory = usePermission("update_inventory");
+  const [authFormOpen, setAuthFormOpen] = useState(false);
+  const [authSuccessCallback, setAuthSuccessCallback] = useState<(() => void) | null>(null);
+
+  const executeWithPermission = (callback: () => void) => {
+    if (canUpdateInventory) {
+      callback();
+    } else {
+      setAuthSuccessCallback(() => callback);
+      setAuthFormOpen(true);
+    }
+  };
+
+  const handleOpenBulkModalWithWarning = () => {
+    showConfirmation({
+      title: "DIRECT STOCK AMENDMENT WARNING",
+      message: "WARNING: Directly modifying stock counts bypasses the standard Purchase Order (PO) and Goods Received Note (GRN) workflow. This immediately updates physical inventory and can cause discrepancies in stock valuation and accounting records. Do you wish to proceed?",
+      variant: "danger",
+      confirmText: "Proceed Anyway",
+      onSuccess: () => {
+        setIsBulkModalOpen(true);
+      }
+    });
+  };
+
+  const handleOpenCreateModalWithWarning = () => {
+    showConfirmation({
+      title: "DIRECT STOCK AMENDMENT WARNING",
+      message: "WARNING: Directly modifying stock counts bypasses the standard Purchase Order (PO) and Goods Received Note (GRN) workflow. This immediately updates physical inventory and can cause discrepancies in stock valuation and accounting records. Do you wish to proceed?",
+      variant: "danger",
+      confirmText: "Proceed Anyway",
+      onSuccess: () => {
+        setIsModalOpen(true);
+      }
+    });
+  };
 
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
-  const [products, setProducts] = useState<DropdownOption[]>([]);
+  const [products, setProducts] = useState<ProductDropdownOption[]>([]);
   const [variants, setVariants] = useState<DropdownOption[]>([]);
   const [sizes, setSizes] = useState<DropdownOption[]>([]);
   const [stockLocations, setStockLocations] = useState<StockLocationOption[]>(
@@ -408,18 +459,26 @@ const InventoryPage = () => {
             form={form}
             layout="vertical"
             onFinish={handleFilterSubmit}
-            initialValues={{ variantId: "all", size: "all", stockId: "all" }}
+            initialValues={{ search: "", productId: "", variantId: "", size: "", stockId: "" }}
             className="w-full p-2"
           >
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 items-end">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 items-end">
+              <Form.Item name="search" label="Search" className="!mb-0">
+                <Input
+                  prefix={<IconSearch size={15} className="text-gray-400" />}
+                  placeholder="Search item..."
+                  allowClear
+                  className="rounded-xl border-gray-200 h-10 w-full"
+                />
+              </Form.Item>
               <Form.Item name="productId" label="Product" className="!mb-0">
                 <Select
                   showSearch
-                  placeholder="All Products"
                   optionFilterProp="children"
+                  className="h-10 rounded-xl w-full"
+                  placeholder="Select Product"
                   onChange={handleProductChange}
                   allowClear
-                  className="w-full h-10"
                 >
                   {products.map((p) => (
                     <Option key={p.id} value={p.id}>
@@ -430,11 +489,12 @@ const InventoryPage = () => {
               </Form.Item>
               <Form.Item name="variantId" label="Variant" className="!mb-0">
                 <Select
-                  className="w-full h-10"
-                  disabled={!form.getFieldValue("productId") || variantLoading}
+                  className="h-10 rounded-xl w-full"
+                  placeholder="Select Variant"
                   loading={variantLoading}
+                  disabled={!variants.length}
+                  allowClear
                 >
-                  <Option value="all">All Variants</Option>
                   {variants.map((v) => (
                     <Option key={v.id} value={v.id}>
                       {v.label}
@@ -443,21 +503,27 @@ const InventoryPage = () => {
                 </Select>
               </Form.Item>
               <Form.Item name="size" label="Size" className="!mb-0">
-                <Select className="w-full h-10">
-                  <Option value="all">All Sizes</Option>
+                <Select
+                  className="h-10 rounded-xl w-full"
+                  placeholder="Select Size"
+                  allowClear
+                >
                   {sizes.map((s) => (
-                    <Option key={s.id} value={s.label}>
+                    <Option key={s.id} value={s.id}>
                       {s.label}
                     </Option>
                   ))}
                 </Select>
               </Form.Item>
               <Form.Item name="stockId" label="Location" className="!mb-0">
-                <Select className="w-full h-10">
-                  <Option value="all">All Locations</Option>
-                  {stockLocations.map((l) => (
-                    <Option key={l.id} value={l.id}>
-                      {l.label}
+                <Select
+                  className="h-10 rounded-xl w-full"
+                  placeholder="Select Location"
+                  allowClear
+                >
+                  {stockLocations.map((s) => (
+                    <Option key={s.id} value={s.id}>
+                      {s.label}
                     </Option>
                   ))}
                 </Select>
@@ -475,7 +541,7 @@ const InventoryPage = () => {
                   <Button
                     icon={<IconX size={15} />}
                     onClick={handleClearFilters}
-                    className="flex-1 rounded-xl h-10 font-bold border-gray-200 flex-items-center justify-center gap-1"
+                    className="flex-1 rounded-xl h-10 font-bold border-gray-200 flex items-center justify-center gap-1"
                   >
                     Clear
                   </Button>
@@ -518,6 +584,24 @@ const InventoryPage = () => {
         onSave={() => fetchInventory()}
         products={products}
         stockLocations={stockLocations}
+      />
+
+      <ERPCredentialVerifyAndRequestAuthorizeForm
+        open={authFormOpen}
+        requiredPermission="update_inventory"
+        title="Authorize Direct Stock Amendment"
+        description="WARNING: Directly modifying stock counts bypasses the standard Purchase Order (PO) and Goods Received Note (GRN) workflow. This immediately updates physical inventory and can cause discrepancies in stock valuation and accounting records. Please enter credentials of an authorized user to proceed."
+        onCancel={() => {
+          setAuthFormOpen(false);
+          setAuthSuccessCallback(null);
+        }}
+        onSuccess={() => {
+          setAuthFormOpen(false);
+          if (authSuccessCallback) {
+            authSuccessCallback();
+            setAuthSuccessCallback(null);
+          }
+        }}
       />
     </PageContainer>
   );

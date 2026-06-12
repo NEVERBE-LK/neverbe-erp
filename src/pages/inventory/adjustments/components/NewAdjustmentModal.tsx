@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { Modal, Spin, Button, Table, Select, Input, InputNumber } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { IconPlus, IconTrash, IconAdjustments } from "@tabler/icons-react";
+import { IconPlus, IconTrash, IconAdjustments, IconPackage } from "@tabler/icons-react";
 import api from "@/lib/api";
 import toast from "react-hot-toast";
 import { useAppSelector } from "@/lib/hooks";
@@ -20,8 +20,14 @@ interface Product {
     variantId: string;
     variantName: string;
     sizes: string[];
+    images?: { url: string; file?: string; order?: number }[];
   }[];
   availableSizes: string[];
+  buyingPrice?: number;
+  sellingPrice?: number;
+  thumbnail?: { url: string; file: string; order: number };
+  brand?: string;
+  category?: string;
 }
 
 interface Stock {
@@ -82,8 +88,36 @@ const NewAdjustmentModal: React.FC<NewAdjustmentModalProps> = ({
   const [quantity, setQuantity] = useState(1);
   const [stockId, setStockId] = useState("");
   const [destinationStockId, setDestinationStockId] = useState("");
+  const [currentStockQty, setCurrentStockQty] = useState<number | null>(null);
+  const [loadingStock, setLoadingStock] = useState(false);
 
   const { currentUser } = useAppSelector((state: RootState) => state.authSlice);
+
+  useEffect(() => {
+    const fetchQty = async () => {
+      if (!selectedProduct || !size || !stockId) {
+        setCurrentStockQty(null);
+        return;
+      }
+      setLoadingStock(true);
+      try {
+        const response = await api.get("/api/v1/erp/inventory/check-quantity", {
+          params: {
+            productId: selectedProduct,
+            variantId: selectedVariant || undefined,
+            size,
+            stockId,
+          },
+        });
+        setCurrentStockQty(response.data?.quantity ?? 0);
+      } catch {
+        setCurrentStockQty(0);
+      } finally {
+        setLoadingStock(false);
+      }
+    };
+    fetchQty();
+  }, [selectedProduct, selectedVariant, size, stockId]);
 
   const fetchData = useCallback(async () => {
     if (!open) return;
@@ -120,6 +154,8 @@ const NewAdjustmentModal: React.FC<NewAdjustmentModalProps> = ({
       setQuantity(1);
       setStockId("");
       setDestinationStockId("");
+      setCurrentStockQty(null);
+      setLoadingStock(false);
     }
   }, [open]);
 
@@ -232,26 +268,53 @@ const NewAdjustmentModal: React.FC<NewAdjustmentModalProps> = ({
     return product.availableSizes || [];
   };
 
-  const currentProduct = products.find((p) => p.id === selectedProduct);
+  const currentProduct = useMemo(() => {
+    return products.find((p) => p.id === selectedProduct) || null;
+  }, [selectedProduct, products]);
+
+  const currentVariant = useMemo(() => {
+    if (!currentProduct || !selectedVariant) return null;
+    return currentProduct.variants.find((v) => v.variantId === selectedVariant) || null;
+  }, [selectedVariant, currentProduct]);
+
   const showVariantSelect =
-    currentProduct &&
+    !!(currentProduct &&
     currentProduct.variants &&
-    currentProduct.variants.length > 0;
+    currentProduct.variants.length > 0);
   const availableSizes = getAvailableSizes();
 
   const columns: ColumnsType<AdjustmentItem> = [
     {
       title: "Product / Variant",
       key: "product",
-      render: (_, i) => (
-        <div className="flex flex-col">
-          <span className="font-bold text-black text-xs">{i.productName}</span>
-          <span className="text-[10px] text-gray-500">
-            {i.variantName ? `${i.variantName} / ` : ""}
-            {i.size}
-          </span>
-        </div>
-      ),
+      render: (_, i) => {
+        const prod = products.find((p) => p.id === i.productId);
+        const variant = prod?.variants.find((v) => v.variantId === i.variantId);
+        const imageUrl = variant?.images?.[0]?.url || prod?.thumbnail?.url;
+
+        return (
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg overflow-hidden border border-gray-200 bg-white flex-shrink-0 flex items-center justify-center">
+              {imageUrl ? (
+                <img
+                  src={imageUrl}
+                  alt={i.productName}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <IconPackage className="text-gray-300" size={18} />
+              )}
+            </div>
+            <div className="flex flex-col">
+              <span className="font-bold text-black text-xs">{i.productName}</span>
+              <span className="text-[10px] text-gray-500">
+                {i.variantName ? `${i.variantName} / ` : ""}
+                {i.size}
+              </span>
+            </div>
+          </div>
+        );
+      },
     },
     {
       title: "Qty",
@@ -366,6 +429,62 @@ const NewAdjustmentModal: React.FC<NewAdjustmentModalProps> = ({
                 <h3 className="text-[10px] font-bold text-gray-400 mb-4 uppercase tracking-wider border-b border-gray-100 pb-2">
                   Add Items
                 </h3>
+                
+                {currentProduct && (
+                  <div className="mb-4 bg-white border border-gray-150 rounded-2xl p-4 flex gap-4 items-center shadow-sm relative overflow-hidden transition-all duration-300">
+                    <div className="absolute top-0 right-0 w-24 h-24 bg-green-500/5 rounded-full blur-xl pointer-events-none" />
+                    <div className="w-16 h-16 rounded-xl overflow-hidden border border-gray-200 bg-white flex-shrink-0 flex items-center justify-center shadow-inner relative group">
+                      {currentVariant?.images?.[0]?.url || currentProduct?.thumbnail?.url ? (
+                        <img
+                          src={currentVariant?.images?.[0]?.url || currentProduct?.thumbnail?.url}
+                          alt={currentProduct.label}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <IconPackage className="text-gray-300" size={24} />
+                      )}
+                    </div>
+                    
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-wrap gap-1 items-center mb-1">
+                        {currentProduct.brand && (
+                          <span className="bg-slate-200/60 text-[8px] font-extrabold uppercase text-slate-600 px-1.5 py-0.5 rounded">
+                            {currentProduct.brand}
+                          </span>
+                        )}
+                        {currentProduct.category && (
+                          <span className="bg-emerald-50 text-[8px] font-extrabold uppercase text-emerald-700 px-1.5 py-0.5 rounded">
+                            {currentProduct.category}
+                          </span>
+                        )}
+                      </div>
+                      
+                      <h4 className="text-sm font-black text-gray-900 leading-snug truncate">
+                        {currentProduct.label}
+                      </h4>
+                      
+                      <div className="flex flex-wrap items-center gap-2 mt-1">
+                        {currentVariant && (
+                          <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded">
+                            Variant: {currentVariant.variantName}
+                          </span>
+                        )}
+                        {size && (
+                          <span className="text-[10px] font-bold text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded">
+                            Size: {size}
+                          </span>
+                        )}
+                        {currentStockQty !== null && (
+                          <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${currentStockQty > 0 ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700 animate-pulse"}`}>
+                            In Stock: {currentStockQty} Units
+                          </span>
+                        )}
+                        {loadingStock && <Spin size="small" />}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className={labelClass}>Product</label>

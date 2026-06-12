@@ -17,8 +17,22 @@ import {
   AdjustmentStatus,
 } from "@/model/InventoryAdjustment";
 import { useConfirmationDialog } from "@/contexts/ConfirmationDialogContext";
+import { IconPackage } from "@tabler/icons-react";
 
 type AdjustmentType = "add" | "remove" | "damage" | "return" | "transfer";
+
+interface Product {
+  id: string;
+  label: string;
+  variants: {
+    variantId: string;
+    variantName: string;
+    sizes: string[];
+    images?: { url: string; file?: string; order?: number }[];
+  }[];
+  availableSizes: string[];
+  thumbnail?: { url: string; file: string; order: number };
+}
 
 interface AdjustmentItem {
   productId: string;
@@ -88,10 +102,23 @@ const ViewAdjustmentPage = () => {
 
   const [loading, setLoading] = useState(true);
   const [adjustment, setAdjustment] = useState<Adjustment | null>(null);
+  const [products, setProducts] = useState<Product[]>([]);
 
   const { showConfirmation } = useConfirmationDialog();
 
   const { currentUser } = useAppSelector((state: RootState) => state.authSlice);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const res = await api.get<Product[]>("/api/v1/erp/master/products/dropdown");
+        setProducts(res.data || []);
+      } catch (e) {
+        console.error("Failed to fetch products", e);
+      }
+    };
+    if (currentUser) fetchProducts();
+  }, [currentUser]);
 
   const fetchAdjustment = useCallback(async () => {
     setLoading(true);
@@ -184,16 +211,35 @@ const ViewAdjustmentPage = () => {
     {
       title: "Product",
       key: "product",
-      render: (_, item) => (
-        <>
-          {item.productName}
-          {item.variantName && (
-            <span className="block text-xs text-gray-500 font-normal">
-              {item.variantName}
-            </span>
-          )}
-        </>
-      ),
+      render: (_, item) => {
+        const prod = products.find((p) => p.id === item.productId);
+        const variant = prod?.variants.find((v) => v.variantId === item.variantId);
+        const imageUrl = variant?.images?.[0]?.url || prod?.thumbnail?.url;
+
+        return (
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg overflow-hidden border border-gray-200 bg-white flex-shrink-0 flex items-center justify-center">
+              {imageUrl ? (
+                <img
+                  src={imageUrl}
+                  alt={item.productName}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <IconPackage className="text-gray-300" size={18} />
+              )}
+            </div>
+            <div className="flex flex-col">
+              <span className="font-bold text-black text-xs">{item.productName}</span>
+              {item.variantName && (
+                <span className="block text-[10px] text-gray-500 font-normal">
+                  {item.variantName}
+                </span>
+              )}
+            </div>
+          </div>
+        );
+      },
     },
     { title: "Size", key: "size", render: (_, item) => <>{item.size}</> },
     {
@@ -337,30 +383,48 @@ const ViewAdjustmentPage = () => {
 
               {/* Mobile Cards */}
               <div className="md:hidden divide-y divide-gray-100">
-                {adjustment.items?.map((item, idx) => (
-                  <div key={idx} className="p-5 flex flex-col gap-3">
-                    <div className="flex justify-between items-start gap-3">
-                      <div className="flex-1 min-w-0">
-                        <Text
-                          strong
-                          className="text-sm text-gray-900 block truncate"
-                        >
-                          {item.productName}
-                        </Text>
-                        {item.variantName && (
-                          <Text
-                            type="secondary"
-                            className="text-[10px] block uppercase tracking-wide"
-                          >
-                            {item.variantName}
-                          </Text>
-                        )}
-                        <div className="mt-2 flex items-center gap-2">
-                          <Tag className="m-0 px-2 py-0 text-[10px] font-bold rounded-md bg-gray-50 border-gray-200">
-                            SIZE: {item.size}
-                          </Tag>
+                {adjustment.items?.map((item, idx) => {
+                  const prod = products.find((p) => p.id === item.productId);
+                  const variant = prod?.variants.find((v) => v.variantId === item.variantId);
+                  const imageUrl = variant?.images?.[0]?.url || prod?.thumbnail?.url;
+
+                  return (
+                    <div key={idx} className="p-5 flex flex-col gap-3">
+                      <div className="flex justify-between items-start gap-3">
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                          <div className="w-12 h-12 rounded-lg overflow-hidden border border-gray-200 bg-white flex-shrink-0 flex items-center justify-center">
+                            {imageUrl ? (
+                              <img
+                                src={imageUrl}
+                                alt={item.productName}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <IconPackage className="text-gray-300" size={20} />
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <Text
+                              strong
+                              className="text-sm text-gray-950 block truncate"
+                            >
+                              {item.productName}
+                            </Text>
+                            {item.variantName && (
+                              <Text
+                                type="secondary"
+                                className="text-[10px] block uppercase tracking-wide"
+                              >
+                                {item.variantName}
+                              </Text>
+                            )}
+                            <div className="mt-1 flex items-center gap-2">
+                              <Tag className="m-0 px-2 py-0 text-[10px] font-bold rounded-md bg-gray-50 border-gray-200">
+                                SIZE: {item.size}
+                              </Tag>
+                            </div>
+                          </div>
                         </div>
-                      </div>
                       <div className="text-right">
                         <span
                           className={`text-lg font-black ${
@@ -406,7 +470,7 @@ const ViewAdjustmentPage = () => {
                       )}
                     </div>
                   </div>
-                ))}
+                )})}
               </div>
             </Card>
           </div>

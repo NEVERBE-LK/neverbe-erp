@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { DropdownOption } from "@/pages/master/products/page";
+import { ProductDropdownOption } from "../page";
 import api from "@/lib/api";
 import toast from "react-hot-toast";
 import {
@@ -25,13 +26,14 @@ interface VariantDropdownOption {
   id: string;
   label: string;
   sizes: string[];
+  images?: { url: string; file?: string; order?: number }[];
 }
 
 interface BulkInventoryFormModalProps {
   open: boolean;
   onClose: () => void;
   onSave: () => void;
-  products: DropdownOption[];
+  products: ProductDropdownOption[];
   stockLocations: StockLocationOption[];
 }
 
@@ -157,6 +159,11 @@ const BulkInventoryFormModal: React.FC<BulkInventoryFormModalProps> = ({
     }));
   };
 
+  const selectedProduct = useMemo(() => {
+    if (!productId) return null;
+    return products.find((p) => p.id === productId) || null;
+  }, [productId, products]);
+
   const changedCount = useMemo(() => {
     return Object.entries(sizeQuantities).filter(
       ([size, qty]) => qty !== (currentStock[size] ?? 0),
@@ -232,6 +239,69 @@ const BulkInventoryFormModal: React.FC<BulkInventoryFormModalProps> = ({
       styles={{ body: { padding: "16px 0 8px 0" } }}
     >
       <div className="space-y-4">
+        {selectedProduct && (
+          <div className="mb-4 bg-gradient-to-r from-gray-50 to-slate-50 border border-gray-150 rounded-2xl p-4 flex gap-4 items-center shadow-sm relative overflow-hidden transition-all duration-300">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-green-500/5 rounded-full blur-xl pointer-events-none" />
+            <div className="w-20 h-20 rounded-xl overflow-hidden border border-gray-250 bg-white flex-shrink-0 flex items-center justify-center shadow-inner relative group">
+              {selectedVariant?.images?.[0]?.url || selectedProduct?.thumbnail?.url ? (
+                <img
+                  src={selectedVariant?.images?.[0]?.url || selectedProduct?.thumbnail?.url}
+                  alt={selectedProduct.label}
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+              ) : (
+                <IconPackage className="text-gray-300" size={32} />
+              )}
+              {selectedVariant?.images?.[0]?.url && (
+                <span className="absolute bottom-1 right-1 bg-black/60 text-[8px] font-bold text-white px-1 py-0.5 rounded uppercase tracking-wider">
+                  Variant Image
+                </span>
+              )}
+            </div>
+            
+            <div className="flex-1 min-w-0">
+              <div className="flex flex-wrap gap-1.5 items-center mb-1">
+                {selectedProduct.brand && (
+                  <span className="bg-slate-200/60 text-[9px] font-extrabold uppercase text-slate-600 px-2 py-0.5 rounded-full border border-slate-300/40">
+                    {selectedProduct.brand}
+                  </span>
+                )}
+                {selectedProduct.category && (
+                  <span className="bg-emerald-50 text-[9px] font-extrabold uppercase text-emerald-700 px-2 py-0.5 rounded-full border border-emerald-100">
+                    {selectedProduct.category}
+                  </span>
+                )}
+              </div>
+              
+              <h3 className="text-base font-black text-gray-950 leading-snug truncate">
+                {selectedProduct.label}
+              </h3>
+              
+              <div className="flex items-baseline gap-4 mt-2">
+                <div>
+                  <span className="block text-[8px] font-bold text-gray-400 uppercase tracking-wider">Buying Price</span>
+                  <span className="text-xs font-semibold text-gray-500">LKR {selectedProduct.buyingPrice?.toLocaleString() || "0"}</span>
+                </div>
+                <div className="h-6 w-px bg-gray-200 self-center" />
+                <div>
+                  <span className="block text-[8px] font-bold text-gray-400 uppercase tracking-wider">Selling Price</span>
+                  <span className="text-sm font-black text-slate-800">LKR {selectedProduct.sellingPrice?.toLocaleString() || "0"}</span>
+                </div>
+                {selectedVariant && (
+                  <>
+                    <div className="h-6 w-px bg-gray-200 self-center" />
+                    <div>
+                      <span className="block text-[8px] font-bold text-gray-400 uppercase tracking-wider">Active Variant</span>
+                      <span className="text-xs font-bold text-indigo-600 truncate max-w-[120px] block">
+                        {selectedVariant.label}
+                      </span>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
         <Row gutter={[16, 16]}>
           <Col span={24}>
             <span className="block text-xs font-bold text-gray-500 mb-1.5">Product</span>
