@@ -105,7 +105,7 @@ const Login = () => {
               <img src="/logo.png" alt="Logo" className="w-28 h-28" />
             </figure>
             <h2 className="text-center text-3xl font-extrabold text-gray-900 tracking-tight">
-              NEVERBE ERP Login
+              Neverbe ERP Login
             </h2>
             <p className="mt-2 text-center text-sm font-semibold text-gray-500 uppercase tracking-widest">
               Enter your credentials

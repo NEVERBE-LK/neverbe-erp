@@ -95,9 +95,9 @@ const CommunicationHub: React.FC<CommunicationHubProps> = ({
     const upperId = orderId.toUpperCase();
 
     if (templateType === "delay") {
-      content = `NEVERBE: Hi ${name}, unfortunately your order #${upperId} is slightly delayed due to a logistics issue. We expect to ship it within 48 hours. Sorry for the trouble!`;
+      content = `Neverbe: Hi ${name}, unfortunately your order #${upperId} is slightly delayed due to a logistics issue. We expect to ship it within 48 hours. Sorry for the trouble!`;
     } else if (templateType === "quick_update") {
-      content = `NEVERBE: Hi ${name}, just a quick update that we are working on your order #${upperId}. We will notify you as soon as it's out for delivery!`;
+      content = `Neverbe: Hi ${name}, just a quick update that we are working on your order #${upperId}. We will notify you as soon as it's out for delivery!`;
     }
 
     form.setFieldsValue({ content });

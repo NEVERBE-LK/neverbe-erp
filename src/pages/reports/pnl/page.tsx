@@ -203,7 +203,7 @@ const ProfitLossPage = () => {
       note?: string;
     }[] = [
       // Company header
-      { raw: ["NEVERBE", null, null, null], type: "title" },
+      { raw: ["Neverbe", null, null, null], type: "title" },
       { raw: ["Profit & Loss Statement", null, null, null], type: "title" },
       { raw: [`Period: ${from}  –  ${to}`, null, null, null], type: "header" },
       { raw: spacer(), type: "spacer" },

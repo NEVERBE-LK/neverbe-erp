@@ -272,7 +272,7 @@ const BannerPage = () => {
   };
 
   return (
-    <PageContainer title="Banner Assets | NEVERBE ERP">
+    <PageContainer title="Banner Assets | Neverbe ERP">
       <div className="flex flex-col gap-8 w-full animate-in fade-in slide-in-from-bottom-4 duration-500 pb-10">
         <Card
           title={

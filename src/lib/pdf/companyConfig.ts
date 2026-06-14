@@ -18,7 +18,7 @@ export interface CompanyConfig {
 }
 
 export const companyConfig: CompanyConfig = {
-  name: "NEVERBE",
+  name: "Neverbe",
   tagline: "Business Intelligence & ERP Platform",
   addressLine1: "330/4/10, New Kandy Road, Delgoda",
   addressLine2: "Gampaha, Sri Lanka",

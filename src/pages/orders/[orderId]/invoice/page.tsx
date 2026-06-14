@@ -429,7 +429,7 @@ const OrderInvoice = () => {
               <div className="text-xs font-bold text-gray-400  ">
                 Thank you for your purchase.
               </div>
-              <div className="text-xs font-bold text-black  ">NEVERBE.LK</div>
+              <div className="text-xs font-bold text-black  ">Neverbe.lk</div>
             </div>
           </div>
         </div>

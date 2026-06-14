@@ -632,7 +632,7 @@ const OrdersPage = () => {
   const viewTitle = isProcessingView ? "Processing Orders" : isPaymentPendingView ? "Pending Payments" : "All Orders";
 
   return (
-    <PageContainer title={`${viewTitle} | NEVERBE ERP`} loading={isLoading} description={`Manage ${viewTitle}`}>
+    <PageContainer title={`${viewTitle} | Neverbe ERP`} loading={isLoading} description={`Manage ${viewTitle}`}>
       <Space direction="vertical" size="large" className="w-full">
         {/* PREMIUM HEADER */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-2 gap-4">
