@@ -8,7 +8,7 @@ type Props = {
   loading?: boolean;
 };
 
-const PageContainer = ({ title, description, children, loading }: Props) => {
+const PageContainer = ({ title, children, loading }: Props) => {
   useEffect(() => {
     if (title) document.title = title;
   }, [title]);
@@ -21,7 +21,7 @@ const PageContainer = ({ title, description, children, loading }: Props) => {
     );
   }
 
-  return <div>{children}</div>;
+  return <div className="flex-1 flex flex-col">{children}</div>;
 };
 
 export default PageContainer;

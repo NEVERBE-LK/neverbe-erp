@@ -63,7 +63,7 @@ export default function AppLayout() {
   }, [fcmToken]);
 
   return (
-    <Layout className="min-h-screen bg-[#f9fafb] text-black font-sans selection:bg-black selection:text-white flex-row overflow-x-hidden">
+    <Layout className="min-h-screen bg-[#f9fafb] text-black font-sans selection:bg-black selection:text-white flex flex-row overflow-x-hidden">
       {/* Desktop Fixed Sidebar */}
       <div
         className="hidden lg:block h-screen fixed top-0 left-0 z-50 transition-all duration-300"
@@ -77,7 +77,7 @@ export default function AppLayout() {
       {/* Main Content Area */}
       <Layout
         hasSider={false}
-        className={`bg-[#f9fafb] transition-all duration-300 min-h-screen flex-1 ${collapsed ? "lg:ml-[80px]" : "lg:ml-[260px]"}`}
+        className={`bg-[#f9fafb] transition-all duration-300 min-h-screen flex flex-col flex-1 ${collapsed ? "lg:ml-[80px]" : "lg:ml-[260px]"}`}
       >
         {/* Global Brand Accent */}
         <div className="w-full h-1 bg-black fixed top-0 z-[100] left-0"></div>
@@ -123,9 +123,9 @@ export default function AppLayout() {
 
         <Content className="grow flex flex-col pt-8 lg:pt-12">
           {/* Global Padding Container matched to old ERP */}
-          <div className="w-full mx-auto pb-12">
+          <div className="w-full mx-auto pb-12 flex-1 flex flex-col">
             <AppBreadcrumb />
-            <div className="px-4 xl:px-8">
+            <div className="px-4 xl:px-8 flex-1 flex flex-col">
               <ErrorBoundary>
                 <Suspense 
                   fallback={
