@@ -349,7 +349,7 @@ export const OrderEditForm: React.FC<OrderEditFormProps> = ({
     const orderDiscount = form.getFieldValue("discount") || 0;
     const payMethodVal = form.getFieldValue("paymentMethod");
     const selectedMethodObjForFee = paymentMethods.find((m) => m.name.toUpperCase() === payMethodVal?.toUpperCase());
-    const fee = selectedMethodObjForFee ? (selectedMethodObjForFee.customerFee || 0) : (order?.fee || 0);
+    const fee = selectedMethodObjForFee ? (itemsTotal * (selectedMethodObjForFee.customerFee || 0) / 100) : (order?.fee || 0);
     const expectedTotal = itemsTotal + Number(shippingFee) + Number(fee) - Number(orderDiscount);
     const totalPaid = newPayments.reduce((sum, p) => sum + p.amount, 0);
     
@@ -376,7 +376,7 @@ export const OrderEditForm: React.FC<OrderEditFormProps> = ({
     const orderDiscount = form.getFieldValue("discount") || 0;
     const payMethodVal = form.getFieldValue("paymentMethod");
     const selectedMethodObjForFee = paymentMethods.find((m) => m.name.toUpperCase() === payMethodVal?.toUpperCase());
-    const fee = selectedMethodObjForFee ? (selectedMethodObjForFee.customerFee || 0) : (order?.fee || 0);
+    const fee = selectedMethodObjForFee ? (itemsTotal * (selectedMethodObjForFee.customerFee || 0) / 100) : (order?.fee || 0);
     const expectedTotal = itemsTotal + Number(shippingFee) + Number(fee) - Number(orderDiscount);
     const totalPaid = newPayments.reduce((sum, p) => sum + p.amount, 0);
 
@@ -397,7 +397,7 @@ export const OrderEditForm: React.FC<OrderEditFormProps> = ({
     }
 
     const selectedMethodObjForFee = paymentMethods.find((m) => m.name.toUpperCase() === values.paymentMethod?.toUpperCase());
-    const fee = selectedMethodObjForFee ? (selectedMethodObjForFee.customerFee || 0) : (order?.fee || 0);
+    const fee = selectedMethodObjForFee ? (itemsTotal * (selectedMethodObjForFee.customerFee || 0) / 100) : (order?.fee || 0);
     const calculatedTotal = itemsTotal + Number(values.shippingFee || 0) + Number(fee) - Number(values.discount || 0);
 
     showConfirmation({
@@ -933,7 +933,7 @@ export const OrderEditForm: React.FC<OrderEditFormProps> = ({
                     const discount = form.getFieldValue("discount") || 0;
                     const payMethod = form.getFieldValue("paymentMethod");
                     const selectedMethodObj = paymentMethods.find((m) => m.name.toUpperCase() === payMethod?.toUpperCase());
-                    const fee = selectedMethodObj ? (selectedMethodObj.customerFee || 0) : (order?.fee || 0);
+                    const fee = selectedMethodObj ? (itemsTotal * (selectedMethodObj.customerFee || 0) / 100) : (order?.fee || 0);
                     const totalVal = itemsTotal + Number(shipping) + Number(fee) - Number(discount);
 
                     return (
@@ -1193,7 +1193,7 @@ export const OrderEditForm: React.FC<OrderEditFormProps> = ({
                       {() => {
                         const payMethod = form.getFieldValue("paymentMethod");
                         const selectedMethodObj = paymentMethods.find((m) => m.name.toUpperCase() === payMethod?.toUpperCase());
-                        const fee = selectedMethodObj ? (selectedMethodObj.customerFee || 0) : (order?.fee || 0);
+                        const fee = selectedMethodObj ? (itemsTotal * (selectedMethodObj.customerFee || 0) / 100) : (order?.fee || 0);
                         if (fee <= 0) return null;
                         return (
                           <div className="flex justify-between items-center">
@@ -1215,7 +1215,7 @@ export const OrderEditForm: React.FC<OrderEditFormProps> = ({
                             const discount = form.getFieldValue("discount") || 0;
                             const payMethod = form.getFieldValue("paymentMethod");
                             const selectedMethodObj = paymentMethods.find((m) => m.name.toUpperCase() === payMethod?.toUpperCase());
-                            const fee = selectedMethodObj ? (selectedMethodObj.customerFee || 0) : (order?.fee || 0);
+                            const fee = selectedMethodObj ? (itemsTotal * (selectedMethodObj.customerFee || 0) / 100) : (order?.fee || 0);
                             const totalVal = itemsTotal + Number(shipping) + Number(fee) - Number(discount);
                             return (
                               <span className="font-mono font-black text-sm text-emerald-700">
@@ -1235,7 +1235,7 @@ export const OrderEditForm: React.FC<OrderEditFormProps> = ({
                           const discount = form.getFieldValue("discount") || 0;
                           const payMethod = form.getFieldValue("paymentMethod");
                           const selectedMethodObj = paymentMethods.find((m) => m.name.toUpperCase() === payMethod?.toUpperCase());
-                          const fee = selectedMethodObj ? (selectedMethodObj.customerFee || 0) : (order?.fee || 0);
+                          const fee = selectedMethodObj ? (itemsTotal * (selectedMethodObj.customerFee || 0) / 100) : (order?.fee || 0);
                           const totalVal = itemsTotal + Number(shipping) + Number(fee) - Number(discount);
                           const paymentStatus = form.getFieldValue("paymentStatus") || order?.paymentStatus;
                           const isPaidWebsite = order?.from?.toLowerCase() === "website" && paymentStatus?.toLowerCase() === "paid";
@@ -1258,7 +1258,7 @@ export const OrderEditForm: React.FC<OrderEditFormProps> = ({
                           const discount = form.getFieldValue("discount") || 0;
                           const payMethod = form.getFieldValue("paymentMethod");
                           const selectedMethodObj = paymentMethods.find((m) => m.name.toUpperCase() === payMethod?.toUpperCase());
-                          const fee = selectedMethodObj ? (selectedMethodObj.customerFee || 0) : (order?.fee || 0);
+                          const fee = selectedMethodObj ? (itemsTotal * (selectedMethodObj.customerFee || 0) / 100) : (order?.fee || 0);
                           const totalVal = itemsTotal + Number(shipping) + Number(fee) - Number(discount);
                           const paymentStatus = form.getFieldValue("paymentStatus") || order?.paymentStatus;
                           const isPaidWebsite = order?.from?.toLowerCase() === "website" && paymentStatus?.toLowerCase() === "paid";

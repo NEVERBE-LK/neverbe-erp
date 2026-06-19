@@ -267,7 +267,7 @@ const PaymentMethodsPage = () => {
                   )}
                   {(method.customerFee ?? 0) > 0 && (
                     <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-100">
-                      Rs. {method.customerFee} Customer Fee
+                      {method.customerFee}% Customer Fee
                     </span>
                   )}
                 </div>
@@ -479,16 +479,16 @@ const PaymentMethodsPage = () => {
               <Col span={12}>
                 <Form.Item
                   name="customerFee"
-                  label={<span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Customer Fee (Rs)</span>}
+                  label={<span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Customer Fee (%)</span>}
                   rules={[{ required: true, message: "Customer fee is required" }]}
-                  tooltip="Flat fee added to the customer's total when they select this payment method"
+                  tooltip="Percentage fee added to the customer's total when they select this payment method"
                 >
                   <InputNumber
                     min={0}
-                    step={1}
+                    step={0.01}
                     className="w-full h-10 rounded-lg"
-                    addonBefore="Rs"
-                    placeholder="0"
+                    addonAfter="%"
+                    placeholder="0.00"
                   />
                 </Form.Item>
               </Col>
