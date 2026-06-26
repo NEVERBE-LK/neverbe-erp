@@ -205,8 +205,14 @@ export const OrderEditForm: React.FC<OrderEditFormProps> = ({
 
   // Set initial form states
   useEffect(() => {
+    const itemDiscounts = order.items?.reduce(
+      (acc, item) => acc + ((item.discount || 0) * (item.quantity || 1)),
+      0
+    ) || 0;
+
     form.setFieldsValue({
       ...order,
+      discount: Math.max(0, (order.discount || 0) - itemDiscounts),
       customer: order.customer || {},
       sendNotification: true,
     });
@@ -421,6 +427,11 @@ export const OrderEditForm: React.FC<OrderEditFormProps> = ({
           }, 0);
 
           // Assemble complete edit payload
+          const itemDiscountsTotal = items.reduce(
+            (acc, item) => acc + ((item.discount || 0) * (item.quantity || 1)),
+            0
+          );
+
           const payload: Partial<Order> = {
             status: values.status,
             paymentStatus: values.paymentStatus,
@@ -432,7 +443,7 @@ export const OrderEditForm: React.FC<OrderEditFormProps> = ({
             paymentReceived: payments,
             total: calculatedTotal,
             shippingFee: Number(values.shippingFee || 0),
-            discount: Number(values.discount || 0),
+            discount: Number(values.discount || 0) + itemDiscountsTotal,
             fee: Number(fee),
             transactionFeeCharge: Math.round(transactionFeeCharge * 100) / 100,
           };

@@ -148,6 +148,11 @@ const OrderView = ({ orderId }: { orderId: string }) => {
     0
   ) || 0;
 
+  const manualOrItemDiscount = Math.max(
+    0,
+    (order?.discount || 0) - (order?.couponDiscount || 0) - (order?.promotionDiscount || 0)
+  );
+
   const fee = order?.fee || 0;
   const shippingFee = order?.shippingFee || 0;
   const isPaidWebsiteOrder =
@@ -778,11 +783,11 @@ const OrderView = ({ orderId }: { orderId: string }) => {
                 </span>
               </div>
 
-              {((order?.discount || 0) + itemDiscounts) > 0 && (
+              {manualOrItemDiscount > 0 && (
                 <div className="flex justify-between items-center text-xs">
                   <span className="text-red-500 font-semibold uppercase">Discounts Applied</span>
                   <span className="font-bold font-mono text-red-500">
-                    -Rs {((order?.discount || 0) + itemDiscounts).toLocaleString()}
+                    -Rs {manualOrItemDiscount.toLocaleString()}
                   </span>
                 </div>
               )}
