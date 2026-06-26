@@ -3,12 +3,10 @@ import React, { useEffect, useState } from "react";
 import { Order } from "@/model/Order";
 import toast from "react-hot-toast";
 import { useAppSelector } from "@/lib/hooks";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
   Card,
   Table,
-  Tag,
-  Typography,
   Alert,
   Spin,
   Timeline,
@@ -31,14 +29,12 @@ import {
   IconUser,
   IconMail,
   IconPhone,
-  IconAlertCircle,
 } from "@tabler/icons-react";
 
 import { OrderExchangeHistory } from "../../components/OrderExchangeHistory";
 import CommunicationHub from "../../components/CommunicationHub";
 import { formatSLDateTime } from "@/utils/dateUtils";
 
-const { Text } = Typography;
 
 const OrderView = ({ orderId }: { orderId: string }) => {
   const [order, setOrder] = useState<Order | null>(null);
@@ -143,10 +139,6 @@ const OrderView = ({ orderId }: { orderId: string }) => {
     0
   ) || 0;
 
-  const itemDiscounts = order?.items?.reduce(
-    (acc, item) => acc + ((item.discount || 0) * (item.quantity || 1)),
-    0
-  ) || 0;
 
   const manualOrItemDiscount = Math.max(
     0,
@@ -408,8 +400,10 @@ const OrderView = ({ orderId }: { orderId: string }) => {
                 Created {formatSLDateTime(order?.createdAt)}
               </span>
             </div>
-            <h2 className="text-xl sm:text-2xl font-black text-gray-900 tracking-tight leading-none">
+            <h2 className="text-xl sm:text-2xl font-black text-gray-900 tracking-tight leading-none flex flex-wrap items-center gap-2">
               Order #{order?.orderId}
+              {getOrderStatusBadge(order?.status)}
+              {getPaymentStatusBadge(order?.paymentStatus)}
             </h2>
           </div>
         </div>
@@ -430,50 +424,6 @@ const OrderView = ({ orderId }: { orderId: string }) => {
           >
             Edit Order
           </AntButton>
-        </div>
-      </div>
-
-      {/* KPI Stats Ticker */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white p-5 border border-gray-100 rounded-2xl shadow-sm flex items-center justify-between">
-          <div className="space-y-1">
-            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Grand Total</span>
-            <h3 className="text-xl font-black text-gray-900">
-              Rs {order?.total?.toLocaleString()}
-            </h3>
-            <span className="block text-[10px] text-gray-400 font-bold">
-              Paid: Rs {totalPaid.toLocaleString()} | Due: Rs {balanceDue.toLocaleString()}
-            </span>
-          </div>
-          <div className="p-3 bg-emerald-50 text-emerald-600 rounded-2xl">
-            <IconCoin size={24} />
-          </div>
-        </div>
-
-        <div className="bg-white p-5 border border-gray-100 rounded-2xl shadow-sm flex items-center justify-between">
-          <div className="space-y-2">
-            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Fulfillment Status</span>
-            <div className="block">{getOrderStatusBadge(order?.status)}</div>
-            <span className="block text-[10px] text-gray-400 font-bold">
-              Source: <span className="uppercase text-gray-500">{order?.from || "Store"}</span>
-            </span>
-          </div>
-          <div className="p-3 bg-blue-50 text-blue-600 rounded-2xl">
-            <IconPackage size={24} />
-          </div>
-        </div>
-
-        <div className="bg-white p-5 border border-gray-100 rounded-2xl shadow-sm flex items-center justify-between">
-          <div className="space-y-2">
-            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Payment Status</span>
-            <div className="block">{getPaymentStatusBadge(order?.paymentStatus)}</div>
-            <span className="block text-[10px] text-gray-400 font-bold">
-              Method: <span className="uppercase text-gray-500">{order?.paymentMethod || "N/A"}</span>
-            </span>
-          </div>
-          <div className="p-3 bg-purple-50 text-purple-600 rounded-2xl">
-            <IconCreditCard size={24} />
-          </div>
         </div>
       </div>
 
@@ -540,7 +490,29 @@ const OrderView = ({ orderId }: { orderId: string }) => {
                 </div>
               </div>
 
+              <div className="flex items-start gap-3">
+                <div className="p-2 bg-gray-50 text-gray-500 rounded-xl">
+                  <IconBuildingStore size={18} />
+                </div>
+                <div>
+                  <span className="block text-[9px] font-bold text-gray-400 uppercase">Order Source</span>
+                  <span className="text-xs font-bold text-gray-800 uppercase">
+                    {order?.from || "Store"}
+                  </span>
+                </div>
+              </div>
 
+              <div className="flex items-start gap-3">
+                <div className="p-2 bg-gray-50 text-gray-500 rounded-xl">
+                  <IconCreditCard size={18} />
+                </div>
+                <div>
+                  <span className="block text-[9px] font-bold text-gray-400 uppercase">Payment Method</span>
+                  <span className="text-xs font-bold text-gray-800 uppercase">
+                    {order?.paymentMethod || "N/A"}
+                  </span>
+                </div>
+              </div>
 
               <div className="flex items-start gap-3">
                 <div className="p-2 bg-gray-50 text-gray-500 rounded-xl">
@@ -672,6 +644,86 @@ const OrderView = ({ orderId }: { orderId: string }) => {
             </div>
           </Card>
 
+          {/* Customer Profile Card */}
+          {order?.customer && (
+            <Card
+              title={
+                <div className="flex items-center gap-2">
+                  <IconUser size={18} className="text-gray-400" />
+                  <span className="text-xs font-bold text-gray-600 uppercase tracking-wider">
+                    Customer Profile
+                  </span>
+                </div>
+              }
+              className="shadow-sm border-gray-100 rounded-2xl bg-white"
+            >
+              <div className="space-y-5">
+                {/* Profile Header Avatar */}
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-gray-900 text-white font-bold flex items-center justify-center text-xs">
+                    {getInitials(order.customer.name)}
+                  </div>
+                  <div>
+                    <span className="block text-sm font-bold text-gray-800 leading-tight">
+                      {order.customer.name}
+                    </span>
+                    <span className="block text-[10px] text-gray-400 font-bold uppercase tracking-wider">
+                      Client ID: {order.userId || "GUEST"}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Contact Coordinates */}
+                <div className="space-y-2 bg-gray-50/50 p-3 rounded-xl border border-gray-100">
+                  <div className="flex items-center gap-2 text-xs">
+                    <IconMail size={14} className="text-gray-400" />
+                    <span className="text-gray-600">{order.customer.email || "No email provided"}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs">
+                    <IconPhone size={14} className="text-gray-400" />
+                    <span className="text-gray-600 font-mono">{order.customer.phone || "No phone provided"}</span>
+                  </div>
+                </div>
+
+                {/* Billing Address */}
+                {(order.customer.address || order.customer.city) && (
+                  <div>
+                    <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
+                      Billing Address
+                    </span>
+                    <span className="block text-xs text-gray-600 leading-relaxed">
+                      {order.customer.address}
+                      <br />
+                      {order.customer.city} {order.customer.zip}
+                    </span>
+                  </div>
+                )}
+
+                {/* Shipping Address */}
+                {order.customer.shippingAddress && (
+                  <div className="pt-4 border-t border-gray-100">
+                    <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
+                      Shipping Details
+                    </span>
+                    <span className="block text-xs text-gray-800 font-bold leading-normal mb-1">
+                      {order.customer.shippingName || order.customer.name}
+                    </span>
+                    <span className="block text-xs text-gray-600 leading-relaxed">
+                      {order.customer.shippingAddress}
+                      <br />
+                      {order.customer.shippingCity} {order.customer.shippingZip}
+                    </span>
+                    {(order.customer.shippingPhone || order.customer.phone) && (
+                      <span className="block text-[11px] text-gray-500 font-bold font-mono mt-1.5">
+                        Tel: {order.customer.shippingPhone || order.customer.phone}
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+            </Card>
+          )}
+
           {/* Internal Order History */}
           {order?.statusHistory && order.statusHistory.length > 0 && (
             <Card
@@ -759,10 +811,14 @@ const OrderView = ({ orderId }: { orderId: string }) => {
               )}
             </Card>
           )}
+
+          {/* Dynamic Interaction Sub-cards */}
+          <CommunicationHub orderId={orderId} customerName={order?.customer?.name} />
+          <OrderExchangeHistory orderId={orderId} />
         </div>
 
-        {/* Right Column: Financials & Customer Profile */}
-        <div className="flex flex-col gap-6">
+        {/* Right Column: Financials */}
+        <div className="lg:sticky lg:top-6 h-fit flex flex-col gap-6">
           {/* Financial Summary Card */}
           <Card
             title={
@@ -852,92 +908,8 @@ const OrderView = ({ orderId }: { orderId: string }) => {
               )}
             </div>
           </Card>
-
-          {/* Customer Profile Card */}
-          {order?.customer && (
-            <Card
-              title={
-                <div className="flex items-center gap-2">
-                  <IconUser size={18} className="text-gray-400" />
-                  <span className="text-xs font-bold text-gray-600 uppercase tracking-wider">
-                    Customer Profile
-                  </span>
-                </div>
-              }
-              className="shadow-sm border-gray-100 rounded-2xl bg-white"
-            >
-              <div className="space-y-5">
-                {/* Profile Header Avatar */}
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gray-900 text-white font-bold flex items-center justify-center text-xs">
-                    {getInitials(order.customer.name)}
-                  </div>
-                  <div>
-                    <span className="block text-sm font-bold text-gray-800 leading-tight">
-                      {order.customer.name}
-                    </span>
-                    <span className="block text-[10px] text-gray-400 font-bold uppercase tracking-wider">
-                      Client ID: {order.userId || "GUEST"}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Contact Coordinates */}
-                <div className="space-y-2 bg-gray-50/50 p-3 rounded-xl border border-gray-100">
-                  <div className="flex items-center gap-2 text-xs">
-                    <IconMail size={14} className="text-gray-400" />
-                    <span className="text-gray-600">{order.customer.email || "No email provided"}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-xs">
-                    <IconPhone size={14} className="text-gray-400" />
-                    <span className="text-gray-600 font-mono">{order.customer.phone || "No phone provided"}</span>
-                  </div>
-                </div>
-
-                {/* Billing Address */}
-                {(order.customer.address || order.customer.city) && (
-                  <div>
-                    <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
-                      Billing Address
-                    </span>
-                    <span className="block text-xs text-gray-600 leading-relaxed">
-                      {order.customer.address}
-                      <br />
-                      {order.customer.city} {order.customer.zip}
-                    </span>
-                  </div>
-                )}
-
-                {/* Shipping Address */}
-                {order.customer.shippingAddress && (
-                  <div className="pt-4 border-t border-gray-100">
-                    <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
-                      Shipping Details
-                    </span>
-                    <span className="block text-xs text-gray-800 font-bold leading-normal mb-1">
-                      {order.customer.shippingName || order.customer.name}
-                    </span>
-                    <span className="block text-xs text-gray-600 leading-relaxed">
-                      {order.customer.shippingAddress}
-                      <br />
-                      {order.customer.shippingCity} {order.customer.shippingZip}
-                    </span>
-                    {(order.customer.shippingPhone || order.customer.phone) && (
-                      <span className="block text-[11px] text-gray-500 font-bold font-mono mt-1.5">
-                        Tel: {order.customer.shippingPhone || order.customer.phone}
-                      </span>
-                    )}
-                  </div>
-                )}
-              </div>
-            </Card>
-          )}
         </div>
       </div>
-
-      {/* Dynamic Interaction Sub-cards */}
-      <CommunicationHub orderId={orderId} customerName={order?.customer?.name} />
-      <OrderExchangeHistory orderId={orderId} />
     </div>
   );
 };
