@@ -394,10 +394,7 @@ const OrderView = ({ orderId }: { orderId: string }) => {
           <div>
             <div className="flex items-center gap-2 mb-1">
               <span className="text-[9px] font-black uppercase tracking-widest text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">
-                Order Log
-              </span>
-              <span className="text-[9px] font-bold text-gray-400">
-                Created {formatSLDateTime(order?.createdAt)}
+                Order Details
               </span>
             </div>
             <h2 className="text-xl sm:text-2xl font-black text-gray-900 tracking-tight leading-none flex flex-wrap items-center gap-2">
