@@ -9,6 +9,9 @@ import {
   IconReceiptRefund,
 } from "@tabler/icons-react";
 import { Row, Col, Statistic, Card, Spin, Tag, Button } from "antd";
+import { collection, query, where, onSnapshot, Timestamp } from "firebase/firestore";
+import { db } from "@/firebase/firebaseClient";
+import { dayjs, SL_TIMEZONE } from "@/utils/dateUtils";
 
 const DailyEarnings = () => {
   const [totalGrossSales, setTotalGrossSales] = useState(0);
@@ -20,12 +23,8 @@ const DailyEarnings = () => {
   const [loading, setLoading] = useState(true);
   const { currentUser } = useAppSelector((state) => state.authSlice);
 
-  useEffect(() => {
-    if (currentUser) fetchDailyEarnings();
-  }, [currentUser]);
-
-  const fetchDailyEarnings = async () => {
-    setLoading(true);
+  const fetchDailyEarnings = async (showLoading = true) => {
+    if (showLoading) setLoading(true);
     try {
       const overview = await getDailyOverviewAction();
       setTotalGrossSales(overview.totalGrossSales);
@@ -40,6 +39,36 @@ const DailyEarnings = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (!currentUser) return;
+
+    let isFirst = true;
+    const now = dayjs().tz(SL_TIMEZONE);
+    const startOfDay = now.startOf("day").toDate();
+    const endOfDay = now.endOf("day").toDate();
+
+    const q = query(
+      collection(db, "orders"),
+      where("createdAt", ">=", Timestamp.fromDate(startOfDay)),
+      where("createdAt", "<=", Timestamp.fromDate(endOfDay))
+    );
+
+    const unsubscribe = onSnapshot(
+      q,
+      () => {
+        fetchDailyEarnings(isFirst);
+        isFirst = false;
+      },
+      (error) => {
+        console.error("[DailyEarnings] Firestore live snapshot failed, falling back to fetch:", error);
+        fetchDailyEarnings(isFirst);
+        isFirst = false;
+      }
+    );
+
+    return () => unsubscribe();
+  }, [currentUser]);
 
   return (
     <DashboardCard>
