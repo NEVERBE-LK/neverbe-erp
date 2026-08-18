@@ -1,7 +1,7 @@
 import type { ColumnsType } from "antd/es/table";
 import React, { useState, useEffect, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Card, Form, Input, Button, Space, Table, Select, Col, Row, Typography } from "antd";
+import { Form, Input, Button, Space, Table, Select, Col, Row } from "antd";
 import {
   IconEye,
   IconSearch,
@@ -19,10 +19,10 @@ import toast from "react-hot-toast";
 import { useAppSelector } from "@/lib/hooks";
 import { RootState } from "@/lib/store";
 import {
-  GRN as GRNModel,
   GRN_STATUS_LABELS,
   GRNStatus,
 } from "@/model/GRN";
+import Spinner from "@/pages/components/shared/Spinner";
 
 interface GRN {
   id: string;
@@ -37,32 +37,37 @@ interface GRN {
 
 const GRN_STATUS_STYLING: Record<
   GRNStatus,
-  { bg: string; text: string; dot: string }
+  { bg: string; text: string; dot: string; pulse?: boolean }
 > = {
   DRAFT: {
-    bg: "bg-gray-50",
-    text: "text-gray-700 border border-gray-200",
-    dot: "bg-gray-400",
+    bg: "bg-slate-100 dark:bg-slate-800",
+    text: "text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700",
+    dot: "bg-slate-400",
+    pulse: false,
   },
   SUBMITTED: {
-    bg: "bg-blue-50/50",
-    text: "text-blue-700 border border-blue-100",
-    dot: "bg-blue-500",
+    bg: "bg-amber-50 dark:bg-amber-950/40",
+    text: "text-amber-700 dark:text-amber-400 border border-amber-200/60 dark:border-amber-800/40",
+    dot: "bg-amber-500",
+    pulse: true,
   },
   APPROVED: {
-    bg: "bg-emerald-50/50",
-    text: "text-emerald-700 border border-emerald-100",
+    bg: "bg-emerald-50 dark:bg-emerald-950/40",
+    text: "text-emerald-700 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/40",
     dot: "bg-emerald-500",
+    pulse: true,
   },
   REJECTED: {
-    bg: "bg-rose-50/50",
-    text: "text-rose-700 border border-rose-100",
+    bg: "bg-rose-50 dark:bg-rose-950/40",
+    text: "text-rose-700 dark:text-rose-400 border border-rose-200/60 dark:border-rose-800/40",
     dot: "bg-rose-500",
+    pulse: true,
   },
   COMPLETED: {
-    bg: "bg-indigo-50/50",
-    text: "text-indigo-700 border border-indigo-100",
+    bg: "bg-indigo-50 dark:bg-indigo-950/40",
+    text: "text-indigo-700 dark:text-indigo-400 border border-indigo-200/60 dark:border-indigo-800/40",
     dot: "bg-indigo-500",
+    pulse: true,
   },
 };
 
@@ -128,25 +133,14 @@ const GRNListPage = () => {
     );
   }, [grns, search]);
 
-  // --- Dynamic Stats ---
-  const stats = useMemo(() => {
-    const total = filteredGRNs.length;
-    const completed = filteredGRNs.filter((g) => g.status === "COMPLETED").length;
-    const totalValue = filteredGRNs.reduce(
-      (sum, g) => sum + (g.totalAmount || 0),
-      0,
-    );
-    return { total, completed, totalValue };
-  }, [filteredGRNs]);
-
   const columns: ColumnsType<GRN> = [
     {
       title: "GRN Number",
       key: "gRNNumber",
       render: (_, grn) => (
         <Space>
-          <IconFileText size={16} className="text-gray-400" />
-          <span className="font-mono font-bold text-gray-900 text-sm">
+          <IconFileText size={16} className="text-slate-400" />
+          <span className="font-mono font-bold text-slate-900 dark:text-slate-100 text-sm">
             {grn.grnNumber}
           </span>
         </Space>
@@ -156,8 +150,8 @@ const GRNListPage = () => {
       title: "PO Number",
       key: "pONumber",
       render: (_, grn) => (
-        <Space className="text-gray-600 text-xs">
-          <IconFileText size={14} className="text-gray-400" />
+        <Space className="text-slate-500 dark:text-slate-400 text-xs">
+          <IconFileText size={14} className="text-slate-400" />
           <span className="font-mono">{grn.poNumber}</span>
         </Space>
       ),
@@ -166,7 +160,7 @@ const GRNListPage = () => {
       title: "Supplier",
       key: "supplier",
       render: (_, grn) => (
-        <span className="font-semibold text-gray-700 text-sm">
+        <span className="font-semibold text-slate-800 dark:text-slate-200 text-sm">
           {grn.supplierName}
         </span>
       ),
@@ -175,7 +169,7 @@ const GRNListPage = () => {
       title: "Amount",
       key: "amount",
       render: (_, grn) => (
-        <span className="font-bold text-gray-900">
+        <span className="font-bold text-slate-900 dark:text-slate-100">
           Rs {grn.totalAmount.toLocaleString()}
         </span>
       ),
@@ -185,8 +179,8 @@ const GRNListPage = () => {
       key: "receivedDate",
       align: "right",
       render: (_, grn) => (
-        <Space className="text-gray-500 text-xs font-bold">
-          <IconCalendar size={14} className="text-gray-400" />
+        <Space className="text-slate-500 dark:text-slate-400 text-xs font-semibold">
+          <IconCalendar size={14} className="text-slate-400" />
           <span>{grn.receivedDate}</span>
         </Space>
       ),
@@ -196,15 +190,16 @@ const GRNListPage = () => {
       key: "status",
       render: (_, grn) => {
         const style = GRN_STATUS_STYLING[grn.status] || {
-          bg: "bg-gray-100",
-          text: "text-gray-700",
-          dot: "bg-gray-400",
+          bg: "bg-slate-100 dark:bg-slate-800",
+          text: "text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700",
+          dot: "bg-slate-400",
+          pulse: false,
         };
         return (
           <span
-            className={`inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-full ${style.bg} ${style.text}`}
+            className={`inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-full ${style.bg} ${style.text}`}
           >
-            <span className={`w-1.5 h-1.5 rounded-full ${style.dot}`} />
+            <span className={`w-1.5 h-1.5 rounded-full ${style.dot} ${style.pulse ? "animate-pulse" : ""}`} />
             <span>{GRN_STATUS_LABELS[grn.status] || grn.status}</span>
           </span>
         );
@@ -218,7 +213,7 @@ const GRNListPage = () => {
       render: (_, grn) => (
         <Link
           to={`/inventory/grn/${grn.id}`}
-          className="p-2 hover:bg-gray-100 inline-flex rounded-xl transition-colors text-gray-500 hover:text-black"
+          className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 inline-flex rounded-xl transition-colors text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
         >
           <IconEye size={18} />
         </Link>
@@ -230,113 +225,53 @@ const GRNListPage = () => {
     <PageContainer title="Goods Received Notes">
       <div className="w-full space-y-6">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between sm:items-end mb-4 gap-4">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-2 gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-1.5 h-10 bg-green-600 rounded-full" />
+            <div className="w-1.5 h-7 bg-slate-900 dark:bg-slate-100 rounded-full" />
             <div className="flex flex-col">
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 leading-none mb-1">
+              <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400 dark:text-slate-500 leading-none mb-1 font-mono">
                 Inventory Control
               </span>
-              <h2 className="text-2xl sm:text-4xl font-black text-gray-900 tracking-tight leading-none">
-                Goods Received Notes
-              </h2>
+              <div className="flex items-center gap-2.5">
+                <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 tracking-tight leading-none">
+                  Goods Received Notes
+                </h2>
+                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200/80 dark:border-slate-700/80">
+                  {filteredGRNs.length} GRNs
+                </span>
+              </div>
             </div>
           </div>
           <Button
             type="primary"
-            icon={<IconPlus size={18} />}
+            icon={<IconPlus size={16} />}
             onClick={() => navigate("/inventory/grn/create")}
             disabled={!canCreate}
-            className="bg-black hover:bg-gray-800 border-none h-12 px-6 rounded-lg text-sm font-bold shadow-lg shadow-black/10 flex items-center gap-2 self-start sm:self-auto"
+            className="bg-slate-900 dark:bg-slate-100 hover:bg-slate-800 dark:hover:bg-white text-white dark:text-slate-900 font-semibold text-xs rounded-xl px-4 py-2.5 shadow-xs cursor-pointer transition-all h-auto border-none flex items-center gap-2"
           >
             New GRN
           </Button>
         </div>
-        <Row gutter={[16, 16]} className="mb-4">
-          <Col xs={24} sm={8}>
-            <Card className="border-none shadow-sm bg-gradient-to-br from-blue-50/50 to-indigo-50/20 rounded-2xl">
-              <div className="flex items-center justify-between">
-                <div>
-                  <Typography.Text
-                    type="secondary"
-                    className="text-xs uppercase tracking-wider font-semibold"
-                  >
-                    Total GRNs
-                  </Typography.Text>
-                  <div className="text-3xl font-black text-slate-800 mt-1">
-                    {stats.total}
-                  </div>
-                </div>
-                <div className="p-3 bg-blue-500/10 text-blue-600 rounded-xl">
-                  <IconFileText size={24} />
-                </div>
-              </div>
-            </Card>
-          </Col>
-          <Col xs={24} sm={8}>
-            <Card className="border-none shadow-sm bg-gradient-to-br from-emerald-50/50 to-teal-50/20 rounded-2xl">
-              <div className="flex items-center justify-between">
-                <div>
-                  <Typography.Text
-                    type="secondary"
-                    className="text-xs uppercase tracking-wider font-semibold"
-                  >
-                    Completed GRNs
-                  </Typography.Text>
-                  <div className="text-3xl font-black text-slate-800 mt-1">
-                    {stats.completed}
-                  </div>
-                </div>
-                <div className="p-3 bg-emerald-500/10 text-emerald-600 rounded-xl">
-                  <IconCheck size={24} />
-                </div>
-              </div>
-            </Card>
-          </Col>
-          <Col xs={24} sm={8}>
-            <Card className="border-none shadow-sm bg-gradient-to-br from-indigo-50/50 to-purple-50/20 rounded-2xl">
-              <div className="flex items-center justify-between">
-                <div>
-                  <Typography.Text
-                    type="secondary"
-                    className="text-xs uppercase tracking-wider font-semibold"
-                  >
-                    Total Received Value
-                  </Typography.Text>
-                  <div className="text-2xl font-black text-slate-800 mt-1 truncate">
-                    Rs {stats.totalValue.toLocaleString()}
-                  </div>
-                </div>
-                <div className="p-3 bg-indigo-500/10 text-indigo-600 rounded-xl">
-                  <IconPigMoney size={24} />
-                </div>
-              </div>
-            </Card>
-          </Col>
-        </Row>
 
         {/* Filters */}
-        <Card
-          size="small"
-          className="border-none bg-gray-50/50 rounded-2xl shadow-none"
-        >
+        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 shadow-xs">
           <Form
             form={form}
             layout="vertical"
             onFinish={handleFilterSubmit}
             initialValues={{ search: "" }}
-            className="w-full p-2"
+            className="w-full"
           >
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 items-end">
-              <Form.Item name="search" label="Search" className="!mb-0">
+              <Form.Item name="search" label={<span className="text-xs font-semibold text-slate-600 dark:text-slate-400">Search</span>} className="!mb-0">
                 <Input
-                  prefix={<IconSearch size={15} className="text-gray-400" />}
+                  prefix={<IconSearch size={15} className="text-slate-400" />}
                   placeholder="Search by GRN#, PO#, or supplier..."
                   allowClear
-                  className="rounded-xl border-gray-200 h-10 w-full"
+                  className="rounded-xl border-slate-200 dark:border-slate-700 bg-transparent text-slate-900 dark:text-slate-100 h-10 w-full"
                 />
               </Form.Item>
-              <Form.Item name="status" label="Status" className="!mb-0">
+              <Form.Item name="status" label={<span className="text-xs font-semibold text-slate-600 dark:text-slate-400">Status</span>} className="!mb-0">
                 <Select
                   placeholder="Select Status"
                   allowClear
@@ -356,14 +291,14 @@ const GRNListPage = () => {
                     type="primary"
                     htmlType="submit"
                     icon={<IconFilter size={15} />}
-                    className="rounded-xl h-10 font-bold flex-1 bg-gray-900 border-none hover:bg-black flex items-center justify-center gap-1"
+                    className="bg-slate-900 dark:bg-slate-100 hover:bg-slate-800 dark:hover:bg-white text-white dark:text-slate-900 font-semibold text-xs rounded-xl px-4 py-2.5 shadow-xs cursor-pointer transition-all h-10 border-none flex-1 flex items-center justify-center gap-1.5"
                   >
                     Filter
                   </Button>
                   <Button
                     icon={<IconX size={15} />}
                     onClick={handleClearFilters}
-                    className="rounded-xl h-10 font-bold border-gray-200 flex-1 flex items-center justify-center gap-1"
+                    className="rounded-xl h-10 font-semibold text-xs border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 shadow-xs flex-1 flex items-center justify-center gap-1.5 cursor-pointer"
                   >
                     Clear
                   </Button>
@@ -371,25 +306,27 @@ const GRNListPage = () => {
               </Form.Item>
             </div>
           </Form>
-        </Card>
+        </div>
 
         {/* Table */}
-        <div className="mt-2 bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-none">
-          <Table
-            scroll={{ x: 1000 }}
-            bordered
-            columns={columns}
-            dataSource={filteredGRNs}
-            loading={loading}
-            rowKey={(r: GRN) => r.id}
-            pagination={{ pageSize: 15, position: ["bottomRight"] }}
-            size="middle"
-            className="rounded-2xl overflow-hidden ant-table-fluid"
-          />
-        </div>
+        <Spinner spinning={loading}>
+          <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl shadow-xs overflow-hidden [&_.ant-table]:!bg-transparent [&_.ant-table-thead>tr>th]:!bg-slate-50/80 [&_.ant-table-thead>tr>th]:dark:!bg-slate-800/60 [&_.ant-table-thead>tr>th]:!text-slate-500 [&_.ant-table-thead>tr>th]:!font-bold [&_.ant-table-thead>tr>th]:!text-[11px] [&_.ant-table-thead>tr>th]:!uppercase [&_.ant-table-thead>tr>th]:!tracking-wider [&_.ant-table-thead>tr>th]:!border-b [&_.ant-table-thead>tr>th]:!border-slate-100 [&_.ant-table-thead>tr>th]:dark:!border-slate-800 [&_.ant-table-tbody>tr]:hover:!bg-slate-50/60 [&_.ant-table-tbody>tr]:dark:hover:!bg-slate-800/40 [&_.ant-table-tbody>tr>td]:!border-b [&_.ant-table-tbody>tr>td]:!border-slate-100 [&_.ant-table-tbody>tr>td]:dark:!border-slate-800/60 [&_.ant-table-tbody>tr>td]:!py-3.5">
+            <Table
+              scroll={{ x: 1000 }}
+              bordered={false}
+              columns={columns}
+              dataSource={filteredGRNs}
+              rowKey={(r: GRN) => r.id}
+              pagination={{ pageSize: 15, position: ["bottomRight"] }}
+              size="middle"
+              className="rounded-2xl overflow-hidden ant-table-fluid"
+            />
+          </div>
+        </Spinner>
       </div>
     </PageContainer>
   );
 };
 
 export default GRNListPage;
+

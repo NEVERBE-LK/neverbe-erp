@@ -4,7 +4,8 @@ import { lazy } from "react";
 import { useAppSelector } from "@/lib/hooks";
 import toast from "react-hot-toast";
 import { getYearlySalesAction } from "@/actions/reportsActions";
-import { Spin } from "antd";
+import Spinner from "../shared/Spinner";
+import { useTheme } from "@/contexts/ThemeContext";
 
 const Chart = lazy(() => import("react-apexcharts"));
 
@@ -23,11 +24,13 @@ const SalesOverview = () => {
   );
 
   const { currentUser } = useAppSelector((state) => state.authSlice);
+  const { theme } = useTheme();
 
-  const primaryColor = "#10b981"; // Emerald 500
-  const secondaryColor = "#d1fae5"; // Emerald 100
+  const isDark = theme === "dark";
 
-  // REDUCED HEIGHT HERE
+  const primaryColor = isDark ? "#cbd5e1" : "#0f172a";
+  const secondaryColor = "#3b82f6";
+
   const chartHeight = 300;
 
   const optionscolumnchart: any = {
@@ -40,15 +43,15 @@ const SalesOverview = () => {
     },
     colors: [primaryColor, secondaryColor],
     plotOptions: {
-      bar: { horizontal: false, columnWidth: "50%", borderRadius: 0 },
+      bar: { horizontal: false, columnWidth: "45%", borderRadius: 4 },
     },
     dataLabels: { enabled: false },
-    stroke: { show: true, width: 0, colors: ["transparent"] },
+    stroke: { show: true, width: 2, colors: ["transparent"] },
     xaxis: {
       categories: months.length ? months : Array(12).fill("N/A"),
       axisBorder: {
         show: true,
-        color: "#000000",
+        color: isDark ? "#334155" : "#e2e8f0",
         height: 1,
         width: "100%",
         offsetX: 0,
@@ -57,45 +60,45 @@ const SalesOverview = () => {
       axisTicks: { show: false },
       labels: {
         style: {
-          colors: "#71717a",
+          colors: "#94a3b8",
           fontSize: "10px",
           fontFamily: "inherit",
-          fontWeight: 800,
+          fontWeight: 500,
           cssClass: " ",
         },
       },
     },
     yaxis: {
-      tickAmount: 3, // Reduced ticks for smaller height
+      tickAmount: 3,
       labels: {
         style: {
-          colors: "#71717a",
+          colors: "#94a3b8",
           fontSize: "10px",
           fontFamily: "inherit",
-          fontWeight: 700,
+          fontWeight: 500,
         },
       },
     },
     grid: {
-      borderColor: "#f3f4f6",
-      strokeDashArray: 2,
+      borderColor: isDark ? "#1e293b" : "#f1f5f9",
+      strokeDashArray: 3,
       xaxis: { lines: { show: false } },
       yaxis: { lines: { show: true } },
-      padding: { top: 0, right: 0, bottom: 0, left: 10 }, // Tighter padding
+      padding: { top: 20, right: 0, bottom: 0, left: 10 },
     },
     legend: {
       show: true,
       position: "top",
       horizontalAlign: "right",
-      offsetY: -20, // Move legend up into header space
+      offsetY: -10,
       fontFamily: "inherit",
-      fontWeight: 700,
-      labels: { colors: "#000000", useSeriesColors: false },
-      markers: { width: 8, height: 8, radius: 0 },
+      fontWeight: 500,
+      labels: { colors: isDark ? "#94a3b8" : "#475569", useSeriesColors: false },
+      markers: { width: 8, height: 8, radius: 4 },
       itemMargin: { horizontal: 10, vertical: 0 },
     },
     tooltip: {
-      theme: "light",
+      theme: isDark ? "dark" : "light",
       style: { fontSize: "12px", fontFamily: "inherit" },
       marker: { show: true },
       x: { show: false },
@@ -122,14 +125,32 @@ const SalesOverview = () => {
   ];
 
   useEffect(() => {
-    if (currentUser) {
-      fetchSalesData();
-    }
+    if (!currentUser) return;
+
+    fetchSalesData(true);
+
+    const interval = setInterval(() => {
+      if (document.visibilityState === "visible") {
+        fetchSalesData(false);
+      }
+    }, 30000); // 30 seconds
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        fetchSalesData(false);
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
   }, [currentUser]);
 
-  const fetchSalesData = async () => {
+  const fetchSalesData = async (showLoading = true) => {
     try {
-      setLoading(true);
+      if (showLoading) setLoading(true);
       const data = await getYearlySalesAction();
       setSalesData({
         website: data.website,
@@ -139,19 +160,13 @@ const SalesOverview = () => {
       console.error(error);
       toast.error(error.message);
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   };
 
   return (
-    <DashboardCard>
-      <div>
-        <h4 className="text-lg font-bold text-black">Sales Performance</h4>
-        <p className="text-xs font-bold text-gray-400  ">
-          Year to Date Comparison
-        </p>
-      </div>
-      <Spin spinning={loading}>
+    <DashboardCard title="Sales Performance" subtitle="Year to Date Comparison">
+      <Spinner spinning={loading}>
         <div className="min-h-[300px]">
           {!loading && (
             <Chart
@@ -163,7 +178,7 @@ const SalesOverview = () => {
             />
           )}
         </div>
-      </Spin>
+      </Spinner>
     </DashboardCard>
   );
 };

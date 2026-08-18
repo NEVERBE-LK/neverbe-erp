@@ -153,18 +153,19 @@ const VariantFormModal: React.FC<VariantFormModalProps> = ({
 
         <Form.Item
           name="variantName"
-          label="Variant Name"
+          label={<span className="text-xs font-semibold text-slate-700 dark:text-slate-300">Variant Name</span>}
           rules={[{ required: true }]}
         >
-          <Input placeholder="e.g. Red / Limited Edition" />
+          <Input placeholder="e.g. Red / Limited Edition" className="rounded-xl" />
         </Form.Item>
 
-        <Form.Item label="Size Availability" name="sizes">
+        <Form.Item label={<span className="text-xs font-semibold text-slate-700 dark:text-slate-300">Size Availability</span>} name="sizes">
           <Select
             mode="multiple"
             placeholder="Select available sizes..."
             style={{ width: "100%" }}
             allowClear
+            className="rounded-xl"
           >
             {sizes.map((s) => (
               <Select.Option key={s.id} value={s.label}>
@@ -174,15 +175,15 @@ const VariantFormModal: React.FC<VariantFormModalProps> = ({
           </Select>
         </Form.Item>
 
-        <Form.Item name="status" label="Active Status" valuePropName="checked">
+        <Form.Item name="status" label={<span className="text-xs font-semibold text-slate-700 dark:text-slate-300">Active Status</span>} valuePropName="checked">
           <Switch checkedChildren="ACTIVE" unCheckedChildren="INACTIVE" />
         </Form.Item>
 
-        <Divider orientation={"left" as any}>Gallery</Divider>
+        <Divider orientation={"left" as any}><span className="text-xs font-mono text-slate-400">Gallery</span></Divider>
 
         <div className="mb-4">
           <Upload beforeUpload={beforeUpload} multiple showUploadList={false}>
-            <Button icon={<IconPhotoPlus size={16} />}>Add Images</Button>
+            <Button icon={<IconPhotoPlus size={16} />} className="rounded-xl">Add Images</Button>
           </Upload>
         </div>
 

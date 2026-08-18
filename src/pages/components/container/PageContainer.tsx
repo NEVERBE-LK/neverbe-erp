@@ -1,5 +1,5 @@
 import { ReactNode, useEffect } from "react";
-import { Spin } from "antd";
+import Spinner from "../shared/Spinner";
 
 type Props = {
   description?: string;
@@ -16,7 +16,7 @@ const PageContainer = ({ title, children, loading }: Props) => {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[80vh]">
-        <Spin size="large" />
+        <Spinner size="large" />
       </div>
     );
   }

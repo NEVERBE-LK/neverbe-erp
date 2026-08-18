@@ -9,8 +9,11 @@ import MonthlyComparison from "../components/dashboard/MonthlyComparison";
 import OrderStatusPanel from "../components/dashboard/OrderStatusPanel";
 import ProfitMargins from "../components/dashboard/ProfitMargins";
 import RevenueByCategory from "../components/dashboard/RevenueByCategory";
+import AIOperationalInsights from "../components/dashboard/AIOperationalInsights";
+import DashboardCard from "../components/shared/DashboardCard";
+import Spinner from "../components/shared/Spinner";
 
-import { Tabs, Spin } from "antd";
+import { Tabs } from "antd";
 import { Suspense } from "react";
 
 const Dashboard = () => {
@@ -18,12 +21,15 @@ const Dashboard = () => {
     <PageContainer title="Dashboard" description="Overview of your business performance">
       <Suspense fallback={
         <div className="flex items-center justify-center min-h-[50vh]">
-          <Spin size="large" />
+          <Spinner size="large" tip="SYNCING CORE DATA..." />
         </div>
       }>
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-4">
+          {/* Row 0: AI Operational Insights */}
+          <AIOperationalInsights />
+
           {/* Row 1: High Level Performance (Hero Section) */}
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 items-stretch">
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 items-stretch">
             <div className="xl:col-span-2">
               <DailyEarnings />
             </div>
@@ -33,14 +39,14 @@ const Dashboard = () => {
           </div>
 
           {/* Row 2: Sales Trends & Order Flow */}
-          <div className="grid grid-cols-1 gap-6 items-stretch">
+          <div className="grid grid-cols-1 gap-4 items-stretch">
             <div className="w-full">
               <SalesOverview />
             </div>
           </div>
 
           {/* Row 3: Operational Status & Financials */}
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-stretch">
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 items-stretch">
             <div className="xl:col-span-1">
               <OrderStatusPanel />
             </div>
@@ -50,15 +56,15 @@ const Dashboard = () => {
           </div>
 
           {/* Row 4: Insights & Recent Activity (Tabbed for simplification) */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-stretch">
             <div className="lg:col-span-1">
               <RevenueByCategory />
             </div>
-            <div className="lg:col-span-2 flex flex-col gap-6">
-              <div className="bg-white rounded-3xl p-2 shadow-sm border border-gray-100">
+            <div className="lg:col-span-2 flex flex-col gap-4">
+              <DashboardCard>
                 <Tabs
                   defaultActiveKey="1"
-                  className="dashboard-tabs px-4"
+                  className="dashboard-tabs px-2"
                   items={[
                     {
                       key: "1",
@@ -77,7 +83,7 @@ const Dashboard = () => {
                     },
                   ]}
                 />
-              </div>
+              </DashboardCard>
             </div>
           </div>
         </div>

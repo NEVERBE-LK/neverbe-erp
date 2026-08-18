@@ -7,22 +7,40 @@ import { RootState } from "@/lib/store";
 
 const { Text } = Typography;
 
+// Parent route prefixes that don't have an explicit page component
+const UNLINKABLE_PARENTS = new Set(["/master", "/campaign"]);
+
 export default function AppBreadcrumb() {
   const location = useLocation();
-  const pathnames = location.pathname.split("/").filter((x) => x);
+  const rawPathnames = location.pathname.split("/").filter((x) => x);
   const { currentUser } = useAppSelector((state: RootState) => state.authSlice);
 
   // Don't show breadcrumbs on the dashboard or root
-  if (pathnames.length === 0 || pathnames[0] === "dashboard") {
+  if (rawPathnames.length === 0 || rawPathnames[0] === "dashboard") {
     return null;
   }
 
   const hasPermission = (permission?: string) => {
     if (!permission) return true;
     if (!currentUser) return false;
-    return (
-      currentUser.permissions?.includes(permission)
-    );
+    const role = String(currentUser.role || "").toUpperCase();
+    if (
+      role === "ADMIN" ||
+      role === "SUPERADMIN" ||
+      role === "SUPER_ADMIN" ||
+      role === "MANAGER" ||
+      role === "OWNER"
+    ) {
+      return true;
+    }
+    if (Array.isArray(currentUser.permissions) && currentUser.permissions.length > 0) {
+      return (
+        currentUser.permissions.includes(permission) ||
+        currentUser.permissions.includes("all") ||
+        currentUser.permissions.includes("*")
+      );
+    }
+    return true;
   };
 
   const getPermissionForPath = (toPath: string): string | undefined => {
@@ -34,14 +52,20 @@ export default function AppBreadcrumb() {
       if (anyItem.children) {
         for (const child of anyItem.children) {
           const anyChild = child as any;
-          if (anyChild.href && (toPath === anyChild.href || toPath.startsWith(anyChild.href + "/"))) {
+          if (
+            anyChild.href &&
+            (toPath === anyChild.href || toPath.startsWith(anyChild.href + "/"))
+          ) {
             if (anyChild.href.length > longestHrefLength) {
               longestHrefLength = anyChild.href.length;
               bestMatchPermission = anyChild.permission;
             }
           }
         }
-      } else if (anyItem.href && (toPath === anyItem.href || toPath.startsWith(anyItem.href + "/"))) {
+      } else if (
+        anyItem.href &&
+        (toPath === anyItem.href || toPath.startsWith(anyItem.href + "/"))
+      ) {
         if (anyItem.href.length > longestHrefLength) {
           longestHrefLength = anyItem.href.length;
           bestMatchPermission = anyItem.permission;
@@ -74,9 +98,48 @@ export default function AppBreadcrumb() {
     return bestMatchPermission;
   };
 
-  // Find the label for a given path from MenuItems or fallbacks
+  const KNOWN_ROUTE_SEGMENTS = new Set([
+    "purchase-orders",
+    "petty-cash",
+    "expense-categories",
+    "supplier-invoices",
+    "bank-accounts",
+    "payment-methods",
+    "email-templates",
+    "daily-summary",
+    "monthly-summary",
+    "yearly-summary",
+    "top-products",
+    "by-category",
+    "by-brand",
+    "by-payment-method",
+    "sales-vs-discount",
+    "refunds-returns",
+    "daily-revenue",
+    "monthly-revenue",
+    "yearly-revenue",
+    "live-stock",
+    "low-stock",
+    "reset-password",
+  ]);
+
   const getLabelForPath = (toPath: string, segment: string) => {
-    // 1. Search through MenuItems for a matching href
+    if (toPath === "/inventory") return "Inventory";
+
+    const pathLabelMap: Record<string, string> = {
+      "/inventory/purchase-orders": "Purchase Orders",
+      "/inventory/purchase-orders/create": "Create Purchase Order",
+      "/inventory/purchase-orders/approvals": "PO Approvals",
+      "/inventory/grn": "Goods Received Notes",
+      "/inventory/grn/create": "Create Goods Received Note",
+      "/inventory/grn/approvals": "GRN Approvals",
+      "/inventory/adjustments": "Stock Adjustments",
+      "/inventory/adjustments/create": "Create Stock Adjustment",
+    };
+
+    if (pathLabelMap[toPath]) return pathLabelMap[toPath];
+
+    // 1. Search through MenuItems for exact matching href
     for (const item of MenuItems) {
       const anyItem = item as any;
       if (anyItem.children) {
@@ -91,22 +154,7 @@ export default function AppBreadcrumb() {
       }
     }
 
-    // 2. Fallback to matching child/item ending in segment with slash
-    for (const item of MenuItems) {
-      const anyItem = item as any;
-      if (anyItem.children) {
-        for (const child of anyItem.children) {
-          const anyChild = child as any;
-          if (anyChild.href && anyChild.href.endsWith("/" + segment)) {
-            return anyChild.title;
-          }
-        }
-      } else if (anyItem.href && anyItem.href.endsWith("/" + segment)) {
-        return anyItem.title;
-      }
-    }
-
-    // 3. Mapping for common/parent segments
+    // 2. Mapping for common/parent segments
     const segmentMap: Record<string, string> = {
       master: "Master Data",
       inventory: "Inventory",
@@ -118,25 +166,90 @@ export default function AppBreadcrumb() {
       users: "Users",
       roles: "Roles",
       website: "Website",
+      products: "Products",
+      categories: "Categories",
+      brands: "Brands",
+      sizes: "Sizes",
+      stocks: "Stock Locations",
+      suppliers: "Suppliers",
+      adjustments: "Stock Adjustments",
+      grn: "Goods Received Notes",
+      "purchase-orders": "Purchase Orders",
       approvals: "Approvals",
       create: "Create",
     };
 
     if (segmentMap[segment]) return segmentMap[segment];
 
-    // 4. Default fallback: capitalize segment
+    // Capitalize segment
     return segment
       .split("-")
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
       .join(" ");
   };
 
+  // Build clean breadcrumb items
+  interface Crumb {
+    to: string;
+    label: string;
+    isLinkable: boolean;
+  }
+
+  const items: Crumb[] = [];
+  let currentPath = "";
+
+  for (let i = 0; i < rawPathnames.length; i++) {
+    const segment = rawPathnames[i];
+    const isKnownRoute = KNOWN_ROUTE_SEGMENTS.has(segment);
+    const isId =
+      !isKnownRoute &&
+      (segment.length > 15 ||
+        !!segment.match(/^[a-z0-9]+-[a-zA-Z0-9_-]{3,}$/i));
+    const isView = segment === "view";
+
+    if (isId || isView) {
+      let detailLabel = "View Details";
+      if (rawPathnames.includes("purchase-orders")) {
+        detailLabel = "PO Details";
+      } else if (rawPathnames.includes("adjustments")) {
+        detailLabel = "Adjustment Details";
+      } else if (rawPathnames.includes("grn")) {
+        detailLabel = "GRN Details";
+      } else if (rawPathnames.includes("orders")) {
+        detailLabel = "Order Details";
+      }
+
+      const nextSegment = rawPathnames[i + 1];
+      currentPath += `/${segment}`;
+      if (nextSegment === "view") {
+        i++;
+        currentPath += "/view";
+      }
+
+      items.push({
+        to: currentPath,
+        label: detailLabel,
+        isLinkable: false,
+      });
+      break;
+    } else {
+      currentPath += `/${segment}`;
+      const label = getLabelForPath(currentPath, segment);
+      const isUnlinkable = UNLINKABLE_PARENTS.has(currentPath);
+      items.push({
+        to: currentPath,
+        label,
+        isLinkable: !isUnlinkable,
+      });
+    }
+  }
+
   return (
     <div className="flex items-center gap-2 text-gray-500 text-sm mb-6 px-4 sm:px-8 lg:px-12 pt-4">
       {hasPermission("view_dashboard") ? (
         <Link
           to="/dashboard"
-          className="!text-green-600 hover:!text-green-700 font-medium transition-colors"
+          className="!text-slate-900 dark:!text-slate-100 hover:!text-slate-700 dark:hover:!text-slate-300 font-medium transition-colors"
         >
           Dashboard
         </Link>
@@ -145,49 +258,55 @@ export default function AppBreadcrumb() {
           Dashboard
         </span>
       )}
-      <span className="text-gray-300">/</span>
+      <span className="text-gray-300 dark:text-slate-600">/</span>
 
-      {pathnames.map((value, index) => {
-        const last = index === pathnames.length - 1;
-        const to = `/${pathnames.slice(0, index + 1).join("/")}`;
+      {items.map((item, index) => {
+        const last = index === items.length - 1;
 
-        // Skip IDs in breadcrumbs (UUIDs, generated IDs like p-, grn-, etc.)
-        let label = getLabelForPath(to, value);
-        if (value.length > 15 || value.match(/^[a-z]+-[a-zA-Z0-9_-]{8}$/)) {
-          label = "View Details"; // Override ugly IDs with generic text
-        }
-
-        if (last) {
+        if (last || !item.isLinkable) {
+          if (last) {
+            return (
+              <Text key={item.to} strong className="text-slate-900 dark:text-slate-100">
+                {item.label}
+              </Text>
+            );
+          }
           return (
-            <Text key={to} strong className="text-gray-700">
-              {label}
-            </Text>
+            <React.Fragment key={item.to}>
+              <span className="text-slate-500 dark:text-slate-400 font-medium">
+                {item.label}
+              </span>
+              <span className="text-gray-300 dark:text-slate-600">/</span>
+            </React.Fragment>
           );
         }
 
-        const permission = getPermissionForPath(to);
+        const permission = getPermissionForPath(item.to);
         const permitted = hasPermission(permission);
 
         if (!permitted) {
           return (
-            <React.Fragment key={to}>
-              <span className="text-gray-400 font-medium cursor-not-allowed" title="You do not have permission to access this page">
-                {label}
+            <React.Fragment key={item.to}>
+              <span
+                className="text-gray-400 font-medium cursor-not-allowed"
+                title="You do not have permission to access this page"
+              >
+                {item.label}
               </span>
-              <span className="text-gray-300">/</span>
+              <span className="text-gray-300 dark:text-slate-600">/</span>
             </React.Fragment>
           );
         }
 
         return (
-          <React.Fragment key={to}>
+          <React.Fragment key={item.to}>
             <Link
-              to={to}
-              className="!text-green-600 hover:!text-green-700 font-medium transition-colors"
+              to={item.to}
+              className="!text-slate-900 dark:!text-slate-100 hover:!text-slate-700 dark:hover:!text-slate-300 font-medium transition-colors"
             >
-              {label}
+              {item.label}
             </Link>
-            <span className="text-gray-300">/</span>
+            <span className="text-gray-300 dark:text-slate-600">/</span>
           </React.Fragment>
         );
       })}

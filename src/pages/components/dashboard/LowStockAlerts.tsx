@@ -4,7 +4,8 @@ import { useAppSelector } from "@/lib/hooks";
 import { getLowStockAlertsAction } from "@/actions/reportsActions";
 import toast from "react-hot-toast";
 import { IconAlertTriangle, IconRefresh } from "@tabler/icons-react";
-import { List, Avatar, Tag, Button, Spin, Typography } from "antd";
+import { List, Avatar, Tag, Button, Typography } from "antd";
+import Spinner from "../shared/Spinner";
 
 interface LowStockItem {
   productId: string;
@@ -21,11 +22,31 @@ const LowStockAlerts = () => {
   const { currentUser } = useAppSelector((state) => state.authSlice);
 
   useEffect(() => {
-    if (currentUser) fetchLowStock();
+    if (!currentUser) return;
+
+    fetchLowStock(true);
+
+    const interval = setInterval(() => {
+      if (document.visibilityState === "visible") {
+        fetchLowStock(false);
+      }
+    }, 30000); // 30 seconds
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        fetchLowStock(false);
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
   }, [currentUser]);
 
-  const fetchLowStock = async () => {
-    setLoading(true);
+  const fetchLowStock = async (showLoading = true) => {
+    if (showLoading) setLoading(true);
     try {
       const data = await getLowStockAlertsAction(5, 8);
       setItems(data);
@@ -33,94 +54,73 @@ const LowStockAlerts = () => {
       console.error(error);
       toast.error(error.message);
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   };
 
   return (
-    <DashboardCard>
-      <div className="flex flex-col sm:flex-row sm:justify-between items-start sm:items-center mb-4 gap-2">
-        <div className="flex items-center gap-2">
-          <IconAlertTriangle size={18} className="text-orange-500" />
-          <h4 className="text-lg font-bold text-black m-0">Low Stock Alerts</h4>
-          <Button
-            type="text"
-            shape="circle"
-            icon={<IconRefresh size={14} />}
-            onClick={fetchLowStock}
-            loading={loading}
-          />
-        </div>
-        <Tag color="orange" className="font-bold">
-          {items.length} Items
-        </Tag>
+    <div className="py-2 flex flex-col h-[350px]">
+      <div className="flex flex-col sm:flex-row sm:justify-between items-start sm:items-center mb-4 pb-3 border-b border-slate-100 dark:border-slate-800/80 gap-2 shrink-0">
+        <span className="text-xs font-semibold text-text-sub dark:text-slate-400">
+          Items Below Minimum Threshold
+        </span>
+        <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border border-amber-200/50 dark:border-amber-800/50">
+          {items.length} Alerts
+        </span>
       </div>
 
-      <Spin spinning={loading}>
-        {items.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-[160px] text-gray-400">
-            <IconAlertTriangle size={32} className="mb-2 opacity-50" />
-            <Typography.Text type="secondary" strong className="text-xs">
-              No low stock items
-            </Typography.Text>
-          </div>
-        ) : (
-          <List
-            dataSource={items}
-            size="small"
-            className="max-h-[200px] overflow-y-auto"
-            renderItem={(item) => (
-              <List.Item className="hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-0 !px-2 !py-2">
-                <List.Item.Meta
-                  avatar={
-                    item.thumbnail ? (
+      <div className="flex-1 overflow-hidden min-h-0">
+        <Spinner spinning={loading}>
+          {items.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-full text-slate-400">
+              <IconAlertTriangle size={32} className="mb-2 opacity-50 text-slate-300" />
+              <span className="text-xs font-semibold text-slate-400">No low stock items</span>
+            </div>
+          ) : (
+            <div className="h-full overflow-y-auto pr-1 no-scrollbar space-y-1">
+              {items.map((item, idx, arr) => (
+                <div 
+                  key={item.productId}
+                  className={`flex justify-between items-center py-3 ${idx !== arr.length - 1 ? 'border-b border-card-border dark:border-card-border-dark' : ''}`}
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    {item.thumbnail ? (
                       <Avatar
                         shape="square"
                         src={item.thumbnail}
                         size="small"
+                        className="shrink-0 rounded-md"
                       />
                     ) : (
                       <Avatar
                         shape="square"
                         size="small"
                         icon={<IconAlertTriangle size={12} />}
-                        className="bg-gray-100 text-gray-400"
+                        className="bg-panel dark:bg-slate-800 text-text-sub shrink-0 rounded-md"
                       />
-                    )
-                  }
-                  title={
-                    <Typography.Text
-                      ellipsis
-                      className="text-xs font-bold block max-w-[150px]"
-                    >
-                      {item.productName}
-                    </Typography.Text>
-                  }
-                  description={
-                    <Typography.Text
-                      type="secondary"
-                      ellipsis
-                      className="text-[10px] block"
-                    >
-                      {item.variantName} • Size {item.size}
-                    </Typography.Text>
-                  }
-                />
-                <div className="text-right shrink-0 ml-2">
-                  <Typography.Text
-                    strong
-                    className={`text-sm block ${item.currentStock <= 2 ? "text-red-600" : "text-orange-600"}`}
-                  >
-                    {item.currentStock}
-                  </Typography.Text>
-                  <span className="text-[10px] text-gray-400">left</span>
+                    )}
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-xs font-semibold text-text-main dark:text-text-main-dark truncate max-w-[180px]">
+                        {item.productName}
+                      </span>
+                      <span className="text-[10px] text-text-sub dark:text-slate-500 mt-0.5 truncate max-w-[180px]">
+                        {item.variantName} • Size {item.size}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="text-right shrink-0 ml-2">
+                    <span className={`text-sm font-bold block ${item.currentStock <= 2 ? "text-red-500" : "text-amber-500"}`}>
+                      {item.currentStock}
+                    </span>
+                    <span className="text-[10px] text-text-sub">left</span>
+                  </div>
                 </div>
-              </List.Item>
-            )}
-          />
-        )}
-      </Spin>
-    </DashboardCard>
+              ))}
+            </div>
+          )}
+        </Spinner>
+      </div>
+    </div>
   );
 };
 

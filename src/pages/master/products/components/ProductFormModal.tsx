@@ -22,8 +22,8 @@ import {
   Divider,
   Tabs,
   Tag,
-  Spin,
 } from "antd";
+import Spinner from "@/pages/components/shared/Spinner";
 
 const { Option } = Select;
 
@@ -518,19 +518,18 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
                 children: (
                   <div className="bg-blue-50/30 p-6 rounded-xl border border-blue-100/50 my-2">
                     <div className="flex justify-between items-center mb-6">
-                      <span className="text-sm font-semibold text-gray-800 uppercase tracking-wider">
+                      <span className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider font-mono">
                         Target Attributes & Demographics
                       </span>
-                      <Button
-                        type="primary"
-                        size="small"
-                        icon={suggesting ? <Spin size="small" /> : <IconSparkles size={13} />}
+                      <button
+                        type="button"
                         onClick={handleSuggestAttributes}
-                        loading={suggesting}
-                        className="flex items-center gap-1 text-xs font-black uppercase tracking-widest bg-emerald-600 hover:bg-emerald-700 border-none shadow-lg shadow-emerald-100 h-8 px-4 rounded-xl transition-all hover:scale-[1.02]"
+                        disabled={suggesting}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-white text-white dark:text-slate-900 text-xs font-semibold shadow-xs transition-all cursor-pointer disabled:opacity-50"
                       >
+                        {suggesting ? <Spinner size="small" /> : <IconSparkles size={14} />}
                         {suggesting ? "ANALYZING..." : "AI Auto Select"}
-                      </Button>
+                      </button>
                     </div>
                     <Row gutter={[24, 16]}>
                       <Col xs={24} md={8}>

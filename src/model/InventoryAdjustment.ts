@@ -28,6 +28,13 @@ export interface InventoryAdjustment {
   reason: string;
   notes?: string;
   adjustedBy?: string;
+  adjustedByName?: string;
+  approvedBy?: string;
+  approvedByName?: string;
+  approvedAt?: Timestamp | string;
+  rejectedBy?: string;
+  rejectedByName?: string;
+  rejectedAt?: Timestamp | string;
   status: AdjustmentStatus;
   createdAt?: Timestamp | string;
   updatedAt?: Timestamp | string;
@@ -53,15 +60,13 @@ export type AdjustmentStatus =
   | "DRAFT"
   | "SUBMITTED"
   | "APPROVED"
-  | "REJECTED"
-  | "COMPLETED";
+  | "REJECTED";
 
 export const ADJUSTMENT_STATUS_LABELS: Record<AdjustmentStatus, string> = {
   DRAFT: "Draft",
   SUBMITTED: "Submitted",
   APPROVED: "Approved",
   REJECTED: "Rejected",
-  COMPLETED: "Completed",
 };
 
 export const ADJUSTMENT_STATUS_COLORS: Record<AdjustmentStatus, string> = {
@@ -69,5 +74,4 @@ export const ADJUSTMENT_STATUS_COLORS: Record<AdjustmentStatus, string> = {
   SUBMITTED: "bg-blue-100 text-blue-800",
   APPROVED: "bg-green-100 text-green-800",
   REJECTED: "bg-red-100 text-red-800",
-  COMPLETED: "bg-indigo-100 text-indigo-800",
 };

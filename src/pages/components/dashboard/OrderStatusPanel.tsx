@@ -11,9 +11,11 @@ import {
   IconRefresh,
   IconClock,
   IconChecklist,
-  IconAlertCircle,
+  IconAlertTriangle,
 } from "@tabler/icons-react";
-import { Button, Spin, Tag } from "antd";
+import { Button, Tag } from "antd";
+import Spinner from "../shared/Spinner";
+import { useTheme } from "@/contexts/ThemeContext";
 
 const Chart = lazy(() => import("react-apexcharts"));
 
@@ -35,13 +37,36 @@ const OrderStatusPanel = () => {
   const [pendingData, setPendingData] = useState<PendingData | null>(null);
   const [loading, setLoading] = useState(true);
   const { currentUser } = useAppSelector((state) => state.authSlice);
+  const { theme } = useTheme();
+
+  const isDark = theme === "dark";
 
   useEffect(() => {
-    if (currentUser) fetchAll();
+    if (!currentUser) return;
+
+    fetchAll(true);
+
+    const interval = setInterval(() => {
+      if (document.visibilityState === "visible") {
+        fetchAll(false);
+      }
+    }, 30000); // 30 seconds
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        fetchAll(false);
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
   }, [currentUser]);
 
-  const fetchAll = async () => {
-    setLoading(true);
+  const fetchAll = async (showLoading = true) => {
+    if (showLoading) setLoading(true);
     try {
       const [status, pending] = await Promise.all([
         getOrderStatusDistributionAction(),
@@ -53,51 +78,44 @@ const OrderStatusPanel = () => {
       const err = error as Error;
       toast.error(err.message || "Failed to load order status");
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   };
 
   const chartOptions: ApexCharts.ApexOptions = {
     chart: { type: "donut", fontFamily: "inherit" },
     labels: ["Pending", "Processing", "Completed", "Cancelled"],
-    colors: ["#fbbf24", "#3b82f6", "#10b981", "#ef4444"],
-    legend: {
-      position: "bottom",
-      fontFamily: "inherit",
-      fontWeight: 700,
-      fontSize: "10px",
-      labels: { colors: "#71717a" },
-      markers: { size: 5 },
-    },
+    colors: ["#f59e0b", "#3b82f6", "#10b981", "#64748b"],
+    legend: { show: false },
     dataLabels: { enabled: false },
     stroke: { width: 0 },
     plotOptions: {
       pie: {
         donut: {
-          size: "68%",
+          size: "70%",
           labels: {
             show: true,
             name: {
               show: true,
-              fontSize: "10px",
+              fontSize: "11px",
               fontFamily: "inherit",
-              fontWeight: 700,
-              color: "#71717a",
+              fontWeight: 500,
+              color: isDark ? "#64748b" : "#94a3b8",
             },
             value: {
               show: true,
-              fontSize: "18px",
+              fontSize: "20px",
               fontFamily: "inherit",
-              fontWeight: 900,
-              color: "#064e3b", // Emerald 900
+              fontWeight: 600,
+              color: isDark ? "#f1f5f9" : "#0f172a",
             },
             total: {
               show: true,
               label: "Total",
-              fontSize: "10px",
+              fontSize: "11px",
               fontFamily: "inherit",
-              fontWeight: 700,
-              color: "#71717a",
+              fontWeight: 500,
+              color: isDark ? "#64748b" : "#94a3b8",
               formatter: (w) =>
                 w.globals.seriesTotals.reduce(
                   (a: number, b: number) => a + b,
@@ -124,79 +142,82 @@ const OrderStatusPanel = () => {
     : [];
 
   return (
-    <DashboardCard>
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:justify-between items-start sm:items-center mb-4 gap-2">
-        <div className="flex items-center gap-2">
-          <IconChartPie size={18} className="text-purple-500" />
-          <h4 className="text-lg font-bold text-black m-0">Order Status</h4>
-          <Button
-            type="text"
-            shape="circle"
-            icon={<IconRefresh size={14} />}
-            onClick={fetchAll}
-            loading={loading}
-          />
-        </div>
-        <Tag className="m-0 text-xs font-bold text-gray-500 bg-gray-100 border-none">
-          This Month
-        </Tag>
-      </div>
-
-      <Spin spinning={loading}>
-        {/* Donut Chart */}
-        <div className="mb-4">
-          {statusData && series.some((v) => v > 0) ? (
-            <Chart
-              options={chartOptions}
-              series={series}
-              type="donut"
-              height={200}
-            />
-          ) : (
-            <div className="flex flex-col items-center justify-center h-[200px] text-gray-400">
-              <IconChartPie size={32} className="mb-2 opacity-50" />
-              <span className="text-xs font-bold">No orders this month</span>
-            </div>
-          )}
-        </div>
-
-        {/* Needs Attention Section */}
-        {pendingData && (
-          <div className="border-t border-gray-100 pt-4">
-            <div className="flex items-center gap-2 mb-3">
-              <IconAlertCircle size={14} className="text-red-500" />
-              <span className="text-xs font-bold uppercase tracking-wider text-gray-500">
-                Needs Attention
-              </span>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="p-3 border border-yellow-100 bg-yellow-50 rounded-2xl hover:-translate-y-0.5 transition-all">
-                <div className="flex items-center gap-2 mb-1">
-                  <IconClock size={13} className="text-yellow-600" />
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-yellow-700">
-                    Awaiting Payment
-                  </span>
-                </div>
-                <p className="text-xl font-bold text-yellow-700 m-0">
-                  {pendingData.pendingPayment}
-                </p>
+    <DashboardCard 
+      title="Order Status" 
+      subtitle="This Month"
+    >
+      <Spinner spinning={loading}>
+        <div className="flex flex-col md:flex-row items-center gap-6 justify-between">
+          {/* Donut Chart */}
+          <div className="flex-1 flex justify-center items-center">
+            {statusData && series.some((v) => v > 0) ? (
+              <Chart
+                options={chartOptions}
+                series={series}
+                type="donut"
+                height={220}
+                width={240}
+              />
+            ) : (
+              <div className="flex flex-col items-center justify-center h-[200px] text-slate-400">
+                <IconChartPie size={32} className="mb-2 opacity-50 text-slate-300 dark:text-slate-700" />
+                <span className="text-xs font-semibold text-slate-400 dark:text-slate-500">No orders this month</span>
               </div>
-              <div className="p-3 border border-blue-100 bg-blue-50 rounded-2xl hover:-translate-y-0.5 transition-all">
-                <div className="flex items-center gap-2 mb-1">
-                  <IconChecklist size={13} className="text-blue-600" />
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-blue-700">
-                    To Fulfill
-                  </span>
-                </div>
-                <p className="text-xl font-bold text-blue-700 m-0">
-                  {pendingData.pendingFulfillment}
-                </p>
-              </div>
-            </div>
+            )}
           </div>
-        )}
-      </Spin>
+
+          {/* Details & Needs Attention Panel */}
+          <div className="w-full md:w-[220px] shrink-0 flex flex-col justify-between">
+            {/* Custom Status Legend */}
+            <div className="flex flex-col gap-2.5">
+              {[
+                { label: "Pending", count: statusData?.pending || 0, color: "bg-amber-500" },
+                { label: "Processing", count: statusData?.processing || 0, color: "bg-blue-500" },
+                { label: "Completed", count: statusData?.completed || 0, color: "bg-emerald-500" },
+                { label: "Cancelled", count: statusData?.cancelled || 0, color: "bg-slate-400" },
+              ].map((item) => (
+                <div key={item.label} className="flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-2">
+                    <span className={`w-2 h-2 rounded-full ${item.color}`} />
+                    <span className="text-text-sub dark:text-slate-400 font-medium">{item.label}</span>
+                  </div>
+                  <span className="font-bold text-text-main dark:text-text-main-dark">{item.count}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Needs Attention Section */}
+            {pendingData && (
+              <div className="border-t border-card-border dark:border-card-border-dark pt-4 mt-5">
+                <div className="flex items-center gap-1.5 mb-2.5">
+                  <IconAlertTriangle size={14} className="text-amber-500 animate-pulse" />
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-text-sub dark:text-slate-500">
+                    Needs Attention
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 gap-2.5">
+                  <div className="p-2.5 border border-card-border dark:border-card-border-dark bg-panel dark:bg-slate-900/50 rounded-lg">
+                    <span className="text-[9px] font-semibold uppercase tracking-wider text-text-sub block truncate">
+                      Awaiting Pay
+                    </span>
+                    <span className="text-base font-bold text-text-main dark:text-text-main-dark block mt-0.5">
+                      {pendingData.pendingPayment}
+                    </span>
+                  </div>
+                  <div className="p-2.5 border border-card-border dark:border-card-border-dark bg-panel dark:bg-slate-900/50 rounded-lg">
+                    <span className="text-[9px] font-semibold uppercase tracking-wider text-text-sub block truncate">
+                      To Fulfill
+                    </span>
+                    <span className="text-base font-bold text-text-main dark:text-text-main-dark block mt-0.5">
+                      {pendingData.pendingFulfillment}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </Spinner>
     </DashboardCard>
   );
 };

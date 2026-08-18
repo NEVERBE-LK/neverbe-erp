@@ -1,5 +1,5 @@
 import React from "react";
-import { Spin } from "antd";
+import Spinner from "@/pages/components/shared/Spinner";
 
 const ComponentsLoader = ({
   title = "LOADING",
@@ -10,7 +10,7 @@ const ComponentsLoader = ({
 }) => {
   return (
     <div
-      className="flex flex-col justify-center items-center bg-white gap-3"
+      className="flex flex-col justify-center items-center bg-canvas dark:bg-canvas-dark gap-3"
       style={{
         position: position,
         top: 0,
@@ -20,8 +20,8 @@ const ComponentsLoader = ({
         zIndex: 9999,
       }}
     >
-      <Spin size="large" />
-      <span className="text-black font-black text-xs tracking-widest uppercase font-mono">
+      <Spinner size="large" />
+      <span className="text-text-main dark:text-text-main-dark font-black text-[10px] tracking-widest uppercase font-mono">
         {title}
       </span>
     </div>

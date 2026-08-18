@@ -1,15 +1,28 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
-import { Modal, Spin, Button, Table, Select, Input, InputNumber } from "antd";
+import { Modal, Table, Select, Input, InputNumber } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { IconPlus, IconTrash, IconAdjustments, IconPackage } from "@tabler/icons-react";
+import {
+  IconPlus,
+  IconTrash,
+  IconAdjustments,
+  IconPackage,
+  IconX,
+  IconTrendingUp,
+  IconTrendingDown,
+  IconAlertTriangle,
+  IconRotateDot,
+  IconArrowsExchange,
+} from "@tabler/icons-react";
 import api from "@/lib/api";
+import Spinner from "@/pages/components/shared/Spinner";
 import toast from "react-hot-toast";
 import { useAppSelector } from "@/lib/hooks";
 import { RootState } from "@/lib/store";
 import { useConfirmationDialog } from "@/contexts/ConfirmationDialogContext";
 
 // Fluid label style
-const labelClass = "block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-0.5";
+const labelClass =
+  "block text-[10px] font-mono font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5 ml-0.5";
 
 type AdjustmentType = "add" | "remove" | "damage" | "return" | "transfer";
 
@@ -48,13 +61,46 @@ interface AdjustmentItem {
   destinationStockName?: string;
 }
 
-const TYPE_OPTIONS: { value: AdjustmentType; label: string }[] = [
-  { value: "add", label: "Stock Addition" },
-  { value: "remove", label: "Stock Removal" },
-  { value: "damage", label: "Damaged Goods" },
-  { value: "return", label: "Customer Return" },
-  { value: "transfer", label: "Stock Transfer" },
-];
+const TYPE_CONFIG: Record<
+  AdjustmentType,
+  { label: string; icon: React.ReactNode; color: string; activeClass: string }
+> = {
+  add: {
+    label: "Stock Addition",
+    icon: <IconTrendingUp size={16} />,
+    color: "emerald",
+    activeClass:
+      "bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-700 shadow-xs",
+  },
+  remove: {
+    label: "Stock Removal",
+    icon: <IconTrendingDown size={16} />,
+    color: "rose",
+    activeClass:
+      "bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-400 border-rose-300 dark:border-rose-700 shadow-xs",
+  },
+  damage: {
+    label: "Damaged Goods",
+    icon: <IconAlertTriangle size={16} />,
+    color: "amber",
+    activeClass:
+      "bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-400 border-amber-300 dark:border-amber-700 shadow-xs",
+  },
+  return: {
+    label: "Customer Return",
+    icon: <IconRotateDot size={16} />,
+    color: "blue",
+    activeClass:
+      "bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-400 border-blue-300 dark:border-blue-700 shadow-xs",
+  },
+  transfer: {
+    label: "Stock Transfer",
+    icon: <IconArrowsExchange size={16} />,
+    color: "purple",
+    activeClass:
+      "bg-purple-50 dark:bg-purple-950/50 text-purple-700 dark:text-purple-400 border-purple-300 dark:border-purple-700 shadow-xs",
+  },
+};
 
 interface NewAdjustmentModalProps {
   open: boolean;
@@ -161,12 +207,12 @@ const NewAdjustmentModal: React.FC<NewAdjustmentModalProps> = ({
 
   const handleAddItem = () => {
     if (!selectedProduct || !size || quantity <= 0 || !stockId) {
-      toast("Please fill all item fields");
+      toast.error("Please fill all item fields");
       return;
     }
 
     if (type === "transfer" && !destinationStockId) {
-      toast.error("Please select destination stock for transfer");
+      toast.error("Please select destination stock location for transfer");
       return;
     }
 
@@ -212,11 +258,11 @@ const NewAdjustmentModal: React.FC<NewAdjustmentModalProps> = ({
 
   const handleSave = async (status: "DRAFT" | "SUBMITTED") => {
     if (!reason.trim()) {
-      toast("Please enter a reason");
+      toast.error("Please enter a reason");
       return;
     }
     if (items.length === 0) {
-      toast("Please add at least one item");
+      toast.error("Please add at least one item");
       return;
     }
 
@@ -229,7 +275,11 @@ const NewAdjustmentModal: React.FC<NewAdjustmentModalProps> = ({
       onSuccess: async () => {
         setSaving(true);
         try {
-          const fd = new FormData();
+          const now = new Date().toISOString();
+          const creatorName =
+            currentUser?.username || currentUser?.email || "System User";
+          const creatorId = currentUser?.userId || "system";
+
           fd.append(
             "data",
             JSON.stringify({
@@ -238,6 +288,10 @@ const NewAdjustmentModal: React.FC<NewAdjustmentModalProps> = ({
               notes,
               items,
               status,
+              adjustedBy: creatorId,
+              adjustedByName: creatorName,
+              createdAt: now,
+              updatedAt: now,
             }),
           );
           await api.post("/api/v1/erp/inventory/adjustments", fd);
@@ -294,7 +348,7 @@ const NewAdjustmentModal: React.FC<NewAdjustmentModalProps> = ({
 
         return (
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg overflow-hidden border border-gray-200 bg-white flex-shrink-0 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex-shrink-0 flex items-center justify-center">
               {imageUrl ? (
                 <img
                   src={imageUrl}
@@ -302,12 +356,12 @@ const NewAdjustmentModal: React.FC<NewAdjustmentModalProps> = ({
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <IconPackage className="text-gray-300" size={18} />
+                <IconPackage className="text-slate-400 dark:text-slate-600" size={18} />
               )}
             </div>
             <div className="flex flex-col">
-              <span className="font-bold text-black text-xs">{i.productName}</span>
-              <span className="text-[10px] text-gray-500">
+              <span className="font-semibold text-slate-900 dark:text-slate-100 text-xs">{i.productName}</span>
+              <span className="text-[10px] text-slate-500 dark:text-slate-400">
                 {i.variantName ? `${i.variantName} / ` : ""}
                 {i.size}
               </span>
@@ -321,7 +375,7 @@ const NewAdjustmentModal: React.FC<NewAdjustmentModalProps> = ({
       key: "qty",
       render: (_, item) => (
         <span
-          className={`font-bold text-xs ${type === "add" || type === "return" ? "text-green-600" : "text-red-600"}`}
+          className={`font-bold text-xs ${type === "add" || type === "return" ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}
         >
           {type === "add" || type === "return" ? "+" : "-"}
           {item.quantity}
@@ -333,11 +387,11 @@ const NewAdjustmentModal: React.FC<NewAdjustmentModalProps> = ({
       key: "location",
       render: (_, item) => (
         <div className="flex flex-col">
-          <span className="text-[10px] font-bold text-gray-900">
+          <span className="text-[10px] font-bold text-slate-900 dark:text-slate-100">
             {item.stockName}
           </span>
           {type === "transfer" && (
-            <span className="text-[10px] text-purple-600">
+            <span className="text-[10px] text-purple-600 dark:text-purple-400">
               → {item.destinationStockName}
             </span>
           )}
@@ -349,65 +403,102 @@ const NewAdjustmentModal: React.FC<NewAdjustmentModalProps> = ({
       key: "action",
       align: "right",
       render: (_, __, idx) => (
-        <Button
-          type="text"
-          size="small"
-          danger
-          icon={<IconTrash size={15} />}
+        <button
+          type="button"
           onClick={() => handleRemoveItem(idx as number)}
-          className="inline-flex items-center justify-center w-8 h-8 rounded-full text-gray-400 hover:text-red-655 hover:bg-red-50 transition-all border-none"
-        />
+          className="inline-flex items-center justify-center w-7 h-7 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors border-none bg-transparent cursor-pointer"
+        >
+          <IconTrash size={15} />
+        </button>
       ),
     },
   ];
 
   return (
     <Modal
-      title={
-        <div className="flex items-center gap-3 pb-3 border-b border-gray-100">
-          <div className="w-10 h-10 rounded-xl bg-black text-white flex items-center justify-center shadow-md shadow-black/10">
-            <IconAdjustments size={20} />
-          </div>
-          <div>
-            <h2 className="text-lg font-black text-gray-900 leading-tight">
-              New Inventory Adjustment
-            </h2>
-            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-0.5">
-              Create a stock adjustment entry
-            </p>
-          </div>
-        </div>
-      }
+      title={null}
       open={open}
       onCancel={onClose}
-      width={1100}
+      width={1050}
       footer={null}
+      closable={false}
       centered
-      styles={{ body: { padding: "24px 0 0 0", maxHeight: "85vh", overflowY: "auto" } }}
-      className="fluid-modal"
+      className="[&_.ant-modal-content]:!rounded-2xl [&_.ant-modal-content]:!p-0 [&_.ant-modal-content]:!overflow-hidden [&_.ant-modal-content]:!bg-white [&_.ant-modal-content]:dark:!bg-slate-900 [&_.ant-modal-content]:!border [&_.ant-modal-content]:!border-slate-200/80 [&_.ant-modal-content]:dark:!border-slate-800"
     >
+      {/* Modal Header */}
+      <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/40">
+        <div className="flex items-center gap-3">
+          <div className="w-1.5 h-7 bg-slate-900 dark:bg-slate-100 rounded-full" />
+          <div className="flex flex-col">
+            <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400 dark:text-slate-500 leading-none mb-1 font-mono">
+              Stock Adjustment Builder
+            </span>
+            <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 tracking-tight leading-none m-0">
+              New Inventory Adjustment
+            </h3>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={onClose}
+          className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+        >
+          <IconX size={18} />
+        </button>
+      </div>
+
       {loading ? (
         <div className="flex justify-center py-20">
-          <Spin size="large" />
+          <Spinner size="large" />
         </div>
       ) : (
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Left Panel: Items Builder and Table */}
-            <div className="lg:col-span-2 space-y-6">
-              {/* Item Builder Block */}
-              <div className="bg-gray-50/50 p-6 border border-gray-100 rounded-3xl space-y-4">
-                <div className="flex items-center gap-2 border-b border-gray-100 pb-3 mb-2">
-                  <span className="w-1.5 h-3 bg-black rounded-full" />
-                  <h3 className="text-xs font-bold text-gray-800 uppercase tracking-widest">
-                    Add Items to List
-                  </h3>
+        <div className="p-6 space-y-6 max-h-[80vh] overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+          {/* Top Segment: Adjustment Type Selector */}
+          <div>
+            <label className={labelClass}>Select Adjustment Type</label>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
+              {(Object.keys(TYPE_CONFIG) as AdjustmentType[]).map((tKey) => {
+                const conf = TYPE_CONFIG[tKey];
+                const isSelected = type === tKey;
+                return (
+                  <button
+                    key={tKey}
+                    type="button"
+                    onClick={() => {
+                      setType(tKey);
+                      setItems([]);
+                    }}
+                    className={`flex items-center gap-2.5 p-3 rounded-xl border text-xs font-semibold transition-all cursor-pointer ${
+                      isSelected
+                        ? conf.activeClass
+                        : "bg-slate-50 dark:bg-slate-800/40 text-slate-600 dark:text-slate-400 border-slate-200/80 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800"
+                    }`}
+                  >
+                    <span>{conf.icon}</span>
+                    <span className="truncate">{conf.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            {/* Left Panel: Item Builder & Item List Table */}
+            <div className="lg:col-span-7 space-y-6">
+              {/* Item Builder Box */}
+              <div className="bg-slate-50/50 dark:bg-slate-800/40 p-5 border border-slate-200/80 dark:border-slate-800 rounded-2xl space-y-4">
+                <div className="flex items-center gap-2 border-b border-slate-200/60 dark:border-slate-800 pb-2.5 mb-2">
+                  <span className="w-1.5 h-3.5 bg-slate-900 dark:bg-slate-100 rounded-full" />
+                  <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-widest font-mono m-0">
+                    Item Builder
+                  </h4>
                 </div>
-                
+
+                {/* Product Live Preview Header */}
                 {currentProduct && (
-                  <div className="mb-4 bg-white border border-gray-150/80 rounded-2xl p-4 flex gap-4 items-center shadow-sm relative overflow-hidden transition-all duration-300">
-                    <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full blur-xl pointer-events-none" />
-                    <div className="w-16 h-16 rounded-xl overflow-hidden border border-gray-200 bg-white flex-shrink-0 flex items-center justify-center shadow-inner relative group">
+                  <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl p-3.5 flex gap-3 items-center shadow-xs">
+                    <div className="w-12 h-12 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shrink-0 flex items-center justify-center">
                       {currentVariant?.images?.[0]?.url || currentProduct?.thumbnail?.url ? (
                         <img
                           src={currentVariant?.images?.[0]?.url || currentProduct?.thumbnail?.url}
@@ -415,57 +506,50 @@ const NewAdjustmentModal: React.FC<NewAdjustmentModalProps> = ({
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <IconPackage className="text-gray-300" size={24} />
+                        <IconPackage className="text-slate-400 dark:text-slate-600" size={20} />
                       )}
                     </div>
                     
                     <div className="flex-1 min-w-0">
-                      <div className="flex flex-wrap gap-1.5 items-center mb-1">
-                        {currentProduct.brand && (
-                          <span className="bg-gray-100 text-[9px] font-extrabold uppercase text-gray-600 px-2 py-0.5 rounded-md">
-                            {currentProduct.brand}
-                          </span>
-                        )}
-                        {currentProduct.category && (
-                          <span className="bg-green-50 text-[9px] font-extrabold uppercase text-green-700 px-2 py-0.5 rounded-md">
-                            {currentProduct.category}
-                          </span>
-                        )}
-                      </div>
-                      
-                      <h4 className="text-sm font-black text-gray-900 leading-snug truncate">
+                      <h5 className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate m-0 leading-tight">
                         {currentProduct.label}
-                      </h4>
+                      </h5>
                       
-                      <div className="flex flex-wrap items-center gap-2 mt-1">
+                      <div className="flex flex-wrap items-center gap-1.5 mt-1">
                         {currentVariant && (
-                          <span className="text-[9px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md">
-                            Variant: {currentVariant.variantName}
+                          <span className="text-[9px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 px-2 py-0.5 rounded-md">
+                            {currentVariant.variantName}
                           </span>
                         )}
                         {size && (
-                          <span className="text-[9px] font-bold text-gray-600 bg-gray-100 px-2 py-0.5 rounded-md">
+                          <span className="text-[9px] font-bold text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md">
                             Size: {size}
                           </span>
                         )}
                         {currentStockQty !== null && (
-                          <span className={`text-[9px] font-black px-2.5 py-0.5 rounded-full ${currentStockQty > 0 ? "bg-green-50 text-green-700 border border-green-100" : "bg-red-50 text-red-700 border border-red-100"}`}>
-                            Current Stock: {currentStockQty} Units
+                          <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${currentStockQty > 0 ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/40" : "bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 border border-rose-200/60 dark:border-rose-800/40"}`}>
+                            Current Stock: {currentStockQty}
                           </span>
                         )}
-                        {loadingStock && <Spin size="small" />}
+                        {loadingStock && <Spinner size="small" />}
                       </div>
                     </div>
                   </div>
                 )}
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className={labelClass}>Product</label>
                     <Select
-                      className="w-full"
+                      className="w-full rounded-xl"
                       showSearch
-                      optionFilterProp="children"
+                      optionFilterProp="label"
+                      filterOption={(input, option) =>
+                        (option?.label ?? "")
+                          .toString()
+                          .toLowerCase()
+                          .includes(input.toLowerCase())
+                      }
                       placeholder="Select Product"
                       value={selectedProduct || undefined}
                       onChange={(val) => {
@@ -483,7 +567,15 @@ const NewAdjustmentModal: React.FC<NewAdjustmentModalProps> = ({
                     <div>
                       <label className={labelClass}>Variant</label>
                       <Select
-                        className="w-full"
+                        className="w-full rounded-xl"
+                        showSearch
+                        optionFilterProp="label"
+                        filterOption={(input, option) =>
+                          (option?.label ?? "")
+                            .toString()
+                            .toLowerCase()
+                            .includes(input.toLowerCase())
+                        }
                         placeholder="Select Variant"
                         value={selectedVariant || undefined}
                         onChange={(val) => {
@@ -500,7 +592,15 @@ const NewAdjustmentModal: React.FC<NewAdjustmentModalProps> = ({
                   <div>
                     <label className={labelClass}>Size</label>
                     <Select
-                      className="w-full"
+                      className="w-full rounded-xl"
+                      showSearch
+                      optionFilterProp="label"
+                      filterOption={(input, option) =>
+                        (option?.label ?? "")
+                          .toString()
+                          .toLowerCase()
+                          .includes(input.toLowerCase())
+                      }
                       placeholder="Select Size"
                       value={size || undefined}
                       onChange={setSize}
@@ -517,7 +617,7 @@ const NewAdjustmentModal: React.FC<NewAdjustmentModalProps> = ({
                   <div>
                     <label className={labelClass}>Quantity</label>
                     <InputNumber
-                      className="w-full"
+                      className="w-full rounded-xl"
                       min={1}
                       value={quantity}
                       onChange={(val) => setQuantity(Number(val))}
@@ -526,8 +626,16 @@ const NewAdjustmentModal: React.FC<NewAdjustmentModalProps> = ({
                   <div>
                     <label className={labelClass}>Source Stock Location</label>
                     <Select
-                      className="w-full"
-                      placeholder="Select Stock"
+                      className="w-full rounded-xl"
+                      showSearch
+                      optionFilterProp="label"
+                      filterOption={(input, option) =>
+                        (option?.label ?? "")
+                          .toString()
+                          .toLowerCase()
+                          .includes(input.toLowerCase())
+                      }
+                      placeholder="Select Location"
                       value={stockId || undefined}
                       onChange={setStockId}
                       options={stocks.map((s) => ({
@@ -539,11 +647,19 @@ const NewAdjustmentModal: React.FC<NewAdjustmentModalProps> = ({
                   {type === "transfer" && (
                     <div>
                       <label className={labelClass}>
-                        Destination Stock Location
+                        Destination Location
                       </label>
                       <Select
-                        className="w-full"
-                        placeholder="Select To Stock"
+                        className="w-full rounded-xl"
+                        showSearch
+                        optionFilterProp="label"
+                        filterOption={(input, option) =>
+                          (option?.label ?? "")
+                            .toString()
+                            .toLowerCase()
+                            .includes(input.toLowerCase())
+                        }
+                        placeholder="Select Destination"
                         value={destinationStockId || undefined}
                         onChange={setDestinationStockId}
                         options={stocks
@@ -553,128 +669,133 @@ const NewAdjustmentModal: React.FC<NewAdjustmentModalProps> = ({
                     </div>
                   )}
                 </div>
-                <div className="mt-4 pt-2">
-                  <Button
-                    type="primary"
-                    icon={<IconPlus size={16} />}
+
+                <div className="pt-2">
+                  <button
+                    type="button"
                     onClick={handleAddItem}
-                    block
-                    className="h-11 rounded-xl bg-black hover:bg-gray-800 border-none shadow-sm flex items-center justify-center gap-2 font-bold"
+                    className="w-full h-10 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-white text-white dark:text-slate-900 text-xs font-semibold shadow-xs flex items-center justify-center gap-2 cursor-pointer transition-all border-none"
                   >
+                    <IconPlus size={16} />
                     Add Item to Adjustment
-                  </Button>
+                  </button>
                 </div>
               </div>
 
               {/* Items Table Box */}
-              <div className="bg-white border border-gray-100 rounded-3xl overflow-hidden min-h-[220px]">
+              <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xs">
+                <div className="px-5 py-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40 flex justify-between items-center">
+                  <span className="text-[10px] uppercase font-bold tracking-widest text-slate-400 dark:text-slate-500 font-mono">
+                    Items List ({items.length})
+                  </span>
+                </div>
+
                 <Table
                   bordered={false}
-                  scroll={{ y: 250, x: 800 }}
+                  scroll={{ y: 220, x: 500 }}
                   columns={columns}
                   dataSource={items}
-                  size="middle"
+                  size="small"
                   rowKey={(_, idx) => idx as number}
                   pagination={false}
-                  className="[&_.ant-table-thead_th]:!bg-gray-50/50 [&_.ant-table-thead_th]:!font-bold [&_.ant-table-thead_th]:!text-gray-500 [&_.ant-table-thead_th]:!text-[10px] [&_.ant-table-thead_th]:!uppercase [&_.ant-table-thead_th]:!tracking-widest [&_.ant-table-thead_th]:!border-b [&_.ant-table-thead_th]:!border-gray-100"
+                  className="[&_.ant-table]:!bg-transparent [&_.ant-table-thead>tr>th]:!bg-slate-50/80 [&_.ant-table-thead>tr>th]:dark:!bg-slate-800/60 [&_.ant-table-thead>tr>th]:!text-slate-500 [&_.ant-table-thead>tr>th]:dark:!text-slate-400 [&_.ant-table-thead>tr>th]:!font-bold [&_.ant-table-thead>tr>th]:!text-[11px] [&_.ant-table-thead>tr>th]:!uppercase [&_.ant-table-thead>tr>th]:!tracking-wider [&_.ant-table-thead>tr>th]:!border-b [&_.ant-table-thead>tr>th]:!border-slate-100 [&_.ant-table-thead>tr>th]:dark:!border-slate-800 [&_.ant-table-tbody>tr]:hover:!bg-slate-50/60 [&_.ant-table-tbody>tr]:dark:hover:!bg-slate-800/40 [&_.ant-table-tbody>tr>td]:!border-b [&_.ant-table-tbody>tr>td]:!border-slate-100 [&_.ant-table-tbody>tr>td]:dark:!border-slate-800/60 [&_.ant-table-tbody>tr>td]:!py-3"
                 />
               </div>
             </div>
 
-            {/* Right Panel: Metadata & Action Sidebar */}
-            <div className="space-y-6">
-              {/* Metadata Details Card */}
-              <div className="bg-white p-6 border border-gray-100 rounded-3xl shadow-sm space-y-4">
-                <div className="flex items-center gap-2 border-b border-gray-150/40 pb-3 mb-2">
-                  <span className="w-1.5 h-3 bg-black rounded-full" />
-                  <h3 className="text-xs font-bold text-gray-850 uppercase tracking-widest">
-                    General Info
-                  </h3>
-                </div>
-
-                <div className="space-y-4">
-                  <div>
-                    <label className={labelClass}>Adjustment Type *</label>
-                    <Select
-                      className="w-full h-11"
-                      value={type}
-                      onChange={(val) => {
-                        setType(val as AdjustmentType);
-                        setItems([]); // Clear items if type changes to prevent confusion
-                      }}
-                      options={TYPE_OPTIONS}
-                    />
+            {/* Right Panel: Reason, Notes & Actions */}
+            <div className="lg:col-span-5 space-y-6 flex flex-col justify-between">
+              <div className="space-y-4">
+                {/* General Info Card */}
+                <div className="bg-white dark:bg-slate-900 p-5 border border-slate-200/80 dark:border-slate-800 rounded-2xl shadow-xs space-y-4">
+                  <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2.5">
+                    <span className="w-1.5 h-3.5 bg-slate-900 dark:bg-slate-100 rounded-full" />
+                    <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-widest font-mono m-0">
+                      Reason & Audit Notes
+                    </h4>
                   </div>
+
                   <div>
-                    <label className={labelClass}>Reason *</label>
+                    <label className={labelClass}>Stated Reason *</label>
                     <Input
-                      className="h-11 rounded-xl border-gray-200"
+                      className="h-10 rounded-xl"
                       value={reason}
                       onChange={(e) => setReason(e.target.value)}
                       placeholder="e.g., Physical count correction"
                     />
                   </div>
+
                   <div>
-                    <label className={labelClass}>Notes</label>
-                    <Input
-                      className="h-11 rounded-xl border-gray-200"
+                    <label className={labelClass}>Auditor Notes</label>
+                    <Input.TextArea
+                      rows={3}
+                      className="rounded-xl"
                       value={notes}
                       onChange={(e) => setNotes(e.target.value)}
                       placeholder="Optional additional notes..."
                     />
                   </div>
                 </div>
-              </div>
 
-              {/* Action Summary Card */}
-              <div className="bg-white border border-gray-100 p-6 space-y-4 rounded-3xl shadow-sm">
-                <div className="flex justify-between items-center bg-gray-50/50 p-4 rounded-2xl border border-gray-100/40">
-                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                    Total Items Selected
-                  </span>
-                  <span className="text-xl font-black text-black">
-                    {items.length}
-                  </span>
+                {/* Summary Card */}
+                <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-4 rounded-2xl shadow-xs flex justify-between items-center">
+                  <div className="flex flex-col">
+                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest font-mono">
+                      Selected Type
+                    </span>
+                    <span className="text-xs font-bold text-slate-900 dark:text-slate-100">
+                      {TYPE_CONFIG[type].label}
+                    </span>
+                  </div>
+                  <div className="flex flex-col text-right">
+                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest font-mono">
+                      Items Count
+                    </span>
+                    <span className="text-lg font-black text-emerald-600 dark:text-emerald-400">
+                      {items.length} SKUs
+                    </span>
+                  </div>
                 </div>
 
-                <div className="space-y-3 pt-2">
-                  <Button
-                    type="primary"
-                    size="large"
-                    block
-                    icon={<IconAdjustments size={18} />}
-                    onClick={() => handleSave("SUBMITTED")}
-                    loading={saving}
-                    className="h-14 rounded-xl font-bold bg-black hover:bg-gray-800 border-none shadow-md shadow-black/10 flex items-center justify-center gap-2"
-                  >
-                    SUBMIT ADJUSTMENT
-                  </Button>
-                  <Button
-                    size="large"
-                    block
+                {/* Notice */}
+                <div className="p-3.5 bg-amber-50/60 dark:bg-amber-950/30 border border-amber-200/60 dark:border-amber-800/40 rounded-2xl text-[11px] text-amber-800 dark:text-amber-300 font-medium leading-relaxed flex gap-2">
+                  <span className="text-sm leading-none shrink-0">⚠️</span>
+                  <span>
+                    Stock level updates require approval review before physical stock values change.
+                  </span>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-5 rounded-2xl shadow-xs space-y-2.5">
+                <button
+                  type="button"
+                  onClick={() => handleSave("SUBMITTED")}
+                  disabled={saving}
+                  className="w-full h-11 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-white text-white dark:text-slate-900 text-xs font-bold shadow-xs flex items-center justify-center gap-2 cursor-pointer transition-all border-none disabled:opacity-50"
+                >
+                  <IconAdjustments size={17} />
+                  SUBMIT ADJUSTMENT
+                </button>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
                     onClick={() => handleSave("DRAFT")}
                     disabled={saving}
-                    className="h-12 rounded-xl font-bold border-gray-200 hover:border-gray-300 text-gray-700 bg-gray-50"
+                    className="h-9 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700/80 text-xs font-semibold cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors disabled:opacity-50"
                   >
-                    Save as Draft
-                  </Button>
-                  <Button
-                    block
+                    Save Draft
+                  </button>
+                  <button
+                    type="button"
                     onClick={onClose}
                     disabled={saving}
-                    className="border-none text-gray-400 text-xs hover:text-gray-600 font-bold mt-1 shadow-none hover:bg-transparent"
+                    className="h-9 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 text-xs font-medium cursor-pointer transition-colors"
                   >
-                    Discard Changes
-                  </Button>
+                    Cancel
+                  </button>
                 </div>
-              </div>
-
-              {/* Warning notice */}
-              <div className="p-4 bg-amber-50/40 border border-amber-100 rounded-2xl text-[10px] text-amber-800 font-bold leading-relaxed flex gap-2">
-                <span className="text-base leading-none">⚠️</span>
-                <span>
-                  Adjustments directly update inventory levels. Please ensure accuracy before submitting.
-                </span>
               </div>
             </div>
           </div>
@@ -685,3 +806,4 @@ const NewAdjustmentModal: React.FC<NewAdjustmentModalProps> = ({
 };
 
 export default NewAdjustmentModal;
+

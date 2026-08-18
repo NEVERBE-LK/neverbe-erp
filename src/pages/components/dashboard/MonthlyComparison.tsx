@@ -9,7 +9,8 @@ import {
   IconRefresh,
   IconArrowRight,
 } from "@tabler/icons-react";
-import { List, Tag, Button, Spin, Typography, Space } from "antd";
+import { List, Tag, Button, Typography, Space } from "antd";
+import Spinner from "../shared/Spinner";
 
 interface MonthlyData {
   currentMonth: { orders: number; revenue: number; profit: number };
@@ -23,11 +24,31 @@ const MonthlyComparison = () => {
   const { currentUser } = useAppSelector((state) => state.authSlice);
 
   useEffect(() => {
-    if (currentUser) fetchData();
+    if (!currentUser) return;
+
+    fetchData(true);
+
+    const interval = setInterval(() => {
+      if (document.visibilityState === "visible") {
+        fetchData(false);
+      }
+    }, 30000); // 30 seconds
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        fetchData(false);
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
   }, [currentUser]);
 
-  const fetchData = async () => {
-    setLoading(true);
+  const fetchData = async (showLoading = true) => {
+    if (showLoading) setLoading(true);
     try {
       const result = await getMonthlyComparisonAction();
       setData(result);
@@ -35,33 +56,25 @@ const MonthlyComparison = () => {
       console.error(error);
       toast.error(error.message);
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   };
 
   return (
     <DashboardCard>
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-2">
-          <h4 className="text-lg font-bold text-black m-0">Monthly Comparison</h4>
-          <Button
-            type="text"
-            shape="circle"
-            icon={<IconRefresh size={14} />}
-            onClick={fetchData}
-            loading={loading}
-          />
+          <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200 tracking-tight m-0">Monthly Comparison</h4>
         </div>
-        <Space size={4} className="text-xs font-bold text-gray-500">
-          <span>vs Last</span>
-          <IconArrowRight size={10} />
+        <Space size={4} className="text-xs font-medium text-slate-400 dark:text-slate-500">
+          <span>vs Last Month</span>
         </Space>
       </div>
 
-      <Spin spinning={loading}>
+      <Spinner spinning={loading}>
         {data ? (
-          <List
-            dataSource={[
+          <div className="flex flex-col">
+            {[
               {
                 label: "Orders",
                 current: data.currentMonth.orders,
@@ -79,55 +92,52 @@ const MonthlyComparison = () => {
                 change: data.percentageChange.profit,
                 isCurrency: true,
               },
-            ]}
-            renderItem={(item) => {
+            ].map((item, idx, arr) => {
               const isPositive = item.change >= 0;
               return (
-                <List.Item className="bg-white mb-3 border border-gray-100 rounded-2xl shadow-sm hover:shadow-md transition-all p-4!">
-                  <div className="flex justify-between items-center w-full">
-                    <div>
-                      <Typography.Text
-                        type="secondary"
-                        strong
-                        className="text-[10px] uppercase tracking-widest block mb-1"
-                      >
-                        {item.label}
-                      </Typography.Text>
-                      <div className="flex items-baseline">
-                        {item.isCurrency && (
-                          <span className="text-xs font-bold text-gray-400 mr-1">
-                            LKR
-                          </span>
-                        )}
-                        <span className="text-lg font-bold text-black">
-                          {item.current.toLocaleString()}
+                <div 
+                  key={item.label}
+                  className={`flex justify-between items-center py-4 ${idx !== arr.length - 1 ? 'border-b border-slate-100 dark:border-slate-800/80' : ''}`}
+                >
+                  <div>
+                    <span className="text-[11px] font-medium text-slate-400 dark:text-slate-500 block mb-1">
+                      {item.label}
+                    </span>
+                    <div className="flex items-baseline gap-1">
+                      {item.isCurrency && (
+                        <span className="text-xs font-semibold text-slate-400">
+                          LKR
                         </span>
-                      </div>
+                      )}
+                      <span className="text-base font-bold text-slate-800 dark:text-slate-100 tracking-tight">
+                        {item.current.toLocaleString(undefined, { minimumFractionDigits: item.isCurrency ? 2 : 0, maximumFractionDigits: item.isCurrency ? 2 : 0 })}
+                      </span>
                     </div>
-                    <Tag
-                      color={isPositive ? "success" : "error"}
-                      className="m-0 flex items-center gap-1 font-bold px-2 py-1 rounded-lg border-none"
-                      icon={
-                        isPositive ? (
-                          <IconTrendingUp size={14} />
-                        ) : (
-                          <IconTrendingDown size={14} />
-                        )
-                      }
-                    >
-                      {Math.abs(item.change)}%
-                    </Tag>
                   </div>
-                </List.Item>
+                  <span
+                    className={`text-xs font-semibold px-2 py-0.5 rounded-full flex items-center gap-1 ${
+                      isPositive 
+                        ? "bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400" 
+                        : "bg-rose-50 dark:bg-rose-950/30 text-rose-700 dark:text-rose-400"
+                    }`}
+                  >
+                    {isPositive ? (
+                      <IconTrendingUp size={13} />
+                    ) : (
+                      <IconTrendingDown size={13} />
+                    )}
+                    {Math.abs(item.change)}%
+                  </span>
+                </div>
               );
-            }}
-          />
+            })}
+          </div>
         ) : (
-          <div className="text-center text-gray-400 py-8">
+          <div className="text-center text-slate-400 dark:text-slate-500 py-8 text-xs">
             No data available
           </div>
         )}
-      </Spin>
+      </Spinner>
     </DashboardCard>
   );
 };

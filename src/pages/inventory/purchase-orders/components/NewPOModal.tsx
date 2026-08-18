@@ -1,19 +1,15 @@
 import React, { useState, useEffect, useCallback } from "react";
 import {
   Modal,
-  Spin,
-  Button,
   Table,
   Select,
   Input,
   InputNumber,
-  Space,
   DatePicker,
-  Card,
-  Divider,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { IconPlus, IconTrash, IconShoppingCart, IconTruck, IconFileText, IconCalendar } from "@tabler/icons-react";
+import { IconPlus, IconTrash, IconShoppingCart, IconTruck } from "@tabler/icons-react";
+import Spinner from "@/pages/components/shared/Spinner";
 import api from "@/lib/api";
 import toast from "react-hot-toast";
 import { useAppSelector } from "@/lib/hooks";
@@ -22,7 +18,7 @@ import { useConfirmationDialog } from "@/contexts/ConfirmationDialogContext";
 import dayjs from "dayjs";
 
 // Fluid label style
-const labelClass = "block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2";
+const labelClass = "block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2 font-mono";
 
 interface Supplier {
   id: string;
@@ -295,14 +291,14 @@ const NewPOModal: React.FC<NewPOModalProps> = ({
       dataIndex: "productName",
       key: "productName",
       render: (text) => (
-        <span className="font-bold text-gray-900 text-xs">{text}</span>
+        <span className="font-bold text-slate-900 dark:text-slate-100 text-xs">{text}</span>
       ),
     },
     {
       title: "Variant/Size",
       key: "variantSize",
       render: (_, item) => (
-        <span className="text-gray-500 text-[10px] font-semibold uppercase">
+        <span className="text-slate-500 dark:text-slate-400 text-[10px] font-semibold uppercase">
           {item.variantName ? `${item.variantName} / ` : ""}
           {item.size}
         </span>
@@ -313,14 +309,14 @@ const NewPOModal: React.FC<NewPOModalProps> = ({
       dataIndex: "unitCost",
       key: "unitCost",
       align: "right",
-      render: (cost) => <span className="font-semibold text-xs text-gray-700">Rs {cost.toLocaleString()}</span>,
+      render: (cost) => <span className="font-semibold text-xs text-slate-700 dark:text-slate-300">Rs {cost.toLocaleString()}</span>,
     },
     {
       title: "Qty",
       dataIndex: "quantity",
       key: "quantity",
       align: "center",
-      render: (qty) => <span className="font-bold text-xs text-gray-800 bg-gray-100 px-2 py-0.5 rounded">{qty}</span>,
+      render: (qty) => <span className="font-bold text-xs text-slate-800 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">{qty}</span>,
     },
     {
       title: "Subtotal",
@@ -328,7 +324,7 @@ const NewPOModal: React.FC<NewPOModalProps> = ({
       key: "totalCost",
       align: "right",
       render: (total) => (
-        <span className="font-bold text-xs text-black">Rs {total.toLocaleString()}</span>
+        <span className="font-bold text-xs text-slate-900 dark:text-slate-100">Rs {total.toLocaleString()}</span>
       ),
     },
     {
@@ -336,13 +332,13 @@ const NewPOModal: React.FC<NewPOModalProps> = ({
       key: "action",
       align: "right",
       render: (_, __, idx) => (
-        <Button
-          type="text"
-          size="small"
-          danger
-          icon={<IconTrash size={14} />}
+        <button
+          type="button"
           onClick={() => handleRemoveItem(idx as number)}
-        />
+          className="p-1 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-rose-500 rounded-lg transition-colors cursor-pointer"
+        >
+          <IconTrash size={15} />
+        </button>
       ),
     },
   ];
@@ -350,14 +346,14 @@ const NewPOModal: React.FC<NewPOModalProps> = ({
   return (
     <Modal
       title={
-        <div className="flex items-center gap-2 pb-2 border-b border-gray-100">
-          <IconShoppingCart size={22} className="text-green-600 animate-pulse" />
+        <div className="flex items-center gap-3 pb-3 border-b border-slate-100 dark:border-slate-800">
+          <div className="w-1.5 h-6 bg-slate-900 dark:bg-slate-100 rounded-full" />
           <div>
-            <div className="text-lg font-bold text-gray-900 leading-tight">
+            <div className="text-lg font-bold text-slate-900 dark:text-slate-100 leading-tight">
               New Purchase Order
             </div>
-            <div className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider">
-              Procurement & Supplier Requisition
+            <div className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold uppercase tracking-wider font-mono">
+              Procurement & Supplier Order
             </div>
           </div>
         </div>
@@ -372,30 +368,25 @@ const NewPOModal: React.FC<NewPOModalProps> = ({
     >
       {loading ? (
         <div className="flex justify-center py-20">
-          <Spin size="large" tip="Loading PO parameters..." />
+          <Spinner size="large" tip="Loading PO parameters..." />
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           {/* LEFT COLUMN: Item configuration & Selected list */}
           <div className="lg:col-span-8 space-y-6">
             {/* Add Items Card */}
-            <Card
-              size="small"
-              className="border border-gray-100 rounded-2xl shadow-sm bg-gray-50/50"
-              title={
-                <div className="flex items-center gap-2">
-                  <IconPlus size={16} className="text-gray-400" />
-                  <span className="text-xs font-bold text-gray-600 uppercase tracking-wider">
-                    Add Items to Requisition
-                  </span>
-                </div>
-              }
-            >
+            <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 shadow-xs">
+              <div className="flex items-center gap-2 pb-3 mb-4 border-b border-slate-100 dark:border-slate-800">
+                <IconPlus size={16} className="text-slate-400 dark:text-slate-500" />
+                <span className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider font-mono">
+                  Add Purchase Order Items
+                </span>
+              </div>
               <div className="space-y-4">
                 <div>
                   <label className={labelClass}>Select Product</label>
                   <Select
-                    className="w-full h-10 rounded-lg"
+                    className="w-full rounded-xl"
                     showSearch
                     optionFilterProp="children"
                     placeholder="Search and choose product..."
@@ -411,7 +402,7 @@ const NewPOModal: React.FC<NewPOModalProps> = ({
                   <div>
                     <label className={labelClass}>Variant</label>
                     <Select
-                      className="w-full h-10 rounded-lg"
+                      className="w-full rounded-xl"
                       placeholder="Select Variant"
                       value={selectedVariant || undefined}
                       onChange={setSelectedVariant}
@@ -425,7 +416,7 @@ const NewPOModal: React.FC<NewPOModalProps> = ({
                   <div>
                     <label className={labelClass}>Size</label>
                     <Select
-                      className="w-full h-10 rounded-lg"
+                      className="w-full rounded-xl"
                       placeholder="Select Size"
                       value={selectedSize || undefined}
                       onChange={setSelectedSize}
@@ -441,7 +432,7 @@ const NewPOModal: React.FC<NewPOModalProps> = ({
                   <div>
                     <label className={labelClass}>Unit Cost (Rs)</label>
                     <InputNumber
-                      className="w-full h-10 flex items-center rounded-lg"
+                      className="w-full flex items-center rounded-xl"
                       min={0}
                       value={unitCost}
                       onChange={(val) => setUnitCost(val || 0)}
@@ -451,7 +442,7 @@ const NewPOModal: React.FC<NewPOModalProps> = ({
                   <div>
                     <label className={labelClass}>Quantity (Units)</label>
                     <InputNumber
-                      className="w-full h-10 flex items-center rounded-lg"
+                      className="w-full flex items-center rounded-xl"
                       min={1}
                       value={quantity}
                       onChange={(val) => setQuantity(Math.max(1, val || 0))}
@@ -459,36 +450,35 @@ const NewPOModal: React.FC<NewPOModalProps> = ({
                     />
                   </div>
                 </div>
-                <Button
-                  type="primary"
-                  icon={<IconPlus size={16} />}
+                <button
+                  type="button"
                   onClick={handleAddItem}
-                  block
-                  className="h-10 rounded-xl bg-black hover:bg-gray-800 border-none font-bold"
+                  className="w-full bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-white text-white dark:text-slate-900 font-semibold text-xs rounded-xl py-2.5 shadow-xs transition-all cursor-pointer inline-flex items-center justify-center gap-2"
                 >
+                  <IconPlus size={16} />
                   Add Line Item
-                </Button>
+                </button>
               </div>
-            </Card>
+            </div>
 
             {/* Added Items List */}
-            <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
-              <div className="px-4 py-3 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-                  Requisition Line Items
+            <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl shadow-xs overflow-hidden">
+              <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-800/60 flex justify-between items-center">
+                <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider font-mono">
+                  Order Line Items
                 </span>
-                <span className="text-xs font-bold text-gray-900 bg-white border border-gray-100 px-2.5 py-0.5 rounded-full">
+                <span className="text-xs font-semibold text-slate-600 dark:text-slate-400 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 px-2.5 py-0.5 rounded-full">
                   {items.length} unique items
                 </span>
               </div>
               <Table
-                bordered
                 size="small"
                 scroll={{ y: 280, x: 700 }}
                 columns={columns}
                 dataSource={items}
                 rowKey={(_, idx) => idx as number}
                 pagination={false}
+                className="[&_.ant-table]:!bg-transparent [&_.ant-table-thead>tr>th]:!bg-slate-50/80 [&_.ant-table-thead>tr>th]:dark:!bg-slate-800/60 [&_.ant-table-thead>tr>th]:!text-slate-500 [&_.ant-table-thead>tr>th]:!font-bold [&_.ant-table-thead>tr>th]:!text-[11px] [&_.ant-table-thead>tr>th]:!uppercase [&_.ant-table-thead>tr>th]:!tracking-wider [&_.ant-table-thead>tr>th]:!border-b [&_.ant-table-thead>tr>th]:!border-slate-100 [&_.ant-table-thead>tr>th]:dark:!border-slate-800 [&_.ant-table-tbody>tr]:hover:!bg-slate-50/60 [&_.ant-table-tbody>tr]:dark:hover:!bg-slate-800/40 [&_.ant-table-tbody>tr>td]:!border-b [&_.ant-table-tbody>tr>td]:!border-slate-100 [&_.ant-table-tbody>tr>td]:dark:!border-slate-800/60 [&_.ant-table-tbody>tr>td]:!py-3.5"
               />
             </div>
           </div>
@@ -496,23 +486,18 @@ const NewPOModal: React.FC<NewPOModalProps> = ({
           {/* RIGHT COLUMN: Logistics & Summary (4 cols) */}
           <div className="lg:col-span-4 space-y-6">
             {/* Logistics Card */}
-            <Card
-              size="small"
-              className="border border-gray-100 rounded-2xl shadow-sm"
-              title={
-                <div className="flex items-center gap-2">
-                  <IconTruck size={16} className="text-gray-400" />
-                  <span className="text-xs font-bold text-gray-600 uppercase tracking-wider">
-                    Logistics & Route
-                  </span>
-                </div>
-              }
-            >
+            <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 shadow-xs">
+              <div className="flex items-center gap-2 pb-3 mb-4 border-b border-slate-100 dark:border-slate-800">
+                <IconTruck size={16} className="text-slate-400 dark:text-slate-500" />
+                <span className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider font-mono">
+                  Logistics & Route
+                </span>
+              </div>
               <div className="space-y-4">
                 <div>
                   <label className={labelClass}>Supplier *</label>
                   <Select
-                    className="w-full h-10 rounded-lg"
+                    className="w-full rounded-xl"
                     showSearch
                     optionFilterProp="children"
                     placeholder="Choose Supplier"
@@ -527,7 +512,7 @@ const NewPOModal: React.FC<NewPOModalProps> = ({
                 <div>
                   <label className={labelClass}>Destination Warehouse</label>
                   <Select
-                    className="w-full h-10 rounded-lg"
+                    className="w-full rounded-xl"
                     placeholder="Choose Location"
                     value={stockId || undefined}
                     onChange={setStockId}
@@ -537,7 +522,7 @@ const NewPOModal: React.FC<NewPOModalProps> = ({
                 <div>
                   <label className={labelClass}>Expected Delivery Date</label>
                   <DatePicker
-                    className="w-full h-10 rounded-lg"
+                    className="w-full rounded-xl"
                     placeholder="Choose Delivery Date"
                     value={expectedDate ? dayjs(expectedDate) : null}
                     onChange={(_, dateString) =>
@@ -548,63 +533,60 @@ const NewPOModal: React.FC<NewPOModalProps> = ({
                   />
                 </div>
                 <div>
-                  <label className={labelClass}>Requisition Notes</label>
+                  <label className={labelClass}>Order Notes</label>
                   <Input.TextArea
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
                     placeholder="Enter any supplier instructions..."
                     rows={3}
-                    className="rounded-lg"
+                    className="rounded-xl"
                   />
                 </div>
               </div>
-            </Card>
+            </div>
 
             {/* Total and Actions Card */}
             <div className="space-y-4">
-              <div className="bg-gradient-to-br from-green-600 to-emerald-700 text-white p-6 rounded-2xl shadow-lg relative overflow-hidden">
-                <div className="absolute right-0 bottom-0 opacity-10 translate-x-2 translate-y-2">
+              <div className="bg-slate-900 dark:bg-slate-950 text-white p-6 rounded-2xl shadow-xs relative overflow-hidden border border-slate-800">
+                <div className="absolute right-0 bottom-0 opacity-10 translate-x-2 translate-y-2 text-slate-400">
                   <IconShoppingCart size={120} />
                 </div>
-                <h4 className="text-[10px] font-bold mb-1 uppercase tracking-widest opacity-70">
-                  Total Requisition Cost
+                <h4 className="text-[10px] font-bold mb-1 uppercase tracking-widest text-slate-400 font-mono">
+                  Total Order Amount
                 </h4>
-                <div className="text-3xl font-black tracking-tight leading-none">
-                  Rs {totalAmount.toLocaleString()}
+                <div className="text-3xl font-black tracking-tight leading-none text-emerald-400 font-mono">
+                  Rs {(totalAmount || 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}
                 </div>
               </div>
 
-              <div className="bg-white border border-gray-100 p-4 space-y-3 rounded-2xl shadow-sm">
-                <Button
-                  type="primary"
-                  size="large"
-                  block
+              <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-4 space-y-3 rounded-2xl shadow-xs">
+                <button
+                  type="button"
                   onClick={() => handleSave("SUBMITTED")}
-                  loading={saving}
-                  className="h-12 rounded-xl font-bold bg-green-600 hover:bg-green-700 border-none shadow-none"
+                  disabled={saving}
+                  className="w-full bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-white text-white dark:text-slate-900 font-semibold text-xs rounded-xl h-11 shadow-xs transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
                 >
                   Submit Order
-                </Button>
-                <Button
-                  size="large"
-                  block
+                </button>
+                <button
+                  type="button"
                   onClick={() => handleSave("DRAFT")}
                   disabled={saving}
-                  className="h-12 rounded-xl font-bold border-gray-100 bg-gray-50 text-gray-700 hover:text-black"
+                  className="w-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-xs rounded-xl h-11 transition-all cursor-pointer flex items-center justify-center disabled:opacity-50"
                 >
                   Save as Draft
-                </Button>
-                <Button
-                  block
+                </button>
+                <button
+                  type="button"
                   onClick={onClose}
                   disabled={saving}
-                  className="border-none text-gray-400 text-xs hover:text-gray-600 font-bold"
+                  className="w-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 text-xs font-semibold transition-all cursor-pointer py-2 text-center"
                 >
                   Discard Changes
-                </Button>
+                </button>
               </div>
 
-              <div className="p-4 bg-yellow-50 border border-yellow-100 rounded-2xl text-[10px] text-yellow-800 font-bold leading-relaxed flex gap-2">
+              <div className="p-3.5 bg-amber-50/80 dark:bg-amber-950/40 border border-amber-200/60 dark:border-amber-800/40 rounded-xl text-[11px] text-amber-800 dark:text-amber-400 font-medium leading-relaxed flex gap-2">
                 <div>⚠️</div>
                 <div>
                   Ensure correct supplier and unit costs are reviewed. Stock will only adjust once goods are received (GRN).
@@ -619,3 +601,4 @@ const NewPOModal: React.FC<NewPOModalProps> = ({
 };
 
 export default NewPOModal;
+

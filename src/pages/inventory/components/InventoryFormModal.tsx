@@ -3,7 +3,8 @@ import { DropdownOption } from "@/pages/master/products/page";
 import { ProductDropdownOption } from "../page";
 import api from "@/lib/api";
 import { InventoryItem } from "@/model/InventoryItem";
-import { Modal, Form, Select, InputNumber, Row, Col, Space, Typography, Spin } from "antd";
+import Spinner from "@/pages/components/shared/Spinner";
+import { Modal, Form, Select, InputNumber, Row, Col, Space, Typography } from "antd";
 import { IconBox, IconMapPin, IconScale, IconPackage } from "@tabler/icons-react";
 
 const { Option } = Select;
@@ -212,13 +213,15 @@ const InventoryFormModal: React.FC<StockFormModalProps> = ({
     <Modal
       open={open}
       title={
-        <div className="flex items-center gap-2 pb-2 border-b border-gray-100">
-          <IconBox size={22} className="text-green-600 animate-pulse" />
+        <div className="flex items-center gap-2.5 pb-3 border-b border-slate-200/80 dark:border-slate-800">
+          <div className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-900 dark:text-slate-100 border border-slate-200/80 dark:border-slate-700">
+            <IconBox size={18} />
+          </div>
           <div>
-            <div className="text-lg font-bold text-gray-900 leading-tight">
+            <div className="text-base font-bold text-slate-900 dark:text-slate-100 leading-tight">
               {isEditing ? "Edit Stock Document" : "New Stock Entry"}
             </div>
-            <div className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider">
+            <div className="text-[9px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider font-mono">
               Inventory Control
             </div>
           </div>
@@ -228,8 +231,8 @@ const InventoryFormModal: React.FC<StockFormModalProps> = ({
       onOk={() => form.submit()}
       confirmLoading={saving}
       okText="Save Stock"
-      okButtonProps={{ className: "bg-black hover:bg-gray-800 border-none h-10 px-5 rounded-lg text-sm font-bold shadow-none" }}
-      cancelButtonProps={{ className: "h-10 rounded-lg" }}
+      okButtonProps={{ className: "bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-white text-white dark:text-slate-900 border-none h-10 px-5 rounded-xl text-xs font-semibold shadow-xs" }}
+      cancelButtonProps={{ className: "h-10 rounded-xl text-xs font-semibold border-slate-200 dark:border-slate-700" }}
       maskClosable={false}
       centered
       styles={{ body: { padding: "16px 0 8px 0" } }}
@@ -242,9 +245,8 @@ const InventoryFormModal: React.FC<StockFormModalProps> = ({
         className="px-1"
       >
         {selectedProduct && (
-          <div className="mb-4 bg-gradient-to-r from-gray-50 to-slate-50 border border-gray-150 rounded-2xl p-4 flex gap-4 items-center shadow-sm relative overflow-hidden transition-all duration-300">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-green-500/5 rounded-full blur-xl pointer-events-none" />
-            <div className="w-20 h-20 rounded-xl overflow-hidden border border-gray-250 bg-white flex-shrink-0 flex items-center justify-center shadow-inner relative group">
+          <div className="mb-4 bg-slate-50/50 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 flex gap-4 items-center relative overflow-hidden transition-all duration-300">
+            <div className="w-16 h-16 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 flex-shrink-0 flex items-center justify-center relative group">
               {selectedVariant?.images?.[0]?.url || selectedProduct?.thumbnail?.url ? (
                 <img
                   src={selectedVariant?.images?.[0]?.url || selectedProduct?.thumbnail?.url}
@@ -252,11 +254,11 @@ const InventoryFormModal: React.FC<StockFormModalProps> = ({
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                 />
               ) : (
-                <IconPackage className="text-gray-300" size={32} />
+                <IconPackage className="text-slate-300 dark:text-slate-600" size={28} />
               )}
               {selectedVariant?.images?.[0]?.url && (
-                <span className="absolute bottom-1 right-1 bg-black/60 text-[8px] font-bold text-white px-1 py-0.5 rounded uppercase tracking-wider">
-                  Variant Image
+                <span className="absolute bottom-1 right-1 bg-slate-900/80 text-[8px] font-bold text-white px-1 py-0.5 rounded uppercase tracking-wider">
+                  Variant
                 </span>
               )}
             </div>
@@ -264,37 +266,37 @@ const InventoryFormModal: React.FC<StockFormModalProps> = ({
             <div className="flex-1 min-w-0">
               <div className="flex flex-wrap gap-1.5 items-center mb-1">
                 {selectedProduct.brand && (
-                  <span className="bg-slate-200/60 text-[9px] font-extrabold uppercase text-slate-600 px-2 py-0.5 rounded-full border border-slate-300/40">
+                  <span className="bg-slate-100 dark:bg-slate-800 text-[9px] font-bold uppercase text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded-full border border-slate-200/80 dark:border-slate-700 font-mono">
                     {selectedProduct.brand}
                   </span>
                 )}
                 {selectedProduct.category && (
-                  <span className="bg-emerald-50 text-[9px] font-extrabold uppercase text-emerald-700 px-2 py-0.5 rounded-full border border-emerald-100">
+                  <span className="bg-emerald-50 dark:bg-emerald-950/40 text-[9px] font-bold uppercase text-emerald-700 dark:text-emerald-400 px-2 py-0.5 rounded-full border border-emerald-200/60 dark:border-emerald-800/40 font-mono">
                     {selectedProduct.category}
                   </span>
                 )}
               </div>
               
-              <h3 className="text-base font-black text-gray-900 leading-snug truncate">
+              <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 leading-snug truncate">
                 {selectedProduct.label}
               </h3>
               
               <div className="flex items-baseline gap-4 mt-2">
                 <div>
-                  <span className="block text-[8px] font-bold text-gray-400 uppercase tracking-wider">Buying Price</span>
-                  <span className="text-xs font-semibold text-gray-500">LKR {selectedProduct.buyingPrice?.toLocaleString() || "0"}</span>
+                  <span className="block text-[8px] font-bold text-slate-400 uppercase tracking-wider font-mono">Buying Price</span>
+                  <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 font-mono">LKR {selectedProduct.buyingPrice?.toLocaleString() || "0"}</span>
                 </div>
-                <div className="h-6 w-px bg-gray-200 self-center" />
+                <div className="h-5 w-px bg-slate-200 dark:bg-slate-700 self-center" />
                 <div>
-                  <span className="block text-[8px] font-bold text-gray-400 uppercase tracking-wider">Selling Price</span>
-                  <span className="text-sm font-black text-slate-800">LKR {selectedProduct.sellingPrice?.toLocaleString() || "0"}</span>
+                  <span className="block text-[8px] font-bold text-slate-400 uppercase tracking-wider font-mono">Selling Price</span>
+                  <span className="text-xs font-bold text-slate-900 dark:text-slate-100 font-mono">LKR {selectedProduct.sellingPrice?.toLocaleString() || "0"}</span>
                 </div>
                 {selectedVariant && (
                   <>
-                    <div className="h-6 w-px bg-gray-200 self-center" />
+                    <div className="h-5 w-px bg-slate-200 dark:bg-slate-700 self-center" />
                     <div>
-                      <span className="block text-[8px] font-bold text-gray-400 uppercase tracking-wider">Active Variant</span>
-                      <span className="text-xs font-bold text-indigo-600 truncate max-w-[120px] block">
+                      <span className="block text-[8px] font-bold text-slate-400 uppercase tracking-wider font-mono">Active Variant</span>
+                      <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400 truncate max-w-[120px] block font-mono">
                         {selectedVariant.label}
                       </span>
                     </div>
@@ -307,7 +309,7 @@ const InventoryFormModal: React.FC<StockFormModalProps> = ({
 
         <Form.Item
           name="productId"
-          label={<span className="text-xs font-bold text-gray-500">Product</span>}
+          label={<span className="text-xs font-semibold text-slate-700 dark:text-slate-300">Product</span>}
           rules={[{ required: true, message: "Please select a product" }]}
         >
           <Select
@@ -316,7 +318,7 @@ const InventoryFormModal: React.FC<StockFormModalProps> = ({
             placeholder="Select Product..."
             showSearch
             optionFilterProp="children"
-            className="w-full h-10 rounded-lg"
+            className="w-full rounded-xl"
           >
             {products.map((p) => (
               <Option key={p.id} value={p.id}>
@@ -328,7 +330,7 @@ const InventoryFormModal: React.FC<StockFormModalProps> = ({
 
         <Form.Item
           name="variantId"
-          label={<span className="text-xs font-bold text-gray-500">Variant</span>}
+          label={<span className="text-xs font-semibold text-slate-700 dark:text-slate-300">Variant</span>}
           rules={[{ required: true, message: "Please select a variant" }]}
         >
           <Select
@@ -336,7 +338,7 @@ const InventoryFormModal: React.FC<StockFormModalProps> = ({
             disabled={isEditing || !productIdValue}
             placeholder="Select Variant..."
             loading={loadingVariants}
-            className="w-full h-10 rounded-lg"
+            className="w-full rounded-xl"
           >
             {variants.map((v) => (
               <Option key={v.id} value={v.id}>
@@ -350,13 +352,13 @@ const InventoryFormModal: React.FC<StockFormModalProps> = ({
           <Col xs={24} sm={12}>
             <Form.Item
               name="size"
-              label={<span className="text-xs font-bold text-gray-500">Size</span>}
+              label={<span className="text-xs font-semibold text-slate-700 dark:text-slate-300">Size</span>}
               rules={[{ required: true, message: "Required" }]}
             >
               <Select
                 disabled={isEditing || !variantIdValue}
                 placeholder="Size..."
-                className="w-full h-10 rounded-lg"
+                className="w-full rounded-xl"
               >
                 {availableSizes.map((s) => (
                   <Option key={s} value={s}>
@@ -369,13 +371,13 @@ const InventoryFormModal: React.FC<StockFormModalProps> = ({
           <Col xs={24} sm={12}>
             <Form.Item
               name="stockId"
-              label={<span className="text-xs font-bold text-gray-500">Location</span>}
+              label={<span className="text-xs font-semibold text-slate-700 dark:text-slate-300">Location</span>}
               rules={[{ required: true, message: "Required" }]}
             >
               <Select
                 disabled={isEditing}
                 placeholder="Warehouse..."
-                className="w-full h-10 rounded-lg"
+                className="w-full rounded-xl"
               >
                 {stockLocations.map((s) => (
                   <Option key={s.id} value={s.id}>
@@ -387,25 +389,25 @@ const InventoryFormModal: React.FC<StockFormModalProps> = ({
           </Col>
         </Row>
 
-        <div className="bg-gray-50/50 p-4 rounded-2xl border border-gray-100 mt-2">
+        <div className="bg-slate-50/50 dark:bg-slate-800/40 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 mt-2">
           <Form.Item
             name="quantity"
-            label={<span className="text-xs font-bold text-gray-500">Physical Stock Count</span>}
+            label={<span className="text-xs font-semibold text-slate-700 dark:text-slate-300">Physical Stock Count</span>}
             rules={[{ required: true, message: "Required" }]}
             className="!mb-0"
           >
             <InputNumber
               min={0}
-              className="w-full h-12 flex items-center rounded-xl"
+              className="w-full h-11 flex items-center rounded-xl"
               size="large"
-              addonAfter={<span className="font-bold text-xs text-gray-500">UNITS</span>}
+              addonAfter={<span className="font-bold text-xs text-slate-500 font-mono">UNITS</span>}
               disabled={loadingQuantity}
             />
           </Form.Item>
 
           {loadingQuantity && (
-            <div className="text-[11px] text-gray-400 mt-2 flex items-center gap-1.5 font-semibold">
-              <Spin size="small" /> Checking current database records...
+            <div className="text-[11px] text-slate-400 mt-2 flex items-center gap-1.5 font-semibold">
+              <Spinner size="small" /> Checking current database records...
             </div>
           )}
         </div>

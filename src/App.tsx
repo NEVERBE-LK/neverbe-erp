@@ -1,7 +1,7 @@
 import { lazy, Suspense } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import ProtectedRoute from "@/components/ProtectedRoute";
-import { Spin } from "antd";
+import Spinner from "@/pages/components/shared/Spinner";
 
 import AppLayout from "@/pages/components/layout/AppLayout";
 
@@ -146,8 +146,8 @@ const Communications = lazy(() => import("@/pages/communications/page"));
 
 function Loading() {
   return (
-    <div className="flex items-center justify-center h-screen bg-gray-50">
-      <Spin size="large" />
+    <div className="flex items-center justify-center h-screen bg-canvas dark:bg-canvas-dark">
+      <Spinner size="large" tip="SYNCING WORKSPACE..." />
     </div>
   );
 }

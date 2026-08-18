@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
-  Spin,
   Table,
   Button,
   Select,
@@ -9,11 +8,10 @@ import {
   InputNumber,
   Space,
   DatePicker,
-  Card,
   Descriptions,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { IconPackage, IconShoppingCart, IconInfoCircle } from "@tabler/icons-react";
+import { IconPackage, IconInfoCircle } from "@tabler/icons-react";
 import PageContainer from "@/pages/components/container/PageContainer";
 import api from "@/lib/api";
 import toast from "react-hot-toast";
@@ -21,8 +19,9 @@ import { dayjs } from "@/utils/dateUtils";
 import { useAppSelector } from "@/lib/hooks";
 import { RootState } from "@/lib/store";
 import { useConfirmationDialog } from "@/contexts/ConfirmationDialogContext";
+import Spinner from "@/pages/components/shared/Spinner";
 
-const labelClass = "block text-xs font-bold text-gray-500 mb-2";
+const labelClass = "block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-2";
 
 interface POItem {
   productId: string;
@@ -256,8 +255,8 @@ const CreateGRNPage = () => {
       key: "product",
       render: (_, i) => (
         <div className="flex flex-col">
-          <span className="font-bold text-black text-xs">{i.productName}</span>
-          <span className="text-[10px] text-gray-500">
+          <span className="font-bold text-slate-900 dark:text-slate-100 text-xs">{i.productName}</span>
+          <span className="text-[10px] text-slate-500 dark:text-slate-400">
             {i.variantName ? `${i.variantName} / ` : ""}
             {i.size}
           </span>
@@ -269,7 +268,7 @@ const CreateGRNPage = () => {
       key: "rem",
       align: "center",
       render: (_, i) => (
-        <span className="text-[10px] font-bold text-gray-400">
+        <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500">
           {i.orderedQuantity - i.previouslyReceived}
         </span>
       ),
@@ -285,7 +284,7 @@ const CreateGRNPage = () => {
             max={remaining}
             value={item.receivedQuantity}
             onChange={(val) => handleQuantityChange(index, Number(val))}
-            className="w-full rounded-lg"
+            className="w-full rounded-lg border-slate-200 dark:border-slate-700 bg-transparent text-slate-900 dark:text-slate-100"
             size="middle"
           />
         );
@@ -310,7 +309,7 @@ const CreateGRNPage = () => {
       key: "total",
       align: "right",
       render: (_, item) => (
-        <span className="font-bold text-xs">
+        <span className="font-bold text-xs text-slate-900 dark:text-slate-100">
           Rs {(item.receivedQuantity * item.unitCost).toLocaleString()}
         </span>
       ),
@@ -321,14 +320,14 @@ const CreateGRNPage = () => {
     <PageContainer title="New Goods Received Note">
       <div className="w-full space-y-6">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between sm:items-end mb-4 gap-4">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-2 gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-1.5 h-10 bg-green-600 rounded-full" />
+            <div className="w-1.5 h-7 bg-slate-900 dark:bg-slate-100 rounded-full" />
             <div className="flex flex-col">
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 leading-none mb-1">
+              <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400 dark:text-slate-500 leading-none mb-1 font-mono">
                 Inventory Control
               </span>
-              <h2 className="text-2xl sm:text-4xl font-black text-gray-900 tracking-tight leading-none">
+              <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 tracking-tight leading-none">
                 Create GRN
               </h2>
             </div>
@@ -337,13 +336,13 @@ const CreateGRNPage = () => {
 
         {loading ? (
           <div className="flex justify-center py-20">
-            <Spin size="large" />
+            <Spinner size="large" />
           </div>
         ) : (
           <div className="space-y-6">
             {/* Order Selection */}
-            <div className="bg-white p-5 border border-gray-100 rounded-2xl shadow-sm">
-              <h3 className="text-[10px] font-bold text-gray-400 mb-4 uppercase tracking-wider border-b border-gray-50 pb-2">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-5 rounded-2xl shadow-xs">
+              <h3 className="text-[10px] font-bold text-slate-400 dark:text-slate-500 mb-4 uppercase tracking-wider font-mono border-b border-slate-100 dark:border-slate-800 pb-2">
                 Purchase Order Selection
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -365,7 +364,7 @@ const CreateGRNPage = () => {
                 <div>
                   <label className={labelClass}>Received Date</label>
                   <DatePicker
-                    className="w-full h-10 rounded-lg"
+                    className="w-full h-10 rounded-lg border-slate-200 dark:border-slate-700 bg-transparent text-slate-900 dark:text-slate-100"
                     placeholder="Select Date"
                     value={receivedDate ? dayjs(receivedDate) : null}
                     onChange={(_, dateString) =>
@@ -381,7 +380,7 @@ const CreateGRNPage = () => {
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
                     placeholder="Optional notes..."
-                    className="rounded-lg h-10"
+                    className="rounded-lg h-10 border-slate-200 dark:border-slate-700 bg-transparent text-slate-900 dark:text-slate-100"
                   />
                 </div>
               </div>
@@ -389,47 +388,42 @@ const CreateGRNPage = () => {
 
             {/* PO Summary Card */}
             {selectedPO && (
-              <Card
-                size="small"
-                className="border-none bg-blue-50/40 rounded-2xl"
-                title={
-                  <Space>
-                    <IconInfoCircle size={16} className="text-blue-500" />
-                    <span className="text-xs font-bold text-blue-700 uppercase tracking-wider">
-                      Purchase Order Details
-                    </span>
-                  </Space>
-                }
-              >
+              <div className="bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200/60 dark:border-blue-900/40 rounded-2xl p-4 shadow-xs">
+                <div className="flex items-center gap-2 mb-3">
+                  <IconInfoCircle size={16} className="text-blue-500" />
+                  <span className="text-xs font-bold text-blue-700 dark:text-blue-400 uppercase tracking-wider font-mono">
+                    Purchase Order Details
+                  </span>
+                </div>
                 <Descriptions size="small" column={{ xs: 1, sm: 2, md: 3 }} className="p-2">
-                  <Descriptions.Item label={<span className="font-bold text-gray-500">PO Number</span>}>
-                    <span className="font-mono font-bold text-gray-900">{selectedPO.poNumber}</span>
+                  <Descriptions.Item label={<span className="font-semibold text-slate-500 dark:text-slate-400">PO Number</span>}>
+                    <span className="font-mono font-bold text-slate-900 dark:text-slate-100">{selectedPO.poNumber}</span>
                   </Descriptions.Item>
-                  <Descriptions.Item label={<span className="font-bold text-gray-500">Supplier</span>}>
-                    <span className="font-bold text-gray-900">{selectedPO.supplierName}</span>
+                  <Descriptions.Item label={<span className="font-semibold text-slate-500 dark:text-slate-400">Supplier</span>}>
+                    <span className="font-bold text-slate-900 dark:text-slate-100">{selectedPO.supplierName}</span>
                   </Descriptions.Item>
-                  <Descriptions.Item label={<span className="font-bold text-gray-500">Expected Date</span>}>
-                    <span className="font-bold text-gray-900">{selectedPO.expectedDate || "Not Specified"}</span>
+                  <Descriptions.Item label={<span className="font-semibold text-slate-500 dark:text-slate-400">Expected Date</span>}>
+                    <span className="font-bold text-slate-900 dark:text-slate-100">{selectedPO.expectedDate || "Not Specified"}</span>
                   </Descriptions.Item>
                 </Descriptions>
-              </Card>
+              </div>
             )}
 
             {/* Items Table */}
             {selectedPO && items.length > 0 && (
               <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                 <div className="lg:col-span-3">
-                  <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden min-h-[200px]">
-                    <div className="px-4 py-3 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
-                      <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                  <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl shadow-xs overflow-hidden min-h-[200px] [&_.ant-table]:!bg-transparent [&_.ant-table-thead>tr>th]:!bg-slate-50/80 [&_.ant-table-thead>tr>th]:dark:!bg-slate-800/60 [&_.ant-table-thead>tr>th]:!text-slate-500 [&_.ant-table-thead>tr>th]:!font-bold [&_.ant-table-thead>tr>th]:!text-[11px] [&_.ant-table-thead>tr>th]:!uppercase [&_.ant-table-thead>tr>th]:!tracking-wider [&_.ant-table-thead>tr>th]:!border-b [&_.ant-table-thead>tr>th]:!border-slate-100 [&_.ant-table-thead>tr>th]:dark:!border-slate-800 [&_.ant-table-tbody>tr]:hover:!bg-slate-50/60 [&_.ant-table-tbody>tr]:dark:hover:!bg-slate-800/40 [&_.ant-table-tbody>tr>td]:!border-b [&_.ant-table-tbody>tr>td]:!border-slate-100 [&_.ant-table-tbody>tr>td]:dark:!border-slate-800/60 [&_.ant-table-tbody>tr>td]:!py-3.5">
+                    <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-800/60 flex justify-between items-center">
+                      <h3 className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider font-mono">
                         Items to Receive
                       </h3>
-                      <span className="text-[10px] text-gray-400 font-bold">
+                      <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold font-mono">
                         {items.length} Items
                       </span>
                     </div>
                     <Table
-                      bordered
+                      bordered={false}
                       scroll={{ y: 350, x: 800 }}
                       columns={columns}
                       dataSource={items}
@@ -442,8 +436,8 @@ const CreateGRNPage = () => {
 
                 {/* Action Sidebar */}
                 <div className="lg:col-span-1 space-y-4">
-                  <div className="bg-green-600 text-white p-5 rounded-2xl shadow-lg">
-                    <h4 className="text-[10px] font-bold mb-1 uppercase opacity-70">
+                  <div className="bg-emerald-600 dark:bg-emerald-700 text-white p-5 rounded-2xl shadow-xs">
+                    <h4 className="text-[10px] font-bold mb-1 uppercase opacity-80 font-mono tracking-wider">
                       Received Value
                     </h4>
                     <div className="text-3xl font-bold tracking-tight leading-none">
@@ -451,14 +445,14 @@ const CreateGRNPage = () => {
                     </div>
                   </div>
 
-                  <div className="bg-white border border-gray-100 p-4 space-y-3 rounded-2xl shadow-sm">
+                  <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-4 space-y-3 rounded-2xl shadow-xs">
                     <Button
                       type="primary"
                       size="large"
                       block
                       onClick={() => handleSave("SUBMITTED")}
                       loading={saving}
-                      className="h-12 rounded-xl font-bold"
+                      className="bg-slate-900 dark:bg-slate-100 hover:bg-slate-800 dark:hover:bg-white text-white dark:text-slate-900 font-semibold text-xs rounded-xl h-12 shadow-xs cursor-pointer transition-all border-none"
                     >
                       Submit for Review
                     </Button>
@@ -467,7 +461,7 @@ const CreateGRNPage = () => {
                       block
                       onClick={() => handleSave("DRAFT")}
                       disabled={saving}
-                      className="h-12 rounded-xl font-bold border-gray-100 bg-gray-50"
+                      className="h-12 rounded-xl font-semibold text-xs border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 cursor-pointer"
                     >
                       Save as Draft
                     </Button>
@@ -475,13 +469,13 @@ const CreateGRNPage = () => {
                       block
                       onClick={() => navigate("/inventory/grn")}
                       disabled={saving}
-                      className="border-none text-gray-400 text-xs hover:text-gray-600"
+                      className="border-none text-slate-400 dark:text-slate-500 text-xs hover:text-slate-600 dark:hover:text-slate-300 cursor-pointer"
                     >
                       Cancel
                     </Button>
                   </div>
 
-                  <div className="p-4 bg-yellow-50 border border-yellow-100 rounded-2xl text-[10px] text-yellow-800 font-bold leading-relaxed">
+                  <div className="p-4 bg-amber-50 dark:bg-amber-950/30 border border-amber-200/60 dark:border-amber-800/40 rounded-2xl text-[10px] text-amber-800 dark:text-amber-300 font-semibold leading-relaxed">
                     GRN will be sent for approval. Inventory will only be updated once approved by an authorized manager.
                   </div>
                 </div>
@@ -489,9 +483,9 @@ const CreateGRNPage = () => {
             )}
 
             {!selectedPO && !loading && (
-              <div className="flex flex-col items-center justify-center py-20 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
-                <IconPackage size={40} className="text-gray-300 mb-2" />
-                <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">
+              <div className="flex flex-col items-center justify-center py-20 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-500 font-medium">
+                <IconPackage size={40} className="text-slate-300 dark:text-slate-600 mb-2" />
+                <span className="text-xs font-bold uppercase tracking-widest font-mono">
                   Select an order to begin
                 </span>
               </div>
@@ -504,3 +498,4 @@ const CreateGRNPage = () => {
 };
 
 export default CreateGRNPage;
+

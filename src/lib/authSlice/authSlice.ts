@@ -1,12 +1,12 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { User } from "@/model/User";
 
-interface Interface {
+interface AuthState {
   currentUser: User | null;
   loading: boolean;
 }
 
-const initialState: Interface = {
+const initialState: AuthState = {
   currentUser: null,
   loading: true,
 };
@@ -15,14 +15,15 @@ const userSlice = createSlice({
   name: "user",
   initialState,
   reducers: {
-    setUser(state, action) {
+    setUser(state, action: PayloadAction<User | null>) {
       state.currentUser = action.payload;
       state.loading = false;
     },
     clearUser(state) {
       state.currentUser = null;
+      state.loading = false;
     },
-    setLoading(state, action) {
+    setLoading(state, action: PayloadAction<boolean>) {
       state.loading = action.payload;
     },
   },

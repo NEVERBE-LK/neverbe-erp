@@ -31,12 +31,12 @@ const DashboardCard = ({
     <Card
       title={
         displayTitle ? (
-          <div className="flex flex-col py-0">
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-950/40 leading-none mb-1">
+          <div className="flex flex-col py-1">
+            <span className="text-sm font-semibold text-text-main dark:text-text-main-dark tracking-tight leading-snug">
               {displayTitle}
             </span>
             {displaySubtitle && (
-              <span className="text-[9px] font-bold text-gray-300 mt-0 uppercase tracking-widest leading-none">
+              <span className="text-xs text-text-sub dark:text-text-sub-dark font-normal mt-0.5 tracking-normal leading-normal">
                 {displaySubtitle}
               </span>
             )}
@@ -44,16 +44,16 @@ const DashboardCard = ({
         ) : null
       }
       extra={action}
-      className={`h-full shadow-2xl shadow-emerald-900/5 rounded-[2.5rem] border border-gray-100/50 transition-all duration-500 hover:shadow-emerald-950/10 hover:border-emerald-100 ${className?.includes('bg-') ? '' : 'bg-white/80 backdrop-blur-md'} ${className || ""}`}
-      style={{ borderRadius: "2rem" }}
-      bodyStyle={{ padding: "2rem", height: "100%" }}
+      className={`h-full shadow-sm hover:shadow-md rounded-xl border border-card-border dark:border-card-border-dark transition-all duration-300 ${className?.includes('bg-') ? '' : 'bg-card dark:bg-card-dark'} ${className || ""}`}
+      style={{ borderRadius: "12px" }}
+      bodyStyle={{ padding: "1.5rem", height: "100%" }}
       bordered={false}
     >
-      <div className="flex flex-col h-full">
+      <div className="flex flex-col h-full text-text-main dark:text-text-main-dark">
         {middlecontent && <div className="mb-4">{middlecontent}</div>}
         <div className="flex-1">{children}</div>
         {footer && (
-          <div className="mt-6 pt-4 border-t border-gray-100">{footer}</div>
+          <div className="mt-6 pt-4 border-t border-card-border dark:border-card-border-dark">{footer}</div>
         )}
       </div>
     </Card>

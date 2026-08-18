@@ -8,7 +8,8 @@ import {
   IconRefresh,
   IconReceiptRefund,
 } from "@tabler/icons-react";
-import { Row, Col, Statistic, Card, Spin, Tag, Button } from "antd";
+import { Row, Col, Statistic, Card, Tag, Button } from "antd";
+import Spinner from "../shared/Spinner";
 import { collection, query, where, onSnapshot, Timestamp } from "firebase/firestore";
 import { db } from "@/firebase/firebaseClient";
 import { dayjs, SL_TIMEZONE } from "@/utils/dateUtils";
@@ -75,156 +76,82 @@ const DailyEarnings = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:justify-between items-start sm:items-center mb-6 min-w-0 gap-2">
         <div className="flex items-center gap-2 overflow-hidden">
-          <h4 className="text-lg font-bold text-black truncate">
+          <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200 tracking-tight">
             Daily Overview
           </h4>
-          <Button
-            type="text"
-            shape="circle"
-            icon={<IconRefresh size={16} />}
-            onClick={fetchDailyEarnings}
-            loading={loading}
-          />
         </div>
 
-        <Tag color="green" className="m-0 font-bold">
+        <span className="text-xs font-semibold px-2 py-0.5 rounded bg-slate-50 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 border border-slate-200/60 dark:border-slate-700/60">
           {invoiceCount} Orders
-        </Tag>
+        </span>
       </div>
 
-      <Spin spinning={loading}>
-        <div className="flex flex-col gap-4">
-          {/* Row 1: Gross & Discount */}
-          <Row gutter={[16, 16]}>
-            <Col span={12}>
-              <Card
-                size="small"
-                bordered={false}
-                className="bg-white h-full rounded-2xl shadow-sm border border-gray-100 transition-all hover:-translate-y-0.5"
-                bodyStyle={{ padding: "16px" }}
-              >
-                <Statistic
-                  title={
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                      Gross Sales
-                    </span>
-                  }
-                  value={totalGrossSales}
-                  precision={2}
-                  prefix="LKR"
-                  valueStyle={{
-                    fontSize: "1.125rem",
-                    fontWeight: "900",
-                    color: "#1f2937",
-                  }}
-                />
-              </Card>
-            </Col>
-            <Col span={12}>
-              <Card
-                size="small"
-                bordered={false}
-                className="bg-white h-full rounded-2xl shadow-sm border border-gray-100 transition-all hover:-translate-y-0.5"
-                bodyStyle={{ padding: "16px" }}
-              >
-                <Statistic
-                  title={
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                      Total Discounts
-                    </span>
-                  }
-                  value={totalDiscount}
-                  precision={2}
-                  prefix="LKR"
-                  valueStyle={{
-                    fontSize: "1.125rem",
-                    fontWeight: "900",
-                    color: "#1f2937",
-                  }}
-                />
-              </Card>
-            </Col>
-          </Row>
+      <Spinner spinning={loading}>
+        <div className="flex flex-col lg:flex-row gap-6">
+          {/* Main Profit Block */}
+          <div className="flex-1 bg-slate-50 dark:bg-slate-800/40 border border-slate-200/40 dark:border-slate-700/60 rounded-xl p-5 flex flex-col justify-between min-h-[140px] transition-all hover:border-slate-200">
+            <div>
+              <span className="text-xs font-medium text-slate-500 block mb-1">
+                Net Profit
+              </span>
+              <div className="flex items-baseline gap-1">
+                <span className="text-sm font-bold text-slate-400">LKR</span>
+                <span className="text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
+                  {totalProfit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </span>
+              </div>
+            </div>
+            <div className="text-[11px] text-slate-400 mt-4 flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full bg-emerald-500 inline-block"></span>
+              Live calculations
+            </div>
+          </div>
 
-          {/* Row 2: Net Sales & Refunds */}
-          <Row gutter={[16, 16]}>
-            <Col span={12}>
-              <Card
-                size="small"
-                bordered={false}
-                className="h-full rounded-2xl shadow-sm border border-green-200 bg-green-50 transition-all hover:-translate-y-0.5"
-                bodyStyle={{ padding: "16px" }}
-              >
-                <Statistic
-                  title={
-                    <span className="text-[10px] font-bold text-green-700 uppercase tracking-widest">
-                      Net Sales
-                    </span>
-                  }
-                  value={totalNetSales}
-                  precision={2}
-                  prefix="LKR"
-                  valueStyle={{
-                    fontSize: "1.25rem",
-                    fontWeight: "900",
-                    color: "#166534",
-                  }}
-                />
-              </Card>
-            </Col>
-            <Col span={12}>
-              <Card
-                size="small"
-                bordered={false}
-                className="bg-white h-full rounded-2xl shadow-sm border border-gray-100 transition-all hover:-translate-y-0.5"
-                bodyStyle={{ padding: "16px" }}
-              >
-                <Statistic
-                  title={
-                    <div className="flex items-center gap-1">
-                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                        Refunds
-                      </span>
-                      <IconReceiptRefund size={12} className="text-gray-400" />
-                    </div>
-                  }
-                  value={totalRefunds}
-                  precision={2}
-                  prefix="LKR"
-                  valueStyle={{
-                    fontSize: "1.125rem",
-                    fontWeight: "900",
-                    color: "#1f2937",
-                  }}
-                />
-              </Card>
-            </Col>
-          </Row>
+          {/* Grid of other metrics */}
+          <div className="grid grid-cols-2 gap-4 flex-[2]">
+            {/* Gross Sales */}
+            <div className="border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900/50 rounded-lg p-4 transition-all hover:border-slate-200/60">
+              <span className="text-[11px] font-medium text-slate-400 block mb-1">
+                Gross Sales
+              </span>
+              <div className="text-sm font-semibold text-slate-800 dark:text-slate-200">
+                LKR {totalGrossSales.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </div>
+            </div>
 
-          {/* Row 3: Net Profit (Hero) */}
-          <div className="bg-linear-to-r from-green-500 to-green-600 rounded-2xl shadow-lg border border-green-500 p-5 transition-all hover:-translate-y-0.5 hover:shadow-green-500/30">
-            <Statistic
-              title={
-                <div className="flex items-center gap-2 mb-1">
-                  <IconCurrencyDollar size={18} className="text-green-100" />
-                  <span className="text-xs font-bold text-green-100 uppercase tracking-widest">
-                    Profit
-                  </span>
-                </div>
-              }
-              value={totalProfit}
-              precision={2}
-              prefix="LKR"
-              valueStyle={{
-                fontSize: "2rem",
-                fontWeight: "900",
-                color: "#fff",
-                letterSpacing: "-0.025em",
-              }}
-            />
+            {/* Net Sales */}
+            <div className="border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900/50 rounded-lg p-4 transition-all hover:border-slate-200/60">
+              <span className="text-[11px] font-medium text-slate-400 block mb-1">
+                Net Sales
+              </span>
+              <div className="text-sm font-semibold text-slate-800 dark:text-slate-200">
+                LKR {totalNetSales.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </div>
+            </div>
+
+            {/* Total Discounts */}
+            <div className="border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900/50 rounded-lg p-4 transition-all hover:border-slate-200/60">
+              <span className="text-[11px] font-medium text-slate-400 block mb-1">
+                Discounts Given
+              </span>
+              <div className="text-sm font-semibold text-slate-800 dark:text-slate-200">
+                LKR {totalDiscount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </div>
+            </div>
+
+            {/* Refunds */}
+            <div className="border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900/50 rounded-lg p-4 transition-all hover:border-slate-200/60">
+              <div className="flex items-center gap-1 mb-1">
+                <span className="text-[11px] font-medium text-slate-400">Refunds</span>
+                <IconReceiptRefund size={12} className="text-slate-400" />
+              </div>
+              <div className="text-sm font-semibold text-slate-800 dark:text-slate-200">
+                LKR {totalRefunds.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </div>
+            </div>
           </div>
         </div>
-      </Spin>
+      </Spinner>
     </DashboardCard>
   );
 };

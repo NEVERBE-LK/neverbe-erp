@@ -2,15 +2,14 @@ import { PopularItem } from "@/model/PopularItem";
 import { useEffect, useState, useRef } from "react";
 import { useAppSelector } from "@/lib/hooks";
 import { getPopularItemsAction } from "@/actions/inventoryActions";
-import DashboardCard from "@/pages/components/shared/DashboardCard";
 import PopularItemCard from "@/pages/components/dashboard/PopularItemCard";
 import {
-  IconRefresh,
   IconChevronLeft,
   IconChevronRight,
 } from "@tabler/icons-react";
 import toast from "react-hot-toast";
-import { Button, Select, Spin, Divider } from "antd";
+import { Button, Select, Divider } from "antd";
+import Spinner from "../shared/Spinner";
 import { dayjs } from "@/utils/dateUtils";
 
 const PopularItems = () => {
@@ -48,14 +47,32 @@ const PopularItems = () => {
 
   // Re-fetch when User, Month, OR Size changes
   useEffect(() => {
-    if (currentUser) {
-      fetchPopularItems();
-    }
+    if (!currentUser) return;
+
+    fetchPopularItems(true);
+
+    const interval = setInterval(() => {
+      if (document.visibilityState === "visible") {
+        fetchPopularItems(false);
+      }
+    }, 30000); // 30 seconds
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        fetchPopularItems(false);
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
   }, [currentUser, selectedMonth, fetchSize]);
 
-  const fetchPopularItems = async () => {
+  const fetchPopularItems = async (showLoading = true) => {
     try {
-      setIsLoading(true);
+      if (showLoading) setIsLoading(true);
       const currentYear = dayjs().year();
 
       const items: PopularItem[] = await getPopularItemsAction(
@@ -68,7 +85,7 @@ const PopularItems = () => {
       console.error(e);
       toast.error(e.message);
     } finally {
-      setIsLoading(false);
+      if (showLoading) setIsLoading(false);
     }
   };
 
@@ -83,85 +100,75 @@ const PopularItems = () => {
   };
 
   return (
-    <DashboardCard>
-      <div className="mb-2">
-        <div className="flex flex-wrap items-center justify-between gap-y-4 mb-6 pb-4 border-b border-green-600">
-          <div className="flex flex-wrap items-center gap-3 md:gap-4">
-            <h4 className="text-xl font-black text-black m-0 leading-none tracking-tight">
-              Trending Products
-            </h4>
-
-            <div className="flex items-center gap-2">
-              <Button
-                size="small"
-                icon={<IconRefresh size={16} />}
-                onClick={fetchPopularItems}
-                className="border-gray-200 hover:border-emerald-500 hover:text-emerald-500 transition-colors"
-              />
-              <Divider type="vertical" className="h-4 bg-gray-200" />
-              <div className="flex items-center bg-gray-50 rounded-lg p-0.5 border border-gray-100">
-                <Button
-                  type="text"
-                  size="small"
-                  icon={<IconChevronLeft size={16} />}
-                  onClick={() => scrollSlider("left")}
-                  className="hover:bg-white text-gray-400 hover:text-emerald-600"
-                />
-                <Button
-                  type="text"
-                  size="small"
-                  icon={<IconChevronRight size={16} />}
-                  onClick={() => scrollSlider("right")}
-                  className="hover:bg-white text-gray-400 hover:text-emerald-600"
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 w-full md:w-auto">
-            {/* Size Selector */}
-            <Select
-              value={fetchSize}
-              onChange={setFetchSize}
-              options={sizeOptions}
-              className="flex-1 md:w-28 h-9"
-              popupClassName="rounded-xl border-none shadow-2xl"
+    <div className="py-2 flex flex-col h-[350px]">
+      <div className="flex flex-wrap items-center justify-between gap-y-3 mb-4 pb-3 border-b border-card-border dark:border-card-border-dark shrink-0">
+        <div className="flex items-center gap-3">
+          <span className="text-xs font-semibold text-text-sub dark:text-slate-400">
+            Top Performing Products
+          </span>
+          <div className="flex items-center bg-panel dark:bg-slate-800/60 rounded-lg p-0.5 border border-card-border dark:border-card-border-dark">
+            <Button
+              type="text"
+              size="small"
+              icon={<IconChevronLeft size={14} />}
+              onClick={() => scrollSlider("left")}
+              className="hover:bg-card dark:hover:bg-slate-700 text-text-sub hover:text-brand dark:hover:text-brand-dark"
             />
-
-            {/* Month Selector */}
-            <Select
-              value={selectedMonth}
-              onChange={setSelectedMonth}
-              options={months}
-              className="flex-[1.5] md:w-36 h-9"
-              popupClassName="rounded-xl border-none shadow-2xl"
+            <Button
+              type="text"
+              size="small"
+              icon={<IconChevronRight size={14} />}
+              onClick={() => scrollSlider("right")}
+              className="hover:bg-card dark:hover:bg-slate-700 text-text-sub hover:text-brand dark:hover:text-brand-dark"
             />
           </div>
         </div>
 
-        <Spin spinning={isLoading}>
+        <div className="flex items-center gap-2">
+          {/* Size Selector */}
+          <Select
+            value={fetchSize}
+            onChange={setFetchSize}
+            options={sizeOptions}
+            className="w-24 h-8 text-xs"
+            popupClassName="rounded-xl border-none shadow-2xl"
+          />
+
+          {/* Month Selector */}
+          <Select
+            value={selectedMonth}
+            onChange={setSelectedMonth}
+            options={months}
+            className="w-32 h-8 text-xs"
+            popupClassName="rounded-xl border-none shadow-2xl"
+          />
+        </div>
+      </div>
+
+      <div className="flex-1 overflow-hidden flex items-center min-h-0">
+        <Spinner spinning={isLoading}>
           <div
             ref={sliderRef}
-            className="flex gap-5 overflow-x-auto pb-4 scrollbar-hide scroll-smooth snap-x snap-mandatory"
+            className="flex gap-5 overflow-x-auto pb-2 scrollbar-hide scroll-smooth snap-x snap-mandatory w-full"
             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
           >
             {items?.map((item: PopularItem) => (
-              <div key={item.item.productId} className="snap-start">
+              <div key={item.item.productId} className="snap-start shrink-0">
                 <PopularItemCard item={item} />
               </div>
             ))}
 
             {!isLoading && items?.length === 0 && (
-              <div className="w-full py-12 flex flex-col items-center justify-center opacity-50 border-2 border-dashed border-gray-100">
-                <p className="text-sm font-bold m-0">
+              <div className="w-full py-12 flex flex-col items-center justify-center border border-dashed border-card-border dark:border-slate-800 rounded-lg">
+                <p className="text-sm font-semibold text-text-sub m-0">
                   No Data For Selected Month
                 </p>
               </div>
             )}
           </div>
-        </Spin>
+        </Spinner>
       </div>
-    </DashboardCard>
+    </div>
   );
 };
 

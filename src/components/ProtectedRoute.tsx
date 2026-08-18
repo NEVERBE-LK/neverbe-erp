@@ -1,6 +1,8 @@
 import { Navigate, useLocation } from "react-router-dom";
 import { useAppSelector } from "@/lib/hooks";
-import { Spin } from "antd";
+import Spinner from "@/pages/components/shared/Spinner";
+
+const PRIVILEGED_ROLES = ["ADMIN", "SUPERADMIN", "MANAGER", "OWNER"];
 
 export default function ProtectedRoute({
   children,
@@ -14,8 +16,8 @@ export default function ProtectedRoute({
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen bg-gray-50">
-        <Spin size="large" />
+      <div className="flex items-center justify-center h-screen bg-canvas dark:bg-canvas-dark">
+        <Spinner size="large" tip="AUTHENTICATING..." />
       </div>
     );
   }
@@ -25,12 +27,10 @@ export default function ProtectedRoute({
   }
 
   if (permission) {
-    const isSpecialRole =
-      currentUser.role === "ADMIN" ||
-      currentUser.role === "SUPERADMIN" ||
-      currentUser.role === "Manager";
+    const normalizedRole = currentUser.role?.toUpperCase() ?? "";
+    const isPrivileged = PRIVILEGED_ROLES.includes(normalizedRole);
 
-    if (!isSpecialRole && !currentUser.permissions?.includes(permission)) {
+    if (!isPrivileged && !currentUser.permissions?.includes(permission)) {
       return <Navigate to="/unauthorized" replace />;
     }
   }

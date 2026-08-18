@@ -381,29 +381,6 @@ const OrdersPage = () => {
     return dateValue || "-";
   };
 
-  // Dynamic Metrics Calculation for current view
-  const metrics = useMemo(() => {
-    let totalRevenue = 0;
-    let pendingPaymentsCount = 0;
-    let activeFulfillmentsCount = 0;
-
-    orders.forEach((o) => {
-      totalRevenue += o.total || 0;
-      if (o.paymentStatus?.toLowerCase() === "pending") {
-        pendingPaymentsCount++;
-      }
-      if (o.status?.toLowerCase() === "processing" || o.status?.toLowerCase() === "pending") {
-        activeFulfillmentsCount++;
-      }
-    });
-
-    return {
-      totalRevenue,
-      pendingPaymentsCount,
-      activeFulfillmentsCount,
-    };
-  }, [orders]);
-
   const getSourceBadge = (source: string | undefined) => {
     if (!source) return null;
     const src = source.toLowerCase();

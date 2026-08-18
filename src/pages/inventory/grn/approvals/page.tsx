@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { Card, Button, Space, Table, Spin, Typography } from "antd";
+import { Button, Space, Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import {
   IconEye,
@@ -17,6 +17,7 @@ import toast from "react-hot-toast";
 import { useAppSelector } from "@/lib/hooks";
 import { RootState } from "@/lib/store";
 import { useConfirmationDialog } from "@/contexts/ConfirmationDialogContext";
+import Spinner from "@/pages/components/shared/Spinner";
 
 interface GRN {
   id: string;
@@ -86,8 +87,8 @@ const GRNApprovalsPage = () => {
       key: "grnNumber",
       render: (_, grn) => (
         <Space>
-          <IconFileText size={16} className="text-gray-400" />
-          <span className="font-mono font-bold text-gray-900 text-sm">
+          <IconFileText size={16} className="text-slate-400" />
+          <span className="font-mono font-bold text-slate-900 dark:text-slate-100 text-sm">
             {grn.grnNumber}
           </span>
         </Space>
@@ -97,7 +98,7 @@ const GRNApprovalsPage = () => {
       title: "PO Number",
       key: "poNumber",
       render: (_, grn) => (
-        <span className="font-mono text-gray-600 text-xs">
+        <span className="font-mono text-slate-500 dark:text-slate-400 text-xs">
           {grn.poNumber}
         </span>
       ),
@@ -106,7 +107,7 @@ const GRNApprovalsPage = () => {
       title: "Supplier",
       key: "supplierName",
       render: (_, grn) => (
-        <span className="font-semibold text-gray-700 text-sm">
+        <span className="font-semibold text-slate-800 dark:text-slate-200 text-sm">
           {grn.supplierName}
         </span>
       ),
@@ -115,7 +116,7 @@ const GRNApprovalsPage = () => {
       title: "Amount",
       key: "totalAmount",
       render: (_, grn) => (
-        <span className="font-bold text-gray-900">
+        <span className="font-bold text-slate-900 dark:text-slate-100">
           Rs {grn.totalAmount.toLocaleString()}
         </span>
       ),
@@ -125,8 +126,8 @@ const GRNApprovalsPage = () => {
       align: "right",
       key: "receivedDate",
       render: (_, grn) => (
-        <Space className="text-gray-500 text-xs font-bold">
-          <IconCalendar size={14} className="text-gray-400" />
+        <Space className="text-slate-500 dark:text-slate-400 text-xs font-semibold">
+          <IconCalendar size={14} className="text-slate-400" />
           <span>{grn.receivedDate}</span>
         </Space>
       ),
@@ -139,7 +140,7 @@ const GRNApprovalsPage = () => {
         <div className="flex justify-end gap-2">
           <Link
             to={`/inventory/grn/${grn.id}`}
-            className="p-2 hover:bg-gray-100 inline-flex rounded-xl transition-colors text-gray-500 hover:text-black"
+            className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 inline-flex rounded-xl transition-colors text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
             title="View Details"
           >
             <IconEye size={18} />
@@ -149,7 +150,7 @@ const GRNApprovalsPage = () => {
             onClick={() => handleUpdateStatus(grn.id, "APPROVED")}
             disabled={updatingId !== null}
             icon={<IconCheck size={16} />}
-            className="bg-green-600 hover:bg-green-700 border-none rounded-xl h-9 px-4 font-bold text-xs uppercase tracking-wider flex items-center gap-1.5"
+            className="bg-slate-900 dark:bg-slate-100 hover:bg-slate-800 dark:hover:bg-white text-white dark:text-slate-900 font-semibold text-xs rounded-xl h-9 px-4 shadow-xs cursor-pointer transition-all border-none flex items-center gap-1.5"
           >
             Approve
           </Button>
@@ -158,7 +159,7 @@ const GRNApprovalsPage = () => {
             onClick={() => handleUpdateStatus(grn.id, "REJECTED")}
             disabled={updatingId !== null}
             icon={<IconX size={16} />}
-            className="rounded-xl h-9 px-4 font-bold text-xs uppercase tracking-wider flex items-center gap-1.5"
+            className="rounded-xl h-9 px-4 font-semibold text-xs border-rose-200 dark:border-rose-800/60 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 flex items-center gap-1.5"
           >
             Reject
           </Button>
@@ -175,79 +176,86 @@ const GRNApprovalsPage = () => {
     <PageContainer title="GRN Approvals">
       <div className="w-full space-y-6">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between sm:items-end mb-4 gap-4">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-2 gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-1.5 h-10 bg-amber-500 rounded-full" />
+            <div className="w-1.5 h-7 bg-slate-900 dark:bg-slate-100 rounded-full" />
             <div className="flex flex-col">
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 leading-none mb-1">
+              <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400 dark:text-slate-500 leading-none mb-1 font-mono">
                 Inventory Control
               </span>
-              <h2 className="text-2xl sm:text-4xl font-black text-gray-900 tracking-tight leading-none">
-                GRN Approvals
-              </h2>
+              <div className="flex items-center gap-2.5">
+                <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 tracking-tight leading-none">
+                  GRN Approvals
+                </h2>
+                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200/80 dark:border-slate-700/80">
+                  {grns.length} pending
+                </span>
+              </div>
             </div>
           </div>
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-4">
-          <Card className="border-none shadow-sm bg-gradient-to-br from-amber-50/50 to-orange-50/20 rounded-2xl">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-2">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 shadow-xs">
             <div className="flex items-center justify-between">
               <div>
-                <Typography.Text type="secondary" className="text-xs uppercase tracking-wider font-semibold">
+                <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400 dark:text-slate-500 font-mono">
                   Pending Approvals
-                </Typography.Text>
-                <div className="text-3xl font-black text-slate-800 mt-1">
+                </span>
+                <div className="text-2xl font-bold text-slate-900 dark:text-slate-100 mt-1">
                   {grns.length}
                 </div>
               </div>
-              <div className="p-3 bg-amber-500/10 text-amber-600 rounded-xl">
-                <IconUser size={24} />
+              <div className="p-2.5 bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 rounded-xl border border-amber-100 dark:border-amber-900/50">
+                <IconUser size={20} />
               </div>
             </div>
-          </Card>
-          <Card className="border-none shadow-sm bg-gradient-to-br from-emerald-50/50 to-teal-50/20 rounded-2xl">
+          </div>
+          <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 shadow-xs">
             <div className="flex items-center justify-between">
               <div>
-                <Typography.Text type="secondary" className="text-xs uppercase tracking-wider font-semibold">
+                <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400 dark:text-slate-500 font-mono">
                   Total Value Pending
-                </Typography.Text>
-                <div className="text-2xl font-black text-slate-800 mt-1 truncate">
+                </span>
+                <div className="text-2xl font-bold text-slate-900 dark:text-slate-100 mt-1 truncate">
                   Rs {totalValue.toLocaleString()}
                 </div>
               </div>
-              <div className="p-3 bg-emerald-500/10 text-emerald-600 rounded-xl">
-                <IconPigMoney size={24} />
+              <div className="p-2.5 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 rounded-xl border border-emerald-100 dark:border-emerald-900/50">
+                <IconPigMoney size={20} />
               </div>
             </div>
-          </Card>
+          </div>
         </div>
 
         {/* Table */}
-        <div className="mt-2 bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-none">
-          <Table
-            scroll={{ x: 1000 }}
-            bordered
-            columns={columns}
-            dataSource={grns}
-            loading={loading}
-            rowKey="id"
-            pagination={{ pageSize: 15, position: ["bottomRight"] }}
-            size="middle"
-            className="rounded-2xl overflow-hidden ant-table-fluid"
-            locale={{
-              emptyText: (
-                <div className="py-12 flex flex-col items-center justify-center text-gray-400 font-medium">
-                  <IconCheck size={40} className="text-green-500 mb-2" />
-                  <span>No Goods Received Notes pending approval</span>
-                </div>
-              )
-            }}
-          />
-        </div>
+        <Spinner spinning={loading}>
+          <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl shadow-xs overflow-hidden [&_.ant-table]:!bg-transparent [&_.ant-table-thead>tr>th]:!bg-slate-50/80 [&_.ant-table-thead>tr>th]:dark:!bg-slate-800/60 [&_.ant-table-thead>tr>th]:!text-slate-500 [&_.ant-table-thead>tr>th]:!font-bold [&_.ant-table-thead>tr>th]:!text-[11px] [&_.ant-table-thead>tr>th]:!uppercase [&_.ant-table-thead>tr>th]:!tracking-wider [&_.ant-table-thead>tr>th]:!border-b [&_.ant-table-thead>tr>th]:!border-slate-100 [&_.ant-table-thead>tr>th]:dark:!border-slate-800 [&_.ant-table-tbody>tr]:hover:!bg-slate-50/60 [&_.ant-table-tbody>tr]:dark:hover:!bg-slate-800/40 [&_.ant-table-tbody>tr>td]:!border-b [&_.ant-table-tbody>tr>td]:!border-slate-100 [&_.ant-table-tbody>tr>td]:dark:!border-slate-800/60 [&_.ant-table-tbody>tr>td]:!py-3.5">
+            <Table
+              scroll={{ x: 1000 }}
+              bordered={false}
+              columns={columns}
+              dataSource={grns}
+              rowKey="id"
+              pagination={{ pageSize: 15, position: ["bottomRight"] }}
+              size="middle"
+              className="rounded-2xl overflow-hidden ant-table-fluid"
+              locale={{
+                emptyText: (
+                  <div className="py-12 flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 font-medium">
+                    <IconCheck size={40} className="text-emerald-500 mb-2" />
+                    <span>No Goods Received Notes pending approval</span>
+                  </div>
+                )
+              }}
+            />
+          </div>
+        </Spinner>
       </div>
     </PageContainer>
   );
 };
 
 export default GRNApprovalsPage;
+

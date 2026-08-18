@@ -16,6 +16,7 @@ import {
 } from "@tabler/icons-react";
 import { useConfirmationDialog } from "@/contexts/ConfirmationDialogContext";
 import { logoutUserAction } from "@/actions/authActions";
+import { clearUser } from "@/lib/authSlice/authSlice";
 import api from "@/lib/api";
 import toast from "react-hot-toast";
 import {
@@ -106,7 +107,8 @@ const ProfilePage = () => {
   const handleLogout = async () => {
     try {
       await logoutUserAction();
-      navigate("/");
+      dispatch(clearUser());
+      navigate("/login");
       toast.success("LOGGED OUT SUCCESSFULLY");
     } catch (error) {
       toast.error("FAILED TO LOGOUT");
@@ -126,7 +128,8 @@ const ProfilePage = () => {
           await api.delete(`/api/v1/erp/users/${currentUser?.userId}`);
 
           await logoutUserAction();
-          navigate("/");
+          dispatch(clearUser());
+          navigate("/login");
           toast.success("ACCOUNT DELETED");
         } catch (error: Error | unknown) {
           console.error(error);

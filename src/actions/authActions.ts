@@ -10,8 +10,8 @@ import api from "@/lib/api";
 
 export const logoutUserAction = async () => {
   try {
+    window.localStorage.removeItem("nvrUser");
     await signOut(auth);
-    // Let Firebase handle logout, we don't strictly need the server for it
   } catch (e: unknown) {
     throw new Error((e as Error).message);
   }

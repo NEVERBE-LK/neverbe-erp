@@ -388,16 +388,6 @@ const UsersPage = () => {
     ? users.filter(isAnonymousUser)
     : users.filter((u) => !isAnonymousUser(u));
 
-  // Stats
-  const stats = {
-    total: pagination.total,
-    active: displayedUsers.filter((u) => u.status).length,
-    inactive: displayedUsers.filter((u) => !u.status).length,
-    admins: displayedUsers.filter((u) =>
-      ["ADMIN", "OWNER"].includes(u.role?.toUpperCase()),
-    ).length,
-  };
-
   const handleRowExport = (user: User) => {
     const exportData = [
       {

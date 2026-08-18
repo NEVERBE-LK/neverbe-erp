@@ -9,11 +9,8 @@ import {
   IconEdit,
   IconTrash,
   IconEye,
-  IconPackage,
-  IconTrendingUp,
-  IconDatabase,
-  IconActivity,
   IconCopy,
+  IconDotsVertical,
 } from "@tabler/icons-react";
 import { Product } from "@/model/Product";
 import ProductFormModal from "./components/ProductFormModal";
@@ -26,16 +23,14 @@ import {
   Button,
   Input,
   Select,
-  Tag,
   Badge,
-  Space,
-  Tooltip,
   Form,
-  Card,
-  Typography,
   Switch,
+  Dropdown,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
+import type { MenuProps } from "antd";
+import Spinner from "@/pages/components/shared/Spinner";
 
 export interface DropdownOption {
   id: string;
@@ -66,12 +61,6 @@ const ProductPage = () => {
     current: 1,
     pageSize: 10,
     total: 0,
-  });
-  const [stats, setStats] = useState({
-    totalProducts: 0,
-    activeProducts: 0,
-    totalStock: 0,
-    avgMargin: 0,
   });
 
   // --- Data Fetching ---
@@ -114,9 +103,6 @@ const ProductPage = () => {
         ...prev,
         total: response.data.rowCount || 0,
       }));
-      if (response.data.stats) {
-        setStats(response.data.stats);
-      }
     } catch (e) {
       console.error("Failed to fetch products", e);
       toast.error("Failed to fetch products");
@@ -266,30 +252,30 @@ const ProductPage = () => {
       title: "Product Details",
       key: "details",
       render: (_, record) => (
-        <Space>
+        <div className="flex items-center gap-3">
           {record.thumbnail ? (
             <img
               src={record.thumbnail.url}
               alt="thumb"
-              className="w-10 h-10 object-cover rounded-lg border border-gray-200"
+              className="w-10 h-10 object-cover rounded-lg border border-card-border dark:border-card-border-dark"
             />
           ) : (
-            <div className="w-10 h-10 bg-gray-100 rounded-lg"></div>
+            <div className="w-10 h-10 bg-slate-100 dark:bg-slate-800 rounded-lg"></div>
           )}
           <div>
-            <Typography.Text strong className="block">
+            <span className="text-sm font-semibold text-text-main dark:text-text-main-dark block">
               {record.name}
-            </Typography.Text>
-            <Space size={4} className="mt-1">
-              <Tag className="m-0 text-[10px] uppercase border-gray-200">
+            </span>
+            <div className="flex items-center gap-1 mt-1">
+              <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-text-sub dark:text-slate-400">
                 {record.brand}
-              </Tag>
-              <Tag className="m-0 text-[10px] uppercase border-gray-200">
+              </span>
+              <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-text-sub dark:text-slate-400">
                 {record.category}
-              </Tag>
-            </Space>
+              </span>
+            </div>
           </div>
-        </Space>
+        </div>
       ),
     },
 
@@ -309,35 +295,35 @@ const ProductPage = () => {
         const profit = discountedPrice - costPrice;
         const margin = discountedPrice > 0 ? Math.round((profit / discountedPrice) * 100) : 0;
 
-        let marginColor = "red";
-        if (margin >= 40) marginColor = "green";
-        else if (margin >= 20) marginColor = "orange";
+        let marginColor = "text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/30";
+        if (margin >= 40) marginColor = "text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30";
+        else if (margin >= 20) marginColor = "text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30";
 
         return (
           <div className="flex flex-col items-end gap-1">
-            <div className="text-xs text-gray-500">
-              Cost: <span className="font-semibold text-gray-700">LKR {costPrice.toLocaleString()}</span>
+            <div className="text-xs text-text-sub dark:text-slate-500">
+              Cost: <span className="font-semibold text-text-main dark:text-text-main-dark">LKR {costPrice.toLocaleString()}</span>
             </div>
             <div className="flex items-center gap-1.5">
               {hasDiscount && (
-                <span className="text-[10px] line-through text-gray-400">
+                <span className="text-[10px] line-through text-text-sub dark:text-slate-600">
                   LKR {record.sellingPrice?.toLocaleString()}
                 </span>
               )}
-              <span className={`font-bold text-sm ${hasDiscount ? "text-green-600" : "text-gray-900"}`}>
+              <span className={`font-bold text-sm ${hasDiscount ? "text-emerald-600 dark:text-emerald-400" : "text-text-main dark:text-text-main-dark"}`}>
                 LKR {discountedPrice.toLocaleString()}
               </span>
             </div>
             {discountedPrice > 0 && (
               <div className="flex items-center gap-1 mt-0.5">
                 {hasDiscount && (
-                  <Tag color="green" className="m-0 text-[9px] font-black px-1 py-0 border-none leading-none">
+                  <span className="text-[9px] font-bold px-1 py-0 rounded bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400">
                     -{record.discount}%
-                  </Tag>
+                  </span>
                 )}
-                <Tag color={marginColor} className="m-0 text-[10px] font-bold px-1.5 py-0.5 leading-none">
+                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${marginColor}`}>
                   {margin}% Margin
-                </Tag>
+                </span>
               </div>
             )}
           </div>
@@ -363,10 +349,10 @@ const ProductPage = () => {
 
         return (
           <div className="flex flex-col items-center gap-1">
-            <span className="font-black text-sm text-gray-800">
+            <span className="font-bold text-sm text-text-main dark:text-text-main-dark">
               {count} Units
             </span>
-            <Badge status={statusColor as any} text={<span className="text-xs font-semibold text-gray-500 uppercase">{statusText}</span>} />
+            <Badge status={statusColor as any} text={<span className="text-xs font-semibold text-text-sub dark:text-slate-500 uppercase">{statusText}</span>} />
           </div>
         );
       },
@@ -400,127 +386,82 @@ const ProductPage = () => {
       ),
     },
     {
-      title: "Actions",
+      title: "",
       key: "actions",
-      render: (_, record) => (
-        <Space>
-          <Tooltip title="View">
-            <Button
-              size="small"
-              icon={<IconEye size={16} />}
-              onClick={() =>
-                navigate(`/master/products/${record.productId}/view`)
-              }
-            />
-          </Tooltip>
-          <Tooltip title="Edit">
-            <Button
-              size="small"
-              icon={<IconEdit size={16} />}
-              onClick={() => handleOpenEditModal(record)}
-            />
-          </Tooltip>
-          <Tooltip title="Duplicate">
-            <Button
-              size="small"
-              icon={<IconCopy size={16} />}
-              onClick={() => handleDuplicateProduct(record)}
-            />
-          </Tooltip>
-          <Tooltip title="Delete">
-            <Button
-              size="small"
-              danger
-              icon={<IconTrash size={16} />}
-              onClick={() => handleDeleteProduct(record.productId!)}
-            />
-          </Tooltip>
-        </Space>
-      ),
+      width: 50,
+      align: "center" as const,
+      render: (_, record) => {
+        const items: MenuProps["items"] = [
+          {
+            key: "view",
+            icon: <IconEye size={14} />,
+            label: "View",
+            onClick: () => navigate(`/master/products/${record.productId}/view`),
+          },
+          {
+            key: "edit",
+            icon: <IconEdit size={14} />,
+            label: "Edit",
+            onClick: () => handleOpenEditModal(record),
+          },
+          {
+            key: "duplicate",
+            icon: <IconCopy size={14} />,
+            label: "Duplicate",
+            onClick: () => handleDuplicateProduct(record),
+          },
+          { type: "divider" },
+          {
+            key: "delete",
+            icon: <IconTrash size={14} />,
+            label: "Delete",
+            danger: true,
+            onClick: () => handleDeleteProduct(record.productId!),
+          },
+        ];
+        return (
+          <Dropdown menu={{ items }} trigger={["click"]} placement="bottomRight">
+            <button className="p-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors cursor-pointer">
+              <IconDotsVertical size={16} />
+            </button>
+          </Dropdown>
+        );
+      },
     },
   ];
 
   return (
     <PageContainer title="Products" description="Products Management">
-      <Space direction="vertical" size="large" className="w-full">
-        {/* PREMIUM HEADER */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 gap-4">
+      <div className="space-y-6">
+        {/* Page Header */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-1.5 h-10 bg-green-600 rounded-full" />
+            <div className="w-1.5 h-7 bg-slate-900 dark:bg-slate-100 rounded-full" />
             <div className="flex flex-col">
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 leading-none mb-1">
+              <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400 dark:text-slate-500 leading-none mb-1 font-mono">
                 Master Data Management
               </span>
-              <h2 className="text-4xl font-black text-gray-900 tracking-tight leading-none">
-                Products
-              </h2>
+              <div className="flex items-center gap-2.5">
+                <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 tracking-tight leading-none">
+                  Products
+                </h2>
+                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200/80 dark:border-slate-700/80">
+                  {pagination.total} items
+                </span>
+              </div>
             </div>
           </div>
-          <Button
-            type="primary"
-            size="large"
-            icon={<IconPlus size={18} />}
+          <button
             onClick={handleOpenCreateModal}
-            className="bg-black hover:bg-gray-800 border-none h-12 px-6 rounded-lg text-sm font-bold shadow-lg shadow-black/10 flex items-center gap-2 self-start md:self-auto"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-white text-white dark:text-slate-900 text-xs font-semibold shadow-xs hover:shadow transition-all cursor-pointer self-start md:self-auto"
           >
+            <IconPlus size={16} />
             New Product
-          </Button>
-        </div>
-        
-        {/* KPI SUMMARY CARDS */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-2">
-          <Card size="small" className="shadow-sm hover:shadow-md transition-shadow border-gray-100 rounded-xl overflow-hidden">
-            <div className="flex justify-between items-center p-2">
-              <div>
-                <div className="text-[10px] font-black uppercase tracking-wider text-gray-400">Total Products</div>
-                <div className="text-2xl font-black text-gray-900 mt-1">{stats.totalProducts}</div>
-              </div>
-              <div className="p-2.5 bg-blue-50 text-blue-600 rounded-xl">
-                <IconDatabase size={20} />
-              </div>
-            </div>
-          </Card>
-          <Card size="small" className="shadow-sm hover:shadow-md transition-shadow border-gray-100 rounded-xl overflow-hidden">
-            <div className="flex justify-between items-center p-2">
-              <div>
-                <div className="text-[10px] font-black uppercase tracking-wider text-gray-400">Active Listing</div>
-                <div className="text-2xl font-black text-green-600 mt-1">
-                  {stats.activeProducts} <span className="text-xs font-normal text-gray-400">/ {stats.totalProducts}</span>
-                </div>
-              </div>
-              <div className="p-2.5 bg-green-50 text-green-600 rounded-xl">
-                <IconActivity size={20} />
-              </div>
-            </div>
-          </Card>
-          <Card size="small" className="shadow-sm hover:shadow-md transition-shadow border-gray-100 rounded-xl overflow-hidden">
-            <div className="flex justify-between items-center p-2">
-              <div>
-                <div className="text-[10px] font-black uppercase tracking-wider text-gray-400">Catalog Stock</div>
-                <div className="text-2xl font-black text-gray-900 mt-1">{stats.totalStock} <span className="text-xs font-normal text-gray-400">Units</span></div>
-              </div>
-              <div className="p-2.5 bg-amber-50 text-amber-600 rounded-xl">
-                <IconPackage size={20} />
-              </div>
-            </div>
-          </Card>
-          <Card size="small" className="shadow-sm hover:shadow-md transition-shadow border-gray-100 rounded-xl overflow-hidden">
-            <div className="flex justify-between items-center p-2">
-              <div>
-                <div className="text-[10px] font-black uppercase tracking-wider text-gray-400">Average Margin</div>
-                <div className="text-2xl font-black text-emerald-600 mt-1">
-                  {stats.avgMargin}%
-                </div>
-              </div>
-              <div className="p-2.5 bg-emerald-50 text-emerald-600 rounded-xl">
-                <IconTrendingUp size={20} />
-              </div>
-            </div>
-          </Card>
+          </button>
         </div>
 
         {/* Filter bar */}
-        <Card size="small" className="shadow-sm !mb-4">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 shadow-xs">
           <Form
             form={form}
             layout="vertical"
@@ -531,19 +472,19 @@ const ProductPage = () => {
               status: "all",
               listing: "all",
             }}
-            className="w-full p-2"
+            className="w-full"
           >
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 items-end">
               <Form.Item name="search" label="Search" className="!mb-0">
                 <Input
-                  prefix={<IconSearch size={15} className="text-gray-400" />}
+                  prefix={<IconSearch size={15} className="text-slate-400" />}
                   placeholder="Search products..."
                   allowClear
-                  className="w-full"
+                  className="w-full rounded-xl"
                 />
               </Form.Item>
               <Form.Item name="category" label="Category" className="!mb-0">
-                <Select className="w-full">
+                <Select className="w-full rounded-xl">
                   <Option value="all">All Categories</Option>
                   {categories.map((c) => (
                     <Option key={c.id} value={c.label}>
@@ -553,7 +494,7 @@ const ProductPage = () => {
                 </Select>
               </Form.Item>
               <Form.Item name="brand" label="Brand" className="!mb-0">
-                <Select className="w-full">
+                <Select className="w-full rounded-xl">
                   <Option value="all">All Brands</Option>
                   {brands.map((b) => (
                     <Option key={b.id} value={b.label}>
@@ -563,14 +504,14 @@ const ProductPage = () => {
                 </Select>
               </Form.Item>
               <Form.Item name="status" label="Status" className="!mb-0">
-                <Select className="w-full">
+                <Select className="w-full rounded-xl">
                   <Option value="all">All Status</Option>
                   <Option value="true">Active</Option>
                   <Option value="false">Inactive</Option>
                 </Select>
               </Form.Item>
               <Form.Item name="listing" label="Listing" className="!mb-0">
-                <Select className="w-full">
+                <Select className="w-full rounded-xl">
                   <Option value="all">All Listing</Option>
                   <Option value="true">Listed</Option>
                   <Option value="false">Unlisted</Option>
@@ -578,41 +519,42 @@ const ProductPage = () => {
               </Form.Item>
               <Form.Item className="!mb-0">
                 <div className="flex gap-2">
-                  <Button
-                    type="primary"
-                    htmlType="submit"
-                    icon={<IconFilter size={15} />}
-                    className="flex-1"
+                  <button
+                    type="submit"
+                    className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-white text-white dark:text-slate-900 text-xs font-semibold transition-all cursor-pointer"
                   >
+                    <IconFilter size={14} />
                     Filter
-                  </Button>
-                  <Button
-                    icon={<IconX size={15} />}
+                  </button>
+                  <button
+                    type="button"
                     onClick={handleClearFilters}
-                    className="flex-1"
+                    className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 text-xs font-medium transition-all cursor-pointer"
                   >
+                    <IconX size={14} />
                     Clear
-                  </Button>
+                  </button>
                 </div>
               </Form.Item>
             </div>
           </Form>
-        </Card>
+        </div>
 
-        {/* Table */}
-        <Table
-          scroll={{ x: 1000 }}
-          bordered
-          columns={columns}
-          dataSource={products}
-          rowKey="productId"
-          pagination={{ ...pagination, position: ["bottomRight"] }}
-          loading={loading}
-          onChange={handleTableChange}
-          size="small"
-          className="rounded-lg overflow-hidden border border-gray-100"
-        />
-      </Space>
+        {/* Table Container */}
+        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl shadow-xs overflow-hidden">
+          <Table
+            scroll={{ x: 1000 }}
+            columns={columns}
+            dataSource={products}
+            rowKey="productId"
+            pagination={{ ...pagination, position: ["bottomRight"] }}
+            loading={{ spinning: loading, indicator: <Spinner size="small" /> }}
+            onChange={handleTableChange}
+            size="small"
+            className="[&_.ant-table]:!bg-transparent [&_.ant-table-thead>tr>th]:!bg-slate-50/80 [&_.ant-table-thead>tr>th]:dark:!bg-slate-800/60 [&_.ant-table-thead>tr>th]:!text-slate-500 [&_.ant-table-thead>tr>th]:!font-bold [&_.ant-table-thead>tr>th]:!text-[11px] [&_.ant-table-thead>tr>th]:!uppercase [&_.ant-table-thead>tr>th]:!tracking-wider [&_.ant-table-thead>tr>th]:!border-b [&_.ant-table-thead>tr>th]:!border-slate-100 [&_.ant-table-thead>tr>th]:dark:!border-slate-800 [&_.ant-table-tbody>tr]:hover:!bg-slate-50/60 [&_.ant-table-tbody>tr]:dark:hover:!bg-slate-800/40 [&_.ant-table-tbody>tr>td]:!border-b [&_.ant-table-tbody>tr>td]:!border-slate-100 [&_.ant-table-tbody>tr>td]:dark:!border-slate-800/60 [&_.ant-table-tbody>tr>td]:!py-3.5"
+          />
+        </div>
+      </div>
 
       <ProductFormModal
         open={isModalOpen}

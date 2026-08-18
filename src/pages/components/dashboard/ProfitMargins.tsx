@@ -4,7 +4,9 @@ import { useAppSelector } from "@/lib/hooks";
 import { getProfitMarginsAction } from "@/actions/reportsActions";
 import toast from "react-hot-toast";
 import { IconPercentage, IconRefresh, IconCoin } from "@tabler/icons-react";
-import { Progress, Statistic, Button, Tag, Spin, Card } from "antd";
+import { Progress, Statistic, Button, Tag, Card } from "antd";
+import Spinner from "../shared/Spinner";
+import { useTheme } from "@/contexts/ThemeContext";
 
 interface MarginData {
   grossMargin: number;
@@ -16,13 +18,34 @@ const ProfitMargins = () => {
   const [data, setData] = useState<MarginData | null>(null);
   const [loading, setLoading] = useState(true);
   const { currentUser } = useAppSelector((state) => state.authSlice);
+  const { theme } = useTheme();
 
   useEffect(() => {
-    if (currentUser) fetchData();
+    if (!currentUser) return;
+
+    fetchData(true);
+
+    const interval = setInterval(() => {
+      if (document.visibilityState === "visible") {
+        fetchData(false);
+      }
+    }, 30000); // 30 seconds
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        fetchData(false);
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
   }, [currentUser]);
 
-  const fetchData = async () => {
-    setLoading(true);
+  const fetchData = async (showLoading = true) => {
+    if (showLoading) setLoading(true);
     try {
       const result = await getProfitMarginsAction();
       setData(result);
@@ -30,103 +53,86 @@ const ProfitMargins = () => {
       console.error(error);
       toast.error(error.message);
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   };
 
+  const isDark = theme === "dark";
+
   return (
-    <DashboardCard>
-      <div className="flex flex-col sm:flex-row sm:justify-between items-start sm:items-center mb-4 gap-2">
-        <div className="flex items-center gap-2">
-          <IconPercentage size={18} className="text-blue-500" />
-          <h4 className="text-lg font-bold text-black m-0">Profit Margins</h4>
-          <Button
-            type="text"
-            shape="circle"
-            icon={<IconRefresh size={14} />}
-            onClick={fetchData}
-            loading={loading}
-          />
-        </div>
-        <Tag className="m-0 text-xs font-bold text-gray-500 bg-gray-100 border-none">
-          This Month
-        </Tag>
-      </div>
-
-      <Spin spinning={loading}>
+    <DashboardCard 
+      title="Profit Margins" 
+      subtitle="This Month"
+    >
+      <Spinner spinning={loading}>
         {data ? (
-          <div className="flex flex-col gap-4">
-            <div>
-              <div className="flex justify-between items-center mb-1">
-                <span className="text-xs font-bold text-gray-500">
-                  Gross Margin
-                </span>
-                <span className="text-sm font-bold text-black">
-                  {data.grossMargin}%
-                </span>
-              </div>
-              <Progress
-                percent={data.grossMargin}
-                showInfo={false}
-                strokeColor="#9ca3af"
-                trailColor="#f3f4f6"
-                size="small"
-              />
-            </div>
-
-            <div>
-              <div className="flex justify-between items-center mb-1">
-                <span className="text-xs font-bold text-gray-500">
-                  Net Margin
-                </span>
-                <span className="text-sm font-bold text-black">
-                  {data.netMargin}%
-                </span>
-              </div>
-              <Progress
-                percent={data.netMargin}
-                showInfo={false}
-                strokeColor="#16a34a"
-                trailColor="#f3f4f6"
-                size="small"
-              />
-            </div>
-
-            <Card
-              size="small"
-              bordered={false}
-              className="bg-white shadow-sm border border-gray-100 rounded-2xl transition-all hover:-translate-y-0.5 mt-2"
-            >
-              <Statistic
-                title={
-                  <div className="flex items-center gap-2">
-                    <IconCoin size={14} className="text-gray-400" />
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                      Avg. Order Value
-                    </span>
-                  </div>
-                }
-                value={data.avgOrderValue}
-                precision={2}
-                prefix={
-                  <span className="text-[10px] font-bold text-gray-400 mr-1 uppercase">
-                    LKR
+          <div className="flex flex-col md:flex-row items-stretch gap-6 justify-between">
+            {/* Margins Progress Column */}
+            <div className="flex-1 flex flex-col justify-center gap-6">
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-xs font-semibold text-text-sub dark:text-slate-400">
+                    Gross Margin
                   </span>
-                }
-                valueStyle={{
-                  fontSize: "1.125rem",
-                  fontWeight: "900",
-                  color: "#1f2937",
-                }}
-              />
-            </Card>
+                  <span className="text-sm font-bold text-text-main dark:text-text-main-dark">
+                    {data.grossMargin}%
+                  </span>
+                </div>
+                <Progress
+                  percent={Math.max(0, data.grossMargin)}
+                  showInfo={false}
+                  strokeColor="#3b82f6"
+                  trailColor={isDark ? "#334155" : "#f1f5f9"}
+                  size="small"
+                />
+              </div>
+
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-xs font-semibold text-text-sub dark:text-slate-400">
+                    Net Margin
+                  </span>
+                  <span className={`text-sm font-bold ${data.netMargin >= 0 ? "text-emerald-500" : "text-rose-500"}`}>
+                    {data.netMargin}%
+                  </span>
+                </div>
+                <Progress
+                  percent={Math.max(0, data.netMargin)}
+                  showInfo={false}
+                  strokeColor={data.netMargin >= 0 ? "#10b981" : "#ef4444"}
+                  trailColor={isDark ? "#334155" : "#f1f5f9"}
+                  size="small"
+                />
+              </div>
+            </div>
+
+            {/* Average Order Value Card Column */}
+            <div className="w-full md:w-[220px] shrink-0">
+              <div className="h-full p-4 border border-card-border dark:border-card-border-dark bg-panel dark:bg-slate-900/50 rounded-lg flex flex-col justify-between min-h-[140px] transition-all hover:border-slate-200 dark:hover:border-slate-800">
+                <div className="flex items-center gap-1.5 mb-1">
+                  <IconCoin size={14} className="text-slate-400" />
+                  <span className="text-[10px] font-semibold text-text-sub dark:text-slate-500 uppercase tracking-wider">
+                    Avg. Order Value
+                  </span>
+                </div>
+                <div className="my-auto py-2">
+                  <span className="text-xs font-semibold text-text-sub dark:text-slate-500 uppercase block">LKR</span>
+                  <span className="text-lg font-bold text-text-main dark:text-text-main-dark tracking-tight">
+                    {data.avgOrderValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </span>
+                </div>
+                <span className="text-[9px] text-text-sub dark:text-slate-500 mt-2 block">
+                  Calculated from fulfilled sales
+                </span>
+              </div>
+            </div>
           </div>
         ) : (
-          <div className="text-center text-gray-400 py-8">
+          <div className="text-center text-slate-400 dark:text-slate-500 py-8 text-xs">
             No data available
           </div>
         )}
-      </Spin>
+      </Spinner>
     </DashboardCard>
   );
 };
