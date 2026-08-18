@@ -11,8 +11,6 @@ interface SMSTemplate {
   id: string;
   name: string;
   en: string;
-  si: string;
-  ta: string;
   variables: string[];
 }
 
@@ -80,8 +78,6 @@ const TemplatesPage = () => {
       render: (_, record: SMSTemplate) => (
         <Space size="small">
           {record.en && <Tag color="blue" className="text-[10px] uppercase font-bold px-2 rounded-full">EN</Tag>}
-          {record.si && <Tag color="green" className="text-[10px] uppercase font-bold px-2 rounded-full">SI</Tag>}
-          {record.ta && <Tag color="orange" className="text-[10px] uppercase font-bold px-2 rounded-full">TA</Tag>}
         </Space>
       )
     },
@@ -164,12 +160,6 @@ const TemplatesPage = () => {
                 <Form.Item name="en" label={<span className="font-bold text-blue-600 flex items-center gap-1"><IconLanguage size={14} /> English Content</span>} rules={[{ required: true }]}>
                   <Input.TextArea rows={4} placeholder="English version..." className="rounded-xl border-gray-200 shadow-sm" />
                 </Form.Item>
-                <Form.Item name="si" label={<span className="font-bold text-green-600 flex items-center gap-1"><IconLanguage size={14} /> Sinhala Content</span>}>
-                  <Input.TextArea rows={4} placeholder="Sinhala version..." className="rounded-xl border-gray-200 shadow-sm" />
-                </Form.Item>
-                <Form.Item name="ta" label={<span className="font-bold text-orange-600 flex items-center gap-1"><IconLanguage size={14} /> Tamil Content</span>}>
-                  <Input.TextArea rows={4} placeholder="Tamil version..." className="rounded-xl border-gray-200 shadow-sm" />
-                </Form.Item>
               </div>
             </Col>
             <Col span={8}>
@@ -188,7 +178,7 @@ const TemplatesPage = () => {
                 </div>
                 <Divider className="my-4" />
                 <div className="p-3 bg-blue-50 text-blue-800 rounded-lg text-[10px] leading-relaxed italic">
-                  <strong>Note:</strong> Messages will be concatenated (EN + SI + TA) before sending. Avoid excessive length to minimize SMS costs.
+                  <strong>Note:</strong> Avoid excessive length to minimize SMS costs.
                 </div>
               </div>
             </Col>

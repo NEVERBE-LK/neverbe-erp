@@ -412,12 +412,9 @@ export const OrderEditForm: React.FC<OrderEditFormProps> = ({
 
     showConfirmation({
       title: "UPDATE ORDER DETAILS",
-      message:
-        order?.integrity === false
-          ? "WARNING: THIS ORDER IS FLAGGED FOR SECURITY INTEGRITY. CONFIRM FULL EDIT?"
-          : "ARE YOU SURE YOU WANT TO SAVE THESE ORDER MODIFICATIONS? Stock and payments will be adjusted dynamically.",
+      message: "ARE YOU SURE YOU WANT TO SAVE THESE ORDER MODIFICATIONS? Stock and payments will be adjusted dynamically.",
       confirmText: "SAVE ORDER",
-      variant: order?.integrity === false ? "danger" : "default",
+      variant: "default",
       onSuccess: async () => {
         try {
           setIsSubmitting(true);
@@ -628,16 +625,6 @@ export const OrderEditForm: React.FC<OrderEditFormProps> = ({
 
   return (
     <div className="w-full animate-in fade-in duration-700 flex flex-col gap-6">
-      {/* ⚠️ Security Alert */}
-      {order.integrity === false && (
-        <Alert
-          message="Security Integrity Check Failed"
-          description="This order has failed system integrity checks. Please exercise extreme caution before proceeding."
-          type="error"
-          showIcon
-          className="shadow-sm rounded-2xl"
-        />
-      )}
 
       <Form
         form={form}

@@ -5,8 +5,6 @@ import {
   IconEye,
   IconFileInvoice,
   IconEdit,
-  IconCheck,
-  IconAlertCircle,
   IconSearch,
   IconFilter,
   IconX,
@@ -607,25 +605,6 @@ const OrdersPage = () => {
           </span>
         );
       },
-    },
-    {
-      title: "System Integrity",
-      key: "check",
-      align: "center" as const,
-      render: (_: any, order: Order) =>
-        order.integrity ? (
-          <Tooltip title="Security Integrity Verified">
-            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-green-600 bg-green-50 border border-green-200 rounded-full px-2 py-0.5">
-              <IconCheck size={12} /> SECURE
-            </span>
-          </Tooltip>
-        ) : (
-          <Tooltip title="Integrity Check Failed! Check records immediately.">
-            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-rose-600 bg-rose-50 border border-rose-200 rounded-full px-2 py-0.5 animate-pulse">
-              <IconAlertCircle size={12} /> FLAGGED
-            </span>
-          </Tooltip>
-        ),
     },
   ];
 

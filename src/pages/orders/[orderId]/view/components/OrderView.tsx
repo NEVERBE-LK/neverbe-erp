@@ -374,16 +374,6 @@ const OrderView = ({ orderId }: { orderId: string }) => {
 
   return (
     <div className="w-full flex flex-col gap-6">
-      {/* ⚠️ Security Alert */}
-      {order && order.integrity === false && (
-        <Alert
-          message="Security Integrity Check Failed"
-          description="This order has failed system integrity checks. Please exercise extreme caution before proceeding."
-          type="error"
-          showIcon
-          className="rounded-2xl border-none shadow-sm"
-        />
-      )}
 
       {/* Modern Header Action Panel */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 border border-gray-100 rounded-2xl shadow-sm">

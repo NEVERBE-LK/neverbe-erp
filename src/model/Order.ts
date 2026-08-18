@@ -20,7 +20,6 @@ export interface Order {
   discount: number;
   from: string;
   stockId?: string;
-  integrity: boolean;
   paymentReceived?: Payment[];
   sendNotification?: boolean;
 
