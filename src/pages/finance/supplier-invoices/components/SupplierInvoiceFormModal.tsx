@@ -1,14 +1,9 @@
-import { Spin, Button, Input, InputNumber, Select, Modal } from "antd";
+import { Button, Input, Select, Modal } from "antd";
 import api from "@/lib/api";
 import React, { useState, useEffect } from "react";
 import {
-  IconX,
-  IconLoader2,
   IconUpload,
-  IconCalendar,
-  IconFileText,
   IconPaperclip,
-  IconBuildingStore,
   IconCurrencyDollar,
 } from "@tabler/icons-react";
 import { SupplierInvoice } from "@/model/SupplierInvoice";
@@ -19,7 +14,7 @@ interface SupplierInvoiceFormModalProps {
   open: boolean;
   onClose: () => void;
   onSave: () => void;
-  invoice: SupplierInvoice | null; // null = create
+  invoice: SupplierInvoice | null;
 }
 
 const emptyForm = {
@@ -35,16 +30,6 @@ const emptyForm = {
   status: "PENDING",
 };
 
-const styles = {
-  label: "block text-xs font-bold text-gray-500   mb-2",
-  input:
-    "block w-full bg-[#f5f5f5] text-gray-900 text-sm font-medium px-4 py-3 rounded-lg border border-transparent focus:bg-white focus:border-gray-200 transition-all duration-200 outline-none placeholder:text-gray-400",
-  select:
-    "block w-full bg-[#f5f5f5] text-gray-900 text-sm font-medium px-4 py-3 rounded-lg border border-transparent focus:bg-white focus:border-gray-200 transition-all duration-200 outline-none appearance-none cursor-pointer",
-  fileButton:
-    "flex items-center justify-center w-full px-4 py-3 border-2 border-dashed border-gray-300 hover:border-gray-200 hover:bg-gray-50 transition-all cursor-pointer text-xs font-bold   text-gray-500 hover:text-black",
-};
-
 const SupplierInvoiceFormModal: React.FC<SupplierInvoiceFormModalProps> = ({
   open,
   onClose,
@@ -52,9 +37,7 @@ const SupplierInvoiceFormModal: React.FC<SupplierInvoiceFormModalProps> = ({
   invoice,
 }) => {
   const [formData, setFormData] = useState(emptyForm);
-  const [suppliers, setSuppliers] = useState<{ id: string; name: string }[]>(
-    [],
-  );
+  const [suppliers, setSuppliers] = useState<{ id: string; name: string }[]>([]);
   const [file, setFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
   const [fetchingSuppliers, setFetchingSuppliers] = useState(false);
@@ -89,11 +72,10 @@ const SupplierInvoiceFormModal: React.FC<SupplierInvoiceFormModalProps> = ({
     setFetchingSuppliers(true);
     try {
       const res = await api.get("/api/v1/erp/procurement/suppliers");
-      // Assuming api returns array of Supplier objects
       setSuppliers(
         res.data
           .filter((s: any) => s.status === "active")
-          .map((s: any) => ({ id: s.id, name: s.name })),
+          .map((s: any) => ({ id: s.id, name: s.name }))
       );
     } catch (error) {
       console.error(error);
@@ -103,9 +85,7 @@ const SupplierInvoiceFormModal: React.FC<SupplierInvoiceFormModalProps> = ({
   };
 
   const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-    >,
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => {
@@ -131,15 +111,13 @@ const SupplierInvoiceFormModal: React.FC<SupplierInvoiceFormModalProps> = ({
       !formData.amount ||
       !formData.dueDate
     ) {
-      toast("Missing required fields");
+      toast.error("Missing required fields");
       return;
     }
 
     setSaving(true);
     try {
       const formPayload = new FormData();
-
-      // Convert amount and paidAmount to numbers
       const processedData = {
         ...formData,
         amount: Number(formData.amount),
@@ -177,29 +155,34 @@ const SupplierInvoiceFormModal: React.FC<SupplierInvoiceFormModalProps> = ({
   return (
     <Modal
       open={open}
-      title={invoice ? "Edit Invoice" : "New Supplier Invoice"}
+      title={invoice ? "Edit Supplier Invoice" : "New Supplier Invoice"}
       onCancel={onClose}
       width={640}
       footer={
-        <div className="flex justify-end gap-3">
-          <Button onClick={onClose} disabled={saving}>
+        <div className="flex justify-end gap-2 pt-2">
+          <Button onClick={onClose} disabled={saving} className="rounded-xl h-10 font-bold text-xs">
             Cancel
           </Button>
-          <Button type="primary" onClick={handleSubmit} loading={saving}>
+          <Button
+            type="primary"
+            onClick={handleSubmit}
+            loading={saving}
+            className="bg-slate-900 dark:bg-slate-100 dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-200 border-none rounded-xl h-10 px-5 font-bold text-xs cursor-pointer"
+          >
             {invoice ? "Save Changes" : "Create Invoice"}
           </Button>
         </div>
       }
     >
-      <div className="space-y-6 pt-2">
+      <div className="space-y-4 pt-2">
         {/* Supplier & Invoice No */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className={styles.label}>
-              Supplier <span className="text-red-500">*</span>
+            <label className="block text-xs font-bold text-text-sub uppercase font-mono mb-1">
+              Supplier <span className="text-rose-500">*</span>
             </label>
             <Select
-              className="w-full"
+              className="w-full h-10"
               value={formData.supplierId || undefined}
               onChange={(val) => {
                 const sup = suppliers.find((s) => s.id === val);
@@ -216,24 +199,25 @@ const SupplierInvoiceFormModal: React.FC<SupplierInvoiceFormModalProps> = ({
             />
           </div>
           <div>
-            <label className={styles.label}>
-              Invoice Number <span className="text-red-500">*</span>
+            <label className="block text-xs font-bold text-text-sub uppercase font-mono mb-1">
+              Invoice Number <span className="text-rose-500">*</span>
             </label>
             <Input
               name="invoiceNumber"
               value={formData.invoiceNumber}
               onChange={handleChange}
-              placeholder="INV-001"
+              placeholder="e.g. INV-001"
               disabled={saving}
+              className="rounded-xl h-10 font-mono"
             />
           </div>
         </div>
 
         {/* Amounts */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className={styles.label}>
-              Total Amount <span className="text-red-500">*</span>
+            <label className="block text-xs font-bold text-text-sub uppercase font-mono mb-1">
+              Total Amount <span className="text-rose-500">*</span>
             </label>
             <Input
               type="number"
@@ -242,13 +226,14 @@ const SupplierInvoiceFormModal: React.FC<SupplierInvoiceFormModalProps> = ({
               onChange={handleChange}
               placeholder="0.00"
               disabled={saving}
-              prefix={
-                <IconCurrencyDollar size={16} className="text-gray-400" />
-              }
+              className="rounded-xl h-10 font-mono"
+              prefix={<IconCurrencyDollar size={16} className="text-text-sub" />}
             />
           </div>
           <div>
-            <label className={styles.label}>Paid Amount</label>
+            <label className="block text-xs font-bold text-text-sub uppercase font-mono mb-1">
+              Paid Amount
+            </label>
             <Input
               type="number"
               name="paidAmount"
@@ -256,26 +241,30 @@ const SupplierInvoiceFormModal: React.FC<SupplierInvoiceFormModalProps> = ({
               onChange={handleChange}
               placeholder="0.00"
               disabled={saving}
+              className="rounded-xl h-10 font-mono"
               suffix="LKR"
             />
           </div>
         </div>
 
         {/* Dates */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className={styles.label}>Issue Date</label>
+            <label className="block text-xs font-bold text-text-sub uppercase font-mono mb-1">
+              Issue Date
+            </label>
             <Input
               type="date"
               name="issueDate"
               value={formData.issueDate}
               onChange={handleChange}
               disabled={saving}
+              className="rounded-xl h-10 font-mono"
             />
           </div>
           <div>
-            <label className={styles.label}>
-              Due Date <span className="text-red-500">*</span>
+            <label className="block text-xs font-bold text-text-sub uppercase font-mono mb-1">
+              Due Date <span className="text-rose-500">*</span>
             </label>
             <Input
               type="date"
@@ -283,28 +272,34 @@ const SupplierInvoiceFormModal: React.FC<SupplierInvoiceFormModalProps> = ({
               value={formData.dueDate}
               onChange={handleChange}
               disabled={saving}
+              className="rounded-xl h-10 font-mono"
             />
           </div>
         </div>
 
         {/* Notes & Attachment */}
         <div>
-          <label className={styles.label}>Notes</label>
+          <label className="block text-xs font-bold text-text-sub uppercase font-mono mb-1">
+            Notes
+          </label>
           <Input.TextArea
             name="notes"
             value={formData.notes}
             onChange={handleChange}
             rows={3}
-            placeholder="Payment terms, item details..."
+            placeholder="Payment terms, PO reference, line item details..."
             disabled={saving}
+            className="rounded-xl"
           />
         </div>
 
         <div>
-          <label className={styles.label}>Attachment</label>
-          <label className={styles.fileButton}>
+          <label className="block text-xs font-bold text-text-sub uppercase font-mono mb-1">
+            Attachment
+          </label>
+          <label className="flex items-center justify-center w-full px-4 py-3 border-2 border-dashed border-card-border dark:border-card-border-dark hover:border-slate-400 transition-all cursor-pointer text-xs font-bold text-text-sub hover:text-text-main rounded-xl">
             <IconUpload size={16} className="mr-2" />
-            {file ? "Change File" : "Upload Invoice PDF/Image"}
+            {file ? "Change File" : "Upload Invoice PDF / Image"}
             <input
               type="file"
               className="hidden"
@@ -313,7 +308,7 @@ const SupplierInvoiceFormModal: React.FC<SupplierInvoiceFormModalProps> = ({
             />
           </label>
           {file && (
-            <div className="flex items-center gap-2 mt-2 text-xs font-bold text-black ">
+            <div className="flex items-center gap-2 mt-2 text-xs font-bold text-text-main dark:text-text-main-dark font-mono">
               <IconPaperclip size={14} />
               <span className="truncate">{file.name}</span>
             </div>
@@ -323,9 +318,9 @@ const SupplierInvoiceFormModal: React.FC<SupplierInvoiceFormModalProps> = ({
               href={invoice.attachment}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1 text-xs font-bold text-green-600 hover:underline mt-2  tracking-wide"
+              className="flex items-center gap-1 text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline mt-2 font-mono"
             >
-              <IconPaperclip size={12} /> View Current
+              <IconPaperclip size={14} /> View Current Attachment
             </a>
           )}
         </div>

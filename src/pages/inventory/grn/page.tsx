@@ -1,7 +1,7 @@
 import type { ColumnsType } from "antd/es/table";
 import React, { useState, useEffect, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Form, Input, Button, Space, Table, Select, Col, Row } from "antd";
+import { Form, Input, Button, Space, Table, Select, Col, Row, Dropdown, MenuProps } from "antd";
 import {
   IconEye,
   IconSearch,
@@ -12,6 +12,7 @@ import {
   IconCalendar,
   IconCheck,
   IconPigMoney,
+  IconDotsVertical,
 } from "@tabler/icons-react";
 import PageContainer from "@/pages/components/container/PageContainer";
 import api from "@/lib/api";
@@ -61,13 +62,7 @@ const GRN_STATUS_STYLING: Record<
     bg: "bg-rose-50 dark:bg-rose-950/40",
     text: "text-rose-700 dark:text-rose-400 border border-rose-200/60 dark:border-rose-800/40",
     dot: "bg-rose-500",
-    pulse: true,
-  },
-  COMPLETED: {
-    bg: "bg-indigo-50 dark:bg-indigo-950/40",
-    text: "text-indigo-700 dark:text-indigo-400 border border-indigo-200/60 dark:border-indigo-800/40",
-    dot: "bg-indigo-500",
-    pulse: true,
+    pulse: false,
   },
 };
 
@@ -99,6 +94,18 @@ const GRNListPage = () => {
       currentUser.role === "SUPERADMIN" ||
       currentUser.role === "Manager" ||
       currentUser.permissions?.includes("create_grn")
+    );
+  }, [currentUser]);
+
+  const canApproveGRN = useMemo(() => {
+    if (!currentUser) return false;
+    const role = (currentUser.role || "").toUpperCase();
+    return (
+      role === "ADMIN" ||
+      role === "SUPERADMIN" ||
+      role === "MANAGER" ||
+      role === "OWNER" ||
+      currentUser.permissions?.includes("approve_grn")
     );
   }, [currentUser]);
 
@@ -209,15 +216,30 @@ const GRNListPage = () => {
       title: "Actions",
       key: "actions",
       width: 80,
-      align: "center",
-      render: (_, grn) => (
-        <Link
-          to={`/inventory/grn/${grn.id}`}
-          className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 inline-flex rounded-xl transition-colors text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
-        >
-          <IconEye size={18} />
-        </Link>
-      ),
+      align: "right",
+      render: (_, grn) => {
+        const items: MenuProps["items"] = [
+          {
+            key: "view",
+            icon: <IconEye size={14} />,
+            label: "View GRN Details",
+            onClick: () => navigate(`/inventory/grn/${grn.id}`),
+          },
+        ];
+
+        return (
+          <div className="flex justify-end">
+            <Dropdown menu={{ items }} trigger={["click"]} placement="bottomRight">
+              <button
+                type="button"
+                className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer border-none bg-transparent"
+              >
+                <IconDotsVertical size={16} />
+              </button>
+            </Dropdown>
+          </div>
+        );
+      },
     },
   ];
 
@@ -225,36 +247,47 @@ const GRNListPage = () => {
     <PageContainer title="Goods Received Notes">
       <div className="w-full space-y-6">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-2 gap-4">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-1.5 h-7 bg-slate-900 dark:bg-slate-100 rounded-full" />
+            <div className="w-1 h-8 bg-brand dark:bg-brand-dark rounded-full" />
             <div className="flex flex-col">
-              <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400 dark:text-slate-500 leading-none mb-1 font-mono">
+              <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-text-sub dark:text-slate-500 leading-none mb-1 font-mono">
                 Inventory Control
               </span>
               <div className="flex items-center gap-2.5">
-                <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 tracking-tight leading-none">
+                <h2 className="text-2xl font-bold text-text-main dark:text-text-main-dark tracking-tight leading-none">
                   Goods Received Notes
                 </h2>
-                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200/80 dark:border-slate-700/80">
+                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-card-border dark:border-card-border-dark font-mono">
                   {filteredGRNs.length} GRNs
                 </span>
               </div>
             </div>
           </div>
-          <Button
-            type="primary"
-            icon={<IconPlus size={16} />}
-            onClick={() => navigate("/inventory/grn/create")}
-            disabled={!canCreate}
-            className="bg-slate-900 dark:bg-slate-100 hover:bg-slate-800 dark:hover:bg-white text-white dark:text-slate-900 font-semibold text-xs rounded-xl px-4 py-2.5 shadow-xs cursor-pointer transition-all h-auto border-none flex items-center gap-2"
-          >
-            New GRN
-          </Button>
+          <div className="flex items-center gap-2">
+            {canApproveGRN && (
+              <Button
+                onClick={() => navigate("/inventory/grn/approvals")}
+                icon={<IconCheck size={16} />}
+                className="rounded-xl h-10 font-bold text-xs border-card-border dark:border-card-border-dark bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-text-main dark:text-slate-200 cursor-pointer flex items-center gap-2"
+              >
+                GRN Approvals
+              </Button>
+            )}
+            <Button
+              type="primary"
+              icon={<IconPlus size={16} />}
+              onClick={() => navigate("/inventory/grn/create")}
+              disabled={!canCreate}
+              className="bg-slate-900 dark:bg-slate-100 hover:bg-slate-800 dark:hover:bg-slate-200 text-white dark:text-slate-900 font-bold text-xs rounded-xl px-5 py-2.5 shadow-xs cursor-pointer transition-all h-10 border-none flex items-center gap-2"
+            >
+              New GRN
+            </Button>
+          </div>
         </div>
 
         {/* Filters */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 shadow-xs">
+        <div className="bg-card dark:bg-card-dark border border-card-border dark:border-card-border-dark rounded-2xl p-4 shadow-xs">
           <Form
             form={form}
             layout="vertical"
@@ -263,15 +296,15 @@ const GRNListPage = () => {
             className="w-full"
           >
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 items-end">
-              <Form.Item name="search" label={<span className="text-xs font-semibold text-slate-600 dark:text-slate-400">Search</span>} className="!mb-0">
+              <Form.Item name="search" label={<span className="text-xs font-semibold text-text-sub dark:text-slate-400">Search</span>} className="!mb-0">
                 <Input
-                  prefix={<IconSearch size={15} className="text-slate-400" />}
+                  prefix={<IconSearch size={15} className="text-text-sub" />}
                   placeholder="Search by GRN#, PO#, or supplier..."
                   allowClear
-                  className="rounded-xl border-slate-200 dark:border-slate-700 bg-transparent text-slate-900 dark:text-slate-100 h-10 w-full"
+                  className="rounded-xl border-card-border dark:border-card-border-dark bg-transparent text-text-main dark:text-text-main-dark h-10 w-full"
                 />
               </Form.Item>
-              <Form.Item name="status" label={<span className="text-xs font-semibold text-slate-600 dark:text-slate-400">Status</span>} className="!mb-0">
+              <Form.Item name="status" label={<span className="text-xs font-semibold text-text-sub dark:text-slate-400">Status</span>} className="!mb-0">
                 <Select
                   placeholder="Select Status"
                   allowClear
@@ -291,14 +324,14 @@ const GRNListPage = () => {
                     type="primary"
                     htmlType="submit"
                     icon={<IconFilter size={15} />}
-                    className="bg-slate-900 dark:bg-slate-100 hover:bg-slate-800 dark:hover:bg-white text-white dark:text-slate-900 font-semibold text-xs rounded-xl px-4 py-2.5 shadow-xs cursor-pointer transition-all h-10 border-none flex-1 flex items-center justify-center gap-1.5"
+                    className="bg-slate-900 dark:bg-slate-100 hover:bg-slate-800 dark:hover:bg-slate-200 text-white dark:text-slate-900 font-bold text-xs rounded-xl px-4 py-2.5 shadow-xs cursor-pointer transition-all h-10 border-none flex-1 flex items-center justify-center gap-1.5"
                   >
                     Filter
                   </Button>
                   <Button
                     icon={<IconX size={15} />}
                     onClick={handleClearFilters}
-                    className="rounded-xl h-10 font-semibold text-xs border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 shadow-xs flex-1 flex items-center justify-center gap-1.5 cursor-pointer"
+                    className="rounded-xl h-10 font-medium text-xs border-card-border dark:border-card-border-dark hover:bg-slate-50 dark:hover:bg-slate-800 text-text-sub dark:text-slate-300 shadow-xs flex-1 flex items-center justify-center gap-1.5 cursor-pointer"
                   >
                     Clear
                   </Button>
@@ -310,10 +343,9 @@ const GRNListPage = () => {
 
         {/* Table */}
         <Spinner spinning={loading}>
-          <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl shadow-xs overflow-hidden [&_.ant-table]:!bg-transparent [&_.ant-table-thead>tr>th]:!bg-slate-50/80 [&_.ant-table-thead>tr>th]:dark:!bg-slate-800/60 [&_.ant-table-thead>tr>th]:!text-slate-500 [&_.ant-table-thead>tr>th]:!font-bold [&_.ant-table-thead>tr>th]:!text-[11px] [&_.ant-table-thead>tr>th]:!uppercase [&_.ant-table-thead>tr>th]:!tracking-wider [&_.ant-table-thead>tr>th]:!border-b [&_.ant-table-thead>tr>th]:!border-slate-100 [&_.ant-table-thead>tr>th]:dark:!border-slate-800 [&_.ant-table-tbody>tr]:hover:!bg-slate-50/60 [&_.ant-table-tbody>tr]:dark:hover:!bg-slate-800/40 [&_.ant-table-tbody>tr>td]:!border-b [&_.ant-table-tbody>tr>td]:!border-slate-100 [&_.ant-table-tbody>tr>td]:dark:!border-slate-800/60 [&_.ant-table-tbody>tr>td]:!py-3.5">
+          <div className="bg-card dark:bg-card-dark border border-card-border dark:border-card-border-dark rounded-2xl shadow-xs overflow-hidden [&_.ant-table]:!bg-transparent [&_.ant-table-thead>tr>th]:!bg-slate-50/80 [&_.ant-table-thead>tr>th]:dark:!bg-slate-800/60 [&_.ant-table-thead>tr>th]:!text-text-sub [&_.ant-table-thead>tr>th]:!font-bold [&_.ant-table-thead>tr>th]:!text-[11px] [&_.ant-table-thead>tr>th]:!uppercase [&_.ant-table-thead>tr>th]:!tracking-wider [&_.ant-table-thead>tr>th]:!border-b [&_.ant-table-thead>tr>th]:!border-card-border [&_.ant-table-thead>tr>th]:dark:!border-card-border-dark [&_.ant-table-tbody>tr]:hover:!bg-slate-50/60 [&_.ant-table-tbody>tr]:dark:hover:!bg-slate-800/40 [&_.ant-table-tbody>tr>td]:!border-b [&_.ant-table-tbody>tr>td]:!border-card-border [&_.ant-table-tbody>tr>td]:dark:!border-card-border-dark [&_.ant-table-tbody>tr>td]:!py-3.5">
             <Table
               scroll={{ x: 1000 }}
-              bordered={false}
               columns={columns}
               dataSource={filteredGRNs}
               rowKey={(r: GRN) => r.id}

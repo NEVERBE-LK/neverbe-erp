@@ -1,7 +1,7 @@
 import type { ColumnsType } from "antd/es/table";
-import { Button, Table, Input, Select, Switch, Modal } from "antd";
+import { Button, Table, Input, Select, Switch, Modal, Form, Dropdown } from "antd";
+import type { MenuProps } from "antd";
 import api from "@/lib/api";
-
 import React, { useState, useEffect } from "react";
 import {
   IconPlus,
@@ -11,12 +11,13 @@ import {
   IconFilter,
   IconX,
   IconSearch,
+  IconDotsVertical,
 } from "@tabler/icons-react";
 import PageContainer from "@/pages/components/container/PageContainer";
+import Spinner from "@/pages/components/shared/Spinner";
 import toast from "react-hot-toast";
 import { useAppSelector } from "@/lib/hooks";
 import { RootState } from "@/lib/store";
-import { Space, Tooltip, Card, Form } from "antd";
 
 interface ExpenseCategory {
   id: string;
@@ -37,12 +38,10 @@ const ExpenseCategoriesPage = () => {
     search: "",
   });
 
-  // Modal
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  // Form
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -51,7 +50,6 @@ const ExpenseCategoriesPage = () => {
   });
 
   const { currentUser } = useAppSelector((state: RootState) => state.authSlice);
-
   const [form] = Form.useForm();
 
   const fetchCategories = async () => {
@@ -110,7 +108,7 @@ const ExpenseCategoriesPage = () => {
 
   const handleSave = async () => {
     if (!formData.name.trim()) {
-      toast("Please enter a category name");
+      toast.error("Please enter a category name");
       return;
     }
 
@@ -120,10 +118,7 @@ const ExpenseCategoriesPage = () => {
       fd.append("data", JSON.stringify(formData));
 
       if (editingId) {
-        await api.put(
-          `/api/v1/erp/finance/expense-categories/${editingId}`,
-          fd,
-        );
+        await api.put(`/api/v1/erp/finance/expense-categories/${editingId}`, fd);
         toast.success("Category updated");
       } else {
         await api.post("/api/v1/erp/finance/expense-categories", fd);
@@ -152,72 +147,102 @@ const ExpenseCategoriesPage = () => {
       toast.error("Failed to delete category");
     }
   };
+
   const columns: ColumnsType<any> = [
-    { title: "Name", key: "name", render: (_, cat) => <>{cat.name}</> },
+    {
+      title: "Name",
+      key: "name",
+      render: (_, cat) => (
+        <span className="font-semibold text-xs text-text-main dark:text-text-main-dark">
+          {cat.name}
+        </span>
+      ),
+    },
     {
       title: "Description",
       key: "description",
-      render: (_, cat) => <>{cat.description || "-"}</>,
+      render: (_, cat) => (
+        <span className="text-xs text-text-sub dark:text-slate-400">
+          {cat.description || "—"}
+        </span>
+      ),
     },
     {
       title: "Type",
       key: "type",
       render: (_, cat) => (
-        <>
-          <span
-            className={`px-2 py-1 text-xs font-bold rounded-lg ${
-              cat.type === "expense"
-                ? "bg-red-50 text-red-700"
-                : "bg-green-50 text-green-700"
-            }`}
-          >
-            {cat.type}
-          </span>
-        </>
+        <span
+          className={`inline-flex items-center px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-full font-mono ${
+            cat.type === "expense"
+              ? "bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 border border-rose-200/60 dark:border-rose-800/40"
+              : "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/40"
+          }`}
+        >
+          {cat.type}
+        </span>
       ),
     },
     {
       title: "Status",
       key: "status",
       render: (_, cat) => (
-        <>
+        <span
+          className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-full font-mono ${
+            cat.status
+              ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/40"
+              : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-card-border dark:border-card-border-dark"
+          }`}
+        >
           <span
-            className={`px-2 py-1 text-xs font-bold rounded-lg ${
-              cat.status
-                ? "bg-green-50 text-green-700"
-                : "bg-gray-100 text-gray-500"
+            className={`w-1.5 h-1.5 rounded-full ${
+              cat.status ? "bg-emerald-500 animate-pulse" : "bg-slate-400"
             }`}
-          >
-            {cat.status ? "Active" : "Inactive"}
-          </span>
-        </>
+          />
+          {cat.status ? "ACTIVE" : "INACTIVE"}
+        </span>
       ),
     },
     {
-      title: "",
+      title: "Actions",
       key: "actions",
+      width: 60,
       align: "right",
-      render: (_, cat) => (
-        <Space>
-          <Tooltip title="Edit">
-            <Button
-              type="primary"
-              size="small"
-              icon={<IconEdit size={16} />}
-              onClick={() => openEditModal(cat)}
-            />
-          </Tooltip>
-          <Tooltip title="Delete">
-            <Button
-              type="primary"
-              size="small"
-              danger
-              icon={<IconTrash size={16} />}
-              onClick={() => handleDelete(cat.id)}
-            />
-          </Tooltip>
-        </Space>
-      ),
+      render: (_, cat) => {
+        const menuItems: MenuProps["items"] = [
+          {
+            key: "edit",
+            icon: <IconEdit size={14} />,
+            label: "Edit Category",
+            onClick: () => openEditModal(cat),
+          },
+          {
+            type: "divider" as const,
+          },
+          {
+            key: "delete",
+            icon: <IconTrash size={14} className="text-rose-600 dark:text-rose-400" />,
+            label: (
+              <span className="font-semibold text-rose-600 dark:text-rose-400">
+                Delete Category
+              </span>
+            ),
+            onClick: () => handleDelete(cat.id),
+          },
+        ];
+
+        return (
+          <div className="flex justify-end">
+            <Dropdown menu={{ items: menuItems }} trigger={["click"]} placement="bottomRight">
+              <button
+                type="button"
+                className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer border-none bg-transparent"
+              >
+                <IconDotsVertical size={16} />
+              </button>
+            </Dropdown>
+          </div>
+        );
+      },
     },
   ];
 
@@ -231,36 +256,38 @@ const ExpenseCategoriesPage = () => {
   });
 
   return (
-    <PageContainer
-      title="Expense Categories"
-      description="Financial Classifications"
-    >
-      <Space direction="vertical" size="large" className="w-full">
-        {/* PREMIUM HEADER */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 gap-4">
+    <PageContainer title="Expense Categories" description="Financial Classifications">
+      <div className="w-full space-y-6">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-1.5 h-10 bg-green-600 rounded-full" />
-            <div className="flex flex-col">
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 leading-none mb-1">
+            <div className="w-1 h-8 bg-slate-900 dark:bg-slate-100 rounded-full" />
+            <div>
+              <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-text-sub dark:text-slate-500 leading-none mb-1 font-mono block">
                 Financial Classifications
               </span>
-              <h2 className="text-4xl font-black text-gray-900 tracking-tight leading-none">
-                Expense Categories
-              </h2>
+              <div className="flex items-center gap-2 font-mono">
+                <h2 className="text-2xl font-bold text-text-main dark:text-text-main-dark tracking-tight leading-none">
+                  Expense Categories
+                </h2>
+                <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-slate-100 dark:bg-slate-800 text-text-sub dark:text-slate-400 border border-card-border dark:border-card-border-dark">
+                  {categories.length} Total
+                </span>
+              </div>
             </div>
           </div>
           <Button
             type="primary"
-            icon={<IconPlus size={18} />}
+            icon={<IconPlus size={16} />}
             onClick={openAddModal}
-            className="flex items-center gap-2"
+            className="bg-slate-900 dark:bg-slate-100 dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-200 border-none h-10 px-4 rounded-xl text-xs font-bold shadow-xs cursor-pointer flex items-center gap-2"
           >
             Add Category
           </Button>
         </div>
 
-        {/* Filters */}
-        <Card size="small" className="shadow-sm">
+        {/* Filters Panel */}
+        <div className="bg-card dark:bg-card-dark border border-card-border dark:border-card-border-dark rounded-xl p-4">
           <Form
             form={form}
             layout="inline"
@@ -271,110 +298,63 @@ const ExpenseCategoriesPage = () => {
             }}
             className="flex flex-wrap items-center gap-2 w-full"
           >
-            <Form.Item name="search" className="!mb-0 flex-1 min-w-[150px]">
+            <Form.Item name="search" className="!mb-0 flex-1 min-w-[200px]">
               <Input
-                prefix={<IconSearch size={15} className="text-gray-400" />}
+                prefix={<IconSearch size={15} className="text-text-sub" />}
                 placeholder="Search Categories..."
                 allowClear
+                className="rounded-xl h-10"
               />
             </Form.Item>
             <Form.Item name="type" className="!mb-0 w-44">
-              <Select>
+              <Select className="h-10">
                 <Select.Option value="all">All Types</Select.Option>
                 <Select.Option value="expense">Expense</Select.Option>
                 <Select.Option value="income">Income</Select.Option>
               </Select>
             </Form.Item>
             <Form.Item className="!mb-0">
-              <Space>
+              <div className="flex items-center gap-2">
                 <Button
                   type="primary"
                   htmlType="submit"
                   icon={<IconFilter size={15} />}
+                  className="bg-slate-900 dark:bg-slate-100 dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-200 border-none h-10 px-4 rounded-xl text-xs font-bold cursor-pointer"
                 >
                   Filter
                 </Button>
-                <Button icon={<IconX size={15} />} onClick={handleClearFilters}>
+                <Button
+                  icon={<IconX size={15} />}
+                  onClick={handleClearFilters}
+                  className="h-10 px-4 rounded-xl border-card-border dark:border-card-border-dark text-text-sub text-xs font-medium cursor-pointer"
+                >
                   Clear
                 </Button>
-              </Space>
+              </div>
             </Form.Item>
           </Form>
-        </Card>
+        </div>
 
-        {/* List */}
-        {!loading && filteredCategories.length === 0 ? (
-          <div className="bg-white border border-gray-100 p-12 text-center rounded-2xl shadow-sm">
-            <IconCategory size={48} className="mx-auto text-gray-300 mb-4" />
-            <p className="text-gray-500">No categories found</p>
+        {/* Table / List */}
+        {loading ? (
+          <div className="flex justify-center items-center py-24">
+            <Spinner size="large" tip="Loading Categories..." />
+          </div>
+        ) : filteredCategories.length === 0 ? (
+          <div className="bg-card dark:bg-card-dark border border-card-border dark:border-card-border-dark p-12 text-center rounded-2xl shadow-xs">
+            <IconCategory size={48} className="mx-auto text-text-sub mb-4" />
+            <p className="text-text-sub text-sm font-semibold">No expense categories found</p>
           </div>
         ) : (
-          <div>
-            {/* Desktop Table */}
-            <div className="hidden md:block overflow-x-auto">
+          <div className="bg-card dark:bg-card-dark border border-card-border dark:border-card-border-dark rounded-2xl shadow-xs overflow-hidden">
+            <div className="[&_.ant-table]:!bg-transparent [&_.ant-table-thead>tr>th]:!bg-slate-50/80 [&_.ant-table-thead>tr>th]:dark:!bg-slate-800/60 [&_.ant-table-thead>tr>th]:!text-text-sub [&_.ant-table-thead>tr>th]:!font-bold [&_.ant-table-thead>tr>th]:!text-[11px] [&_.ant-table-thead>tr>th]:!uppercase [&_.ant-table-thead>tr>th]:!tracking-wider [&_.ant-table-thead>tr>th]:!border-b [&_.ant-table-thead>tr>th]:!border-card-border [&_.ant-table-thead>tr>th]:dark:!border-card-border-dark [&_.ant-table-tbody>tr]:hover:!bg-slate-50/60 [&_.ant-table-tbody>tr]:dark:hover:!bg-slate-800/40 [&_.ant-table-tbody>tr>td]:!border-b [&_.ant-table-tbody>tr>td]:!border-card-border [&_.ant-table-tbody>tr>td]:dark:!border-card-border-dark [&_.ant-table-tbody>tr>td]:!py-3.5">
               <Table
-                scroll={{ x: 1000 }}
-                bordered
+                scroll={{ x: 800 }}
                 columns={columns}
                 dataSource={filteredCategories}
-                loading={loading}
-                rowKey={(r: ExpenseCategory) =>
-                  r.id || Math.random().toString()
-                }
+                rowKey={(r: ExpenseCategory) => r.id || Math.random().toString()}
                 pagination={{ pageSize: 15, position: ["bottomRight"] }}
               />
-            </div>
-            {/* Mobile Cards */}
-            <div className="md:hidden divide-y divide-gray-100">
-              {filteredCategories.map((cat) => (
-                <div key={cat.id} className="p-4">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <p className="font-medium text-gray-900">{cat.name}</p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        {cat.description || "No description"}
-                      </p>
-                      <div className="flex gap-2 mt-2">
-                        <span
-                          className={`px-2 py-0.5 text-xs font-bold rounded-lg ${
-                            cat.type === "expense"
-                              ? "bg-red-50 text-red-700"
-                              : "bg-green-50 text-green-700"
-                          }`}
-                        >
-                          {cat.type}
-                        </span>
-                        <span
-                          className={`px-2 py-0.5 text-xs font-bold rounded-lg ${
-                            cat.status
-                              ? "bg-green-50 text-green-700"
-                              : "bg-gray-100 text-gray-500"
-                          }`}
-                        >
-                          {cat.status ? "Active" : "Inactive"}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex gap-1">
-                      <Tooltip title="Edit">
-                        <Button
-                          type="text"
-                          icon={<IconEdit size={16} />}
-                          onClick={() => openEditModal(cat)}
-                        />
-                      </Tooltip>
-                      <Tooltip title="Delete">
-                        <Button
-                          type="text"
-                          danger
-                          icon={<IconTrash size={16} />}
-                          onClick={() => handleDelete(cat.id)}
-                        />
-                      </Tooltip>
-                    </div>
-                  </div>
-                </div>
-              ))}
             </div>
           </div>
         )}
@@ -384,9 +364,16 @@ const ExpenseCategoriesPage = () => {
           title={editingId ? "Edit Category" : "Add Category"}
           onCancel={() => setShowModal(false)}
           footer={
-            <div className="flex justify-end gap-3">
-              <Button onClick={() => setShowModal(false)}>Cancel</Button>
-              <Button type="primary" onClick={handleSave} loading={saving}>
+            <div className="flex justify-end gap-2 pt-2">
+              <Button onClick={() => setShowModal(false)} className="rounded-xl h-10 font-bold text-xs">
+                Cancel
+              </Button>
+              <Button
+                type="primary"
+                onClick={handleSave}
+                loading={saving}
+                className="bg-slate-900 dark:bg-slate-100 dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-200 border-none rounded-xl h-10 px-5 font-bold text-xs cursor-pointer"
+              >
                 Save
               </Button>
             </div>
@@ -394,35 +381,33 @@ const ExpenseCategoriesPage = () => {
         >
           <div className="space-y-4 pt-2">
             <div>
-              <label className="block text-xs font-bold text-gray-500 mb-2">
+              <label className="block text-xs font-bold text-text-sub uppercase font-mono mb-1">
                 Name *
               </label>
               <Input
                 value={formData.name}
-                onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder="e.g., Office Supplies"
+                className="rounded-xl h-10"
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-gray-500 mb-2">
+              <label className="block text-xs font-bold text-text-sub uppercase font-mono mb-1">
                 Description
               </label>
               <Input
                 value={formData.description}
-                onChange={(e) =>
-                  setFormData({ ...formData, description: e.target.value })
-                }
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 placeholder="Optional description"
+                className="rounded-xl h-10"
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-gray-500 mb-2">
+              <label className="block text-xs font-bold text-text-sub uppercase font-mono mb-1">
                 Type *
               </label>
               <Select
-                className="w-full"
+                className="w-full h-10"
                 value={formData.type}
                 onChange={(val) => setFormData({ ...formData, type: val })}
                 options={[
@@ -431,18 +416,18 @@ const ExpenseCategoriesPage = () => {
                 ]}
               />
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 pt-2">
               <Switch
                 checked={formData.status}
-                onChange={(checked) =>
-                  setFormData({ ...formData, status: checked })
-                }
+                onChange={(checked) => setFormData({ ...formData, status: checked })}
               />
-              <span className="text-sm text-gray-700">Active</span>
+              <span className="text-xs font-bold text-text-main dark:text-text-main-dark uppercase font-mono">
+                Active Category
+              </span>
             </div>
           </div>
         </Modal>
-      </Space>
+      </div>
     </PageContainer>
   );
 };

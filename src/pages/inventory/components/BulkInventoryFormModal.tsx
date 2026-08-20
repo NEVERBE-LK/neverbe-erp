@@ -361,7 +361,7 @@ const BulkInventoryFormModal: React.FC<BulkInventoryFormModalProps> = ({
         <div className="pt-4 border-t border-gray-100">
           {loadingStock ? (
             <div className="text-center py-10">
-              <Spin tip="Loading Stock Data..." />
+              <Spinner />
             </div>
           ) : selectedVariant && stockId ? (
             <div>

@@ -21,6 +21,10 @@ import {
   IconUser,
   IconShield,
   IconCamera,
+  IconDotsVertical,
+  IconPrinter,
+  IconPackage,
+  IconTruck,
 } from "@tabler/icons-react";
 import PageContainer from "../components/container/PageContainer";
 import toast from "react-hot-toast";
@@ -40,11 +44,15 @@ import {
   Typography,
   Divider,
   Modal,
+  Dropdown,
+  MenuProps,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
 import { formatSLDateTime } from "@/utils/dateUtils";
 import { Html5Qrcode } from "html5-qrcode";
+import Spinner from "@/pages/components/shared/Spinner";
+import { InvoicePreviewModal } from "./[orderId]/components/InvoicePreviewModal";
 
 const { Option } = Select;
 const { RangePicker } = DatePicker;
@@ -88,6 +96,10 @@ const OrdersPage = () => {
   const [scanningOrderId, setScanningOrderId] = useState<string | null>(null);
   const scannerRef = React.useRef<any>(null);
   const isStoppingRef = React.useRef(false);
+
+  // --- Invoice Preview Modal State ---
+  const [previewOrderForInvoice, setPreviewOrderForInvoice] = useState<Order | null>(null);
+  const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
 
   const startScanner = (orderId: string) => {
     setScanningOrderId(orderId);
@@ -406,39 +418,6 @@ const OrdersPage = () => {
   };
 
   const columns: ColumnsType<Order> = [
-    {
-      title: "Actions",
-      key: "actions",
-      width: 140,
-      render: (_, order) => (
-        <Space size="small">
-          <Tooltip title="View Invoice">
-            <Button
-              type="text"
-              icon={<IconFileInvoice size={18} className="text-gray-500 hover:text-black" />}
-              onClick={() => navigate(`/orders/${order.orderId}/invoice`)}
-              className="hover:bg-gray-100 rounded-lg"
-            />
-          </Tooltip>
-          <Tooltip title="View Summary">
-            <Button
-              type="text"
-              icon={<IconEye size={18} className="text-gray-500 hover:text-black" />}
-              onClick={() => navigate(`/orders/${order.orderId}/view`)}
-              className="hover:bg-gray-100 rounded-lg"
-            />
-          </Tooltip>
-          <Tooltip title="Configure/Edit">
-            <Button
-              type="text"
-              icon={<IconEdit size={18} className="text-green-600 hover:text-green-700" />}
-              onClick={() => navigate(`/orders/${order.orderId}`)}
-              className="hover:bg-green-50 rounded-lg"
-            />
-          </Tooltip>
-        </Space>
-      ),
-    },
     // Delivery Column (Only for Processing View)
     ...(isProcessingView ? [{
       title: "Delivery Info",
@@ -583,44 +562,111 @@ const OrdersPage = () => {
         );
       },
     },
+    {
+      title: "Actions",
+      key: "actions",
+      width: 80,
+      align: "right",
+      render: (_, order) => {
+        const items: MenuProps["items"] = [
+          {
+            key: "view",
+            icon: <IconEye size={14} />,
+            label: "View Details",
+            onClick: () => navigate(`/orders/${order.orderId}/view`),
+          },
+          {
+            key: "invoice",
+            icon: <IconPrinter size={14} />,
+            label: "Print PDF",
+            onClick: () => {
+              setPreviewOrderForInvoice(order);
+              setIsInvoiceModalOpen(true);
+            },
+          },
+          {
+            type: "divider",
+          },
+          {
+            key: "edit-customer",
+            icon: <IconUser size={14} className="text-emerald-600 dark:text-emerald-400" />,
+            label: <span className="font-semibold text-emerald-600 dark:text-emerald-400">Edit Customer Profile</span>,
+            onClick: () => navigate(`/orders/${order.orderId}/customer`),
+          },
+          {
+            key: "edit-items",
+            icon: <IconPackage size={14} className="text-emerald-600 dark:text-emerald-400" />,
+            label: <span className="font-semibold text-emerald-600 dark:text-emerald-400">Edit Order Items</span>,
+            onClick: () => navigate(`/orders/${order.orderId}/items`),
+          },
+          {
+            key: "edit-tracking",
+            icon: <IconTruck size={14} className="text-emerald-600 dark:text-emerald-400" />,
+            label: <span className="font-semibold text-emerald-600 dark:text-emerald-400">Edit Tracking & Delivery</span>,
+            onClick: () => navigate(`/orders/${order.orderId}/tracking`),
+          },
+        ];
+
+        return (
+          <div className="flex justify-end">
+            <Dropdown menu={{ items }} trigger={["click"]} placement="bottomRight">
+              <button
+                type="button"
+                className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer border-none bg-transparent"
+              >
+                <IconDotsVertical size={16} />
+              </button>
+            </Dropdown>
+          </div>
+        );
+      },
+    },
   ];
 
-  const viewTitle = isProcessingView ? "Processing Orders" : isPaymentPendingView ? "Pending Payments" : "All Orders";
+  const viewTitle = isProcessingView ? "Processing Orders" : isPaymentPendingView ? "Pending Payments" : "Orders";
 
   return (
-    <PageContainer title={`${viewTitle} | Neverbe ERP`} loading={isLoading} description={`Manage ${viewTitle}`}>
-      <Space direction="vertical" size="large" className="w-full">
-        {/* PREMIUM HEADER */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-2 gap-4">
-          <div className="flex items-center gap-4">
-            <div className={`w-2 h-12 ${isProcessingView ? 'bg-orange-500' : isPaymentPendingView ? 'bg-blue-500' : 'bg-emerald-600'} rounded-full`} />
+    <PageContainer title="Orders" description={`Manage ${viewTitle}`}>
+      <div className="w-full space-y-6">
+        {/* Header Bar */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-6 border-b border-card-border dark:border-card-border-dark">
+          <div className="flex items-center gap-3">
+            <div className="w-1 h-8 bg-brand dark:bg-brand-dark rounded-full" />
             <div className="flex flex-col">
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 leading-none mb-2">Order Management</span>
-              <h2 className="text-4xl font-black text-gray-900 tracking-tight leading-none">{viewTitle}</h2>
+              <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-text-sub dark:text-slate-500 leading-none mb-1 font-mono">
+                Dashboard / Orders
+              </span>
+              <div className="flex items-center gap-2.5">
+                <h2 className="text-2xl font-bold text-text-main dark:text-text-main-dark tracking-tight leading-none font-mono">
+                  {viewTitle}
+                </h2>
+                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-card-border dark:border-card-border-dark font-mono">
+                  {pagination.total} Orders
+                </span>
+              </div>
             </div>
           </div>
         </div>
 
-
-        {/* Filters */}
-        <Card size="small" className="rounded-2xl shadow-sm border-gray-100 bg-gray-50/50">
+        {/* Filter Panel */}
+        <div className="bg-card dark:bg-card-dark border border-card-border dark:border-card-border-dark rounded-2xl p-4 shadow-xs">
           <Form
             form={form}
             layout="inline"
             onFinish={handleFilterSubmit}
-            className="flex flex-wrap gap-3 w-full p-2"
+            className="flex flex-wrap gap-3 w-full"
           >
             <Form.Item name="search" className="!mb-0 flex-grow min-w-[240px]">
               <Input
-                prefix={<IconSearch size={15} className="text-gray-400" />}
+                prefix={<IconSearch size={15} className="text-text-sub" />}
                 placeholder="Search order number, customer name, email..."
                 allowClear
-                className="rounded-xl h-10 border-gray-200"
+                className="rounded-xl h-10 border-card-border dark:border-card-border-dark"
               />
             </Form.Item>
             {!isPaymentPendingView && (
               <Form.Item name="payment" className="!mb-0 w-40">
-                <Select className="h-10 rounded-xl overflow-hidden border-gray-200">
+                <Select className="h-10 rounded-xl overflow-hidden border-card-border dark:border-card-border-dark">
                   <Option value="all">All Payments</Option>
                   <Option value="Paid">Paid</Option>
                   <Option value="Pending">Pending</Option>
@@ -631,7 +677,7 @@ const OrdersPage = () => {
             )}
             {!isProcessingView && (
               <Form.Item name="status" className="!mb-0 w-36">
-                <Select className="h-10 rounded-xl overflow-hidden border-gray-200">
+                <Select className="h-10 rounded-xl overflow-hidden border-card-border dark:border-card-border-dark">
                   <Option value="all">All Statuses</Option>
                   <Option value="Pending">Pending</Option>
                   <Option value="Processing">Processing</Option>
@@ -641,7 +687,7 @@ const OrdersPage = () => {
               </Form.Item>
             )}
             <Form.Item name="from" className="!mb-0 w-32">
-              <Select className="h-10 rounded-xl overflow-hidden border-gray-200" placeholder="Source">
+              <Select className="h-10 rounded-xl overflow-hidden border-card-border dark:border-card-border-dark" placeholder="Source">
                 <Option value="all">All Sources</Option>
                 <Option value="website">Website</Option>
                 <Option value="store">Store</Option>
@@ -649,46 +695,46 @@ const OrdersPage = () => {
               </Select>
             </Form.Item>
             <Form.Item name="dateRange" className="!mb-0 w-64">
-              <RangePicker className="w-full h-10 rounded-xl border-gray-200" />
+              <RangePicker className="w-full h-10 rounded-xl border-card-border dark:border-card-border-dark" />
             </Form.Item>
             <Form.Item className="!mb-0">
               <Space>
                 <Button
-                  type="primary"
+                  type="default"
                   htmlType="submit"
                   icon={<IconFilter size={15} />}
-                  className="h-10 px-6 rounded-xl font-bold bg-black border-none hover:bg-gray-800 shadow-none"
+                  className="bg-slate-900 dark:bg-slate-100 dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-200 border-none text-white text-xs font-bold h-10 px-5 rounded-xl cursor-pointer"
                 >
                   Filter
                 </Button>
                 <Button
                   icon={<IconX size={15} />}
                   onClick={handleClearFilters}
-                  className="h-10 px-6 rounded-xl font-bold border-gray-200"
+                  className="border-card-border dark:border-card-border-dark text-text-sub text-xs font-medium h-10 px-5 rounded-xl cursor-pointer"
                 >
                   Clear
                 </Button>
               </Space>
             </Form.Item>
           </Form>
-        </Card>
+        </div>
 
         {/* Bulk Action Alert Panel */}
         {selectedRowKeys.length > 0 && (
           <div className="animate-in slide-in-from-top-4 duration-300">
-            <div className={`bg-gradient-to-r ${isProcessingView ? 'from-orange-500 to-orange-600' : 'from-blue-500 to-blue-600'} text-white px-6 py-3 rounded-2xl shadow-md flex items-center justify-between border border-transparent`}>
+            <div className="bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 px-6 py-3 rounded-2xl shadow-xs flex items-center justify-between">
               <div className="flex items-center gap-6">
-                <span className="text-white font-black text-xs uppercase tracking-widest">
-                  {selectedRowKeys.length} Order{selectedRowKeys.length > 1 ? 's' : ''} Selected
+                <span className="font-mono text-xs font-bold uppercase tracking-wider">
+                  {selectedRowKeys.length} Order{selectedRowKeys.length > 1 ? "s" : ""} Selected
                 </span>
-                <div className="bg-white/20 w-[1px] h-6" />
+                <div className="bg-slate-700 dark:bg-slate-300 w-[1px] h-5" />
                 <Space size="middle">
                   {isProcessingView && (
                     <Button 
                       type="primary" 
                       size="middle" 
                       icon={<IconPackageExport size={16} />}
-                      className="bg-white text-orange-600 hover:bg-orange-50 border-none font-bold rounded-xl h-9 flex items-center"
+                      className="bg-emerald-600 hover:bg-emerald-700 border-none font-bold rounded-xl h-9 text-xs flex items-center cursor-pointer"
                       onClick={() => handleBulkUpdate("STATUS", "Completed")}
                       loading={isBulkLoading}
                     >
@@ -700,7 +746,7 @@ const OrdersPage = () => {
                       type="primary" 
                       size="middle" 
                       icon={<IconCreditCard size={16} />}
-                      className="bg-white text-blue-600 hover:bg-blue-50 border-none font-bold rounded-xl h-9 flex items-center"
+                      className="bg-emerald-600 hover:bg-emerald-700 border-none font-bold rounded-xl h-9 text-xs flex items-center cursor-pointer"
                       onClick={() => handleBulkUpdate("PAYMENT", "Paid")}
                       loading={isBulkLoading}
                     >
@@ -712,7 +758,7 @@ const OrdersPage = () => {
               <Button 
                 type="text" 
                 icon={<IconX size={18} />} 
-                className="text-white/80 hover:text-white" 
+                className="text-slate-400 hover:text-white dark:hover:text-slate-900 cursor-pointer" 
                 onClick={() => setSelectedRowKeys([])} 
               />
             </div>
@@ -720,21 +766,24 @@ const OrdersPage = () => {
         )}
 
         {/* Table UI */}
-        <Table
-            rowSelection={ (isProcessingView || isPaymentPendingView) ? {
-              selectedRowKeys,
-              onChange: (keys) => setSelectedRowKeys(keys),
-            } : undefined }
-            columns={columns}
-            dataSource={orders}
-            rowKey="orderId"
-            pagination={{ ...pagination, position: ["bottomRight"], showTotal: (total) => `Total ${total} records` }}
-            loading={isLoading || isBulkLoading}
-            onChange={handleTableChange}
-            scroll={{ x: 1200 }}
-            className="custom-table border border-gray-100 rounded-2xl overflow-hidden shadow-sm"
-          />
-      </Space>
+        <Spinner spinning={isLoading || isBulkLoading}>
+          <div className="bg-card dark:bg-card-dark border border-card-border dark:border-card-border-dark rounded-2xl shadow-xs overflow-hidden [&_.ant-table]:!bg-transparent [&_.ant-table-thead>tr>th]:!bg-slate-50/80 [&_.ant-table-thead>tr>th]:dark:!bg-slate-800/60 [&_.ant-table-thead>tr>th]:!text-text-sub [&_.ant-table-thead>tr>th]:!font-bold [&_.ant-table-thead>tr>th]:!text-[11px] [&_.ant-table-thead>tr>th]:!uppercase [&_.ant-table-thead>tr>th]:!tracking-wider [&_.ant-table-thead>tr>th]:!border-b [&_.ant-table-thead>tr>th]:!border-card-border [&_.ant-table-thead>tr>th]:dark:!border-card-border-dark [&_.ant-table-tbody>tr]:hover:!bg-slate-50/60 [&_.ant-table-tbody>tr]:dark:hover:!bg-slate-800/40 [&_.ant-table-tbody>tr>td]:!border-b [&_.ant-table-tbody>tr>td]:!border-card-border [&_.ant-table-tbody>tr>td]:dark:!border-card-border-dark [&_.ant-table-tbody>tr>td]:!py-3.5">
+            <Table
+              rowSelection={(isProcessingView || isPaymentPendingView) ? {
+                selectedRowKeys,
+                onChange: (keys) => setSelectedRowKeys(keys),
+              } : undefined}
+              columns={columns}
+              dataSource={orders}
+              rowKey="orderId"
+              pagination={{ ...pagination, position: ["bottomRight"], showTotal: (total) => `Total ${total} records` }}
+              onChange={handleTableChange}
+              scroll={{ x: 1200 }}
+              className="ant-table-fluid"
+            />
+          </div>
+        </Spinner>
+      </div>
 
       {/* Barcode Camera Scanner Modal */}
       <Modal
@@ -782,6 +831,12 @@ const OrdersPage = () => {
           </Button>
         </div>
       </Modal>
+
+      <InvoicePreviewModal
+        open={isInvoiceModalOpen}
+        onClose={() => setIsInvoiceModalOpen(false)}
+        order={previewOrderForInvoice}
+      />
     </PageContainer>
   );
 };

@@ -1,5 +1,5 @@
 import api from "@/lib/api";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, lazy } from "react";
 import PageContainer from "@/pages/components/container/PageContainer";
 import {
   IconArrowUpRight,
@@ -9,29 +9,18 @@ import {
   IconBuildingBank,
   IconTrendingUp,
 } from "@tabler/icons-react";
-import { lazy } from "react";
-const Chart = lazy(() => import("react-apexcharts"));
 import type { FinanceDashboardData } from "@/model/FinanceDashboard";
-import {
-  Row,
-  Col,
-  Statistic,
-  Table,
-  Button,
-  Typography,
-  Space,
-  Select,
-  Tag,
-  Spin,
-} from "antd";
+import { Row, Col, Statistic, Table, Button, Space, Select } from "antd";
 import DashboardCard from "@/pages/components/shared/DashboardCard";
-import { formatSLDate } from "@/utils/dateUtils";
+import Spinner from "@/pages/components/shared/Spinner";
 
+const Chart = lazy(() => import("react-apexcharts"));
 const { Option } = Select;
 
 const FinanceDashboard = () => {
   const [data, setData] = useState<FinanceDashboardData | null>(null);
   const [loading, setLoading] = useState(true);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -50,7 +39,7 @@ const FinanceDashboard = () => {
     return (
       <PageContainer title="Finance Dashboard">
         <div className="flex justify-center items-center h-[60vh]">
-          <Spin size="large" />
+          <Spinner size="large" tip="Loading Financial Overview..." />
         </div>
       </PageContainer>
     );
@@ -59,7 +48,7 @@ const FinanceDashboard = () => {
   if (!data) {
     return (
       <PageContainer title="Finance Dashboard">
-        <div>Error loading data</div>
+        <div className="p-8 text-center text-text-sub text-sm">Failed to load finance data</div>
       </PageContainer>
     );
   }
@@ -76,18 +65,18 @@ const FinanceDashboard = () => {
     cashFlow = [],
   } = data;
 
-  // Chart Configs
   const cashFlowOptions = {
     chart: { type: "bar", toolbar: { show: false }, fontFamily: "inherit" },
-    colors: ["#16a34a", "#E5E7EB"],
+    colors: ["#10b981", "#64748b"],
     plotOptions: {
-      bar: { borderRadius: 2, columnWidth: "50%" },
+      bar: { borderRadius: 4, columnWidth: "50%" },
     },
     dataLabels: { enabled: false },
     xaxis: {
       categories: cashFlow.map((c: any) => c.date),
       axisBorder: { show: false },
       axisTicks: { show: false },
+      labels: { style: { colors: "#94a3b8" } },
     },
     yaxis: { labels: { show: false } },
     grid: { show: false },
@@ -119,9 +108,13 @@ const FinanceDashboard = () => {
       dataIndex: "category",
       key: "category",
       render: (text: string, record: any) => (
-        <Space>
+        <div className="flex items-center gap-3">
           <div
-            className={`w-8 h-8 flex items-center justify-center rounded-full ${record.type === "income" ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600"}`}
+            className={`w-8 h-8 flex items-center justify-center rounded-full ${
+              record.type === "income"
+                ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400"
+                : "bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400"
+            }`}
           >
             {record.type === "income" ? (
               <IconArrowUpRight size={14} />
@@ -130,19 +123,19 @@ const FinanceDashboard = () => {
             )}
           </div>
           <div className="flex flex-col">
-            <Typography.Text strong>{text}</Typography.Text>
-            <Typography.Text type="secondary" className="text-xs">
+            <span className="font-semibold text-xs text-text-main dark:text-text-main-dark">{text}</span>
+            <span className="text-[10px] text-text-sub dark:text-slate-500 font-mono">
               {record.date}
-            </Typography.Text>
+            </span>
           </div>
-        </Space>
+        </div>
       ),
     },
     {
       title: "Note",
       dataIndex: "note",
       key: "note",
-      render: (text: string) => <span className="text-gray-500">{text}</span>,
+      render: (text: string) => <span className="text-xs text-text-sub dark:text-slate-400">{text || "—"}</span>,
     },
     {
       title: "Amount",
@@ -150,12 +143,13 @@ const FinanceDashboard = () => {
       key: "amount",
       align: "right" as const,
       render: (amount: number, record: any) => (
-        <Typography.Text
-          strong
-          type={record.type === "income" ? "success" : undefined}
+        <span
+          className={`font-mono text-xs font-bold ${
+            record.type === "income" ? "text-emerald-600 dark:text-emerald-400" : "text-text-main dark:text-text-main-dark"
+          }`}
         >
           {record.type === "income" ? "+" : "-"} {formatCurrency(amount)}
-        </Typography.Text>
+        </span>
       ),
     },
   ];
@@ -163,23 +157,23 @@ const FinanceDashboard = () => {
   return (
     <PageContainer title="Finance Overview">
       <Space direction="vertical" size="large" className="w-full">
-        {/* Header */}
-        <div className="flex justify-between items-end mb-8">
+        {/* Page Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2">
           <div className="flex items-center gap-3">
-            <div className="w-1.5 h-10 bg-green-600 rounded-full" />
-            <div className="flex flex-col">
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 leading-none mb-1">
+            <div className="w-1 h-8 bg-slate-900 dark:bg-slate-100 rounded-full" />
+            <div>
+              <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-text-sub dark:text-slate-500 leading-none mb-1 font-mono block">
                 Finance
               </span>
-              <h2 className="text-4xl font-black text-gray-900 tracking-tight leading-none">
+              <h2 className="text-2xl font-bold text-text-main dark:text-text-main-dark tracking-tight leading-none">
                 Financial Overview
               </h2>
             </div>
           </div>
           <Button
             type="primary"
-            icon={<IconTrendingUp size={18} />}
-            className="flex items-center gap-2"
+            icon={<IconTrendingUp size={16} />}
+            className="bg-slate-900 dark:bg-slate-100 dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-200 border-none h-10 px-4 rounded-xl text-xs font-bold shadow-xs cursor-pointer flex items-center gap-2"
           >
             Generate Report
           </Button>
@@ -190,20 +184,51 @@ const FinanceDashboard = () => {
           <Col xs={24} sm={12} lg={6}>
             <DashboardCard>
               <Statistic
-                title="Total Bank Balance"
+                title={<span className="text-xs font-semibold text-text-sub uppercase font-mono">Total Bank Balance</span>}
                 value={cards.totalBankBalance}
-                prefix={
-                  <IconBuildingBank size={20} className="mr-2 text-green-600" />
-                }
+                prefix={<IconBuildingBank size={18} className="mr-2 text-emerald-600 dark:text-emerald-400" />}
                 formatter={(val) => `Rs ${val.toLocaleString()}`}
+                valueStyle={{ fontSize: "1.25rem", fontWeight: "700" }}
+              />
+              <div className="mt-2 flex items-center gap-1.5">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 font-mono">
+                  <IconArrowUpRight size={10} />
+                  Up
+                </span>
+                <span className="text-[10px] text-text-sub font-mono">Across all accounts</span>
+              </div>
+            </DashboardCard>
+          </Col>
+          <Col xs={24} sm={12} lg={6}>
+            <DashboardCard>
+              <Statistic
+                title={<span className="text-xs font-semibold text-text-sub uppercase font-mono">Accounts Payable</span>}
+                value={cards.totalPayable}
+                prefix={<IconReceipt size={18} className="mr-2 text-rose-500" />}
+                formatter={(val) => `Rs ${val.toLocaleString()}`}
+                valueStyle={{ fontSize: "1.25rem", fontWeight: "700" }}
+              />
+              <div className="mt-2 flex items-center gap-1.5">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 font-mono">
+                  <IconArrowDownRight size={10} />
+                  Pending
+                </span>
+                <span className="text-[10px] text-text-sub font-mono">Total Outstanding</span>
+              </div>
+            </DashboardCard>
+          </Col>
+          <Col xs={24} sm={12} lg={6}>
+            <DashboardCard>
+              <Statistic
+                title={<span className="text-xs font-semibold text-text-sub uppercase font-mono">Monthly Expenses</span>}
+                value={cards.monthlyExpenses}
+                prefix={<IconWallet size={18} className="mr-2 text-blue-500" />}
+                formatter={(val) => `Rs ${val.toLocaleString()}`}
+                valueStyle={{ fontSize: "1.25rem", fontWeight: "700" }}
               />
               <div className="mt-2">
-                <Tag color="green">
-                  <IconArrowUpRight size={12} className="inline mr-1" />
-                  Up
-                </Tag>
-                <span className="text-xs text-gray-400">
-                  Across all accounts
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 font-mono">
+                  This Month
                 </span>
               </div>
             </DashboardCard>
@@ -211,45 +236,16 @@ const FinanceDashboard = () => {
           <Col xs={24} sm={12} lg={6}>
             <DashboardCard>
               <Statistic
-                title="Accounts Payable"
-                value={cards.totalPayable}
-                prefix={<IconReceipt size={20} className="mr-2 text-red-500" />}
-                formatter={(val) => `Rs ${val.toLocaleString()}`}
-              />
-              <div className="mt-2">
-                <Tag color="red">
-                  <IconArrowDownRight size={12} className="inline mr-1" />
-                  Down
-                </Tag>
-                <span className="text-xs text-gray-400">Total Outstanding</span>
-              </div>
-            </DashboardCard>
-          </Col>
-          <Col xs={24} sm={12} lg={6}>
-            <DashboardCard>
-              <Statistic
-                title="Monthly Expenses"
-                value={cards.monthlyExpenses}
-                prefix={<IconWallet size={20} className="mr-2 text-blue-500" />}
-                formatter={(val) => `Rs ${val.toLocaleString()}`}
-              />
-              <div className="mt-2">
-                <Tag color="blue">This Month</Tag>
-              </div>
-            </DashboardCard>
-          </Col>
-          <Col xs={24} sm={12} lg={6}>
-            <DashboardCard>
-              <Statistic
-                title="Monthly Income"
+                title={<span className="text-xs font-semibold text-text-sub uppercase font-mono">Monthly Income</span>}
                 value={cards.monthlyIncome}
-                prefix={
-                  <IconArrowUpRight size={20} className="mr-2 text-green-500" />
-                }
+                prefix={<IconArrowUpRight size={18} className="mr-2 text-emerald-500" />}
                 formatter={(val) => `Rs ${val.toLocaleString()}`}
+                valueStyle={{ fontSize: "1.25rem", fontWeight: "700" }}
               />
               <div className="mt-2">
-                <Tag color="green">This Month</Tag>
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 font-mono">
+                  This Month
+                </span>
               </div>
             </DashboardCard>
           </Col>
@@ -262,7 +258,7 @@ const FinanceDashboard = () => {
             <DashboardCard
               title="Cash Flow"
               action={
-                <Select defaultValue="This Month" size="small" bordered={false}>
+                <Select defaultValue="This Month" size="small" variant="borderless">
                   <Option value="This Month">This Month</Option>
                 </Select>
               }
@@ -287,34 +283,34 @@ const FinanceDashboard = () => {
                   height={220}
                 />
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <Typography.Title level={3} className="!m-0">
+                  <span className="text-xl font-bold font-mono text-text-main dark:text-text-main-dark">
                     {(
                       (expenseBreakdown.reduce(
                         (acc: any, curr: any) => acc + curr.amount,
-                        0,
+                        0
                       ) /
-                        cards.monthlyExpenses) *
+                        (cards.monthlyExpenses || 1)) *
                       100
                     ).toFixed(0)}
                     %
-                  </Typography.Title>
+                  </span>
                 </div>
               </div>
-              <div className="space-y-3">
+              <div className="space-y-3 font-mono">
                 {expenseBreakdown.map((item: any, i: number) => (
-                  <div key={i} className="flex justify-between items-center">
+                  <div key={i} className="flex justify-between items-center text-xs">
                     <div className="flex items-center gap-2">
                       <span
                         className="w-2 h-2 rounded-full"
                         style={{ background: item.color }}
                       ></span>
-                      <Typography.Text className="text-xs">
+                      <span className="text-text-sub dark:text-slate-400">
                         {item.category}
-                      </Typography.Text>
+                      </span>
                     </div>
-                    <Typography.Text strong className="text-xs">
+                    <span className="font-bold text-text-main dark:text-text-main-dark">
                       {formatCurrency(item.amount)}
-                    </Typography.Text>
+                    </span>
                   </div>
                 ))}
               </div>
@@ -328,20 +324,21 @@ const FinanceDashboard = () => {
           action={
             <a
               href="/finance/petty-cash"
-              className="text-green-600 font-bold hover:underline"
+              className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline font-mono uppercase"
             >
               View All
             </a>
           }
         >
-          <Table
-            scroll={{ x: 1000 }}
-            bordered
-            columns={transactionColumns}
-            dataSource={recentTransactions}
-            rowKey="id"
-            pagination={false}
-          />
+          <div className="[&_.ant-table]:!bg-transparent [&_.ant-table-thead>tr>th]:!bg-slate-50/80 [&_.ant-table-thead>tr>th]:dark:!bg-slate-800/60 [&_.ant-table-thead>tr>th]:!text-text-sub [&_.ant-table-thead>tr>th]:!font-bold [&_.ant-table-thead>tr>th]:!text-[11px] [&_.ant-table-thead>tr>th]:!uppercase [&_.ant-table-thead>tr>th]:!tracking-wider [&_.ant-table-thead>tr>th]:!border-b [&_.ant-table-thead>tr>th]:!border-card-border [&_.ant-table-thead>tr>th]:dark:!border-card-border-dark [&_.ant-table-tbody>tr]:hover:!bg-slate-50/60 [&_.ant-table-tbody>tr]:dark:hover:!bg-slate-800/40 [&_.ant-table-tbody>tr>td]:!border-b [&_.ant-table-tbody>tr>td]:!border-card-border [&_.ant-table-tbody>tr>td]:dark:!border-card-border-dark [&_.ant-table-tbody>tr>td]:!py-3.5">
+            <Table
+              scroll={{ x: 800 }}
+              columns={transactionColumns}
+              dataSource={recentTransactions}
+              rowKey="id"
+              pagination={false}
+            />
+          </div>
         </DashboardCard>
       </Space>
     </PageContainer>

@@ -41,12 +41,23 @@ const Sidebar = ({
     (item: any) => {
       if (!item.permission) return true;
       if (!currentUser) return false;
+      const role = (currentUser.role || "").toUpperCase();
       if (
-        currentUser.role === "ADMIN" ||
-        currentUser.role === "SUPERADMIN" ||
-        currentUser.role === "Manager"
-      )
+        role === "ADMIN" ||
+        role === "SUPERADMIN" ||
+        role === "SUPER_ADMIN" ||
+        role === "MANAGER" ||
+        role === "OWNER"
+      ) {
         return true;
+      }
+      if (
+        Array.isArray(currentUser.permissions) &&
+        (currentUser.permissions.includes("all") ||
+          currentUser.permissions.includes("*"))
+      ) {
+        return true;
+      }
       return currentUser.permissions?.includes(item.permission);
     },
     [currentUser]

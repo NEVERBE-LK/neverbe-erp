@@ -54,6 +54,11 @@ const PO_STATUS_STYLING: Record<
     text: "text-rose-700 dark:text-rose-400 border border-rose-200/60 dark:border-rose-800/40",
     dot: "bg-rose-500",
   },
+  COMPLETED: {
+    bg: "bg-indigo-50 dark:bg-indigo-950/40",
+    text: "text-indigo-700 dark:text-indigo-400 border border-indigo-200/60 dark:border-indigo-800/40",
+    dot: "bg-indigo-500 animate-pulse",
+  },
 };
 
 const formatDate = (dateStr?: string) => {
@@ -174,18 +179,12 @@ const ViewPurchaseOrderPage = () => {
           const payload: any = { status, updatedAt: nowIso };
 
           if (status === "APPROVED") {
-            payload.approvedBy = currentUser?.id || "";
-            payload.approvedByName =
-              currentUser?.firstName && currentUser?.lastName
-                ? `${currentUser.firstName} ${currentUser.lastName}`
-                : currentUser?.username || currentUser?.email || "Manager";
+            payload.approvedBy = currentUser?.userId || "";
+            payload.approvedByName = currentUser?.username || currentUser?.email || "Manager";
             payload.approvedAt = nowIso;
           } else if (status === "REJECTED") {
-            payload.rejectedBy = currentUser?.id || "";
-            payload.rejectedByName =
-              currentUser?.firstName && currentUser?.lastName
-                ? `${currentUser.firstName} ${currentUser.lastName}`
-                : currentUser?.username || currentUser?.email || "Manager";
+            payload.rejectedBy = currentUser?.userId || "";
+            payload.rejectedByName = currentUser?.username || currentUser?.email || "Manager";
             payload.rejectedAt = nowIso;
           }
 

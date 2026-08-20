@@ -200,6 +200,12 @@ export default function AppBreadcrumb() {
 
   for (let i = 0; i < rawPathnames.length; i++) {
     const segment = rawPathnames[i];
+    if (segment === "dashboard") {
+      continue;
+    }
+    if (segment === "all" && rawPathnames[0] === "orders") {
+      continue;
+    }
     const isKnownRoute = KNOWN_ROUTE_SEGMENTS.has(segment);
     const isId =
       !isKnownRoute &&

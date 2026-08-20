@@ -13,6 +13,7 @@ import {
   IconMessage2,
   IconTruck,
   IconReceipt,
+  IconBuildingStore,
 } from "@tabler/icons-react";
 import { uniqueId } from "lodash";
 
@@ -29,7 +30,7 @@ const Menuitems = [
     permission: "view_dashboard",
   },
   {
-    subHeader: "Management",
+    subHeader: "Master Data",
     navLabel: true,
   },
   {
@@ -46,6 +47,47 @@ const Menuitems = [
     ],
   },
   {
+    subHeader: "Sales & Operations",
+    navLabel: true,
+  },
+  {
+    id: uniqueId(),
+    title: "Orders",
+    icon: IconShoppingCart,
+    permission: "view_orders",
+    children: [
+      { id: uniqueId(), title: "All Orders", href: "/orders" },
+      { id: uniqueId(), title: "Processing", href: "/orders/processing" },
+      { id: uniqueId(), title: "Payment Pending", href: "/orders/payment-pending" },
+    ],
+  },
+  {
+    id: uniqueId(),
+    title: "Procurement",
+    icon: IconTruck,
+    permission: "view_inventory",
+    children: [
+      {
+        id: uniqueId(),
+        title: "Suppliers",
+        href: "/inventory/suppliers",
+        permission: "view_suppliers",
+      },
+      {
+        id: uniqueId(),
+        title: "Purchase Orders",
+        href: "/inventory/purchase-orders",
+        permission: "view_purchase_orders",
+      },
+      {
+        id: uniqueId(),
+        title: "Goods Received (GRN)",
+        href: "/inventory/grn",
+        permission: "view_grn",
+      },
+    ],
+  },
+  {
     id: uniqueId(),
     title: "Inventory",
     icon: IconPackage,
@@ -59,80 +101,15 @@ const Menuitems = [
       },
       {
         id: uniqueId(),
-        title: "Adjustments",
+        title: "Stock Adjustments",
         href: "/inventory/adjustments",
         permission: "view_adjustments",
       },
-      {
-        id: uniqueId(),
-        title: "Suppliers",
-        href: "/inventory/suppliers",
-        permission: "view_suppliers",
-      },
     ],
   },
   {
-    id: uniqueId(),
-    title: "Purchase Orders",
-    icon: IconReceipt,
-    permission: "view_purchase_orders",
-    children: [
-      {
-        id: uniqueId(),
-        title: "Create PO",
-        href: "/inventory/purchase-orders/create",
-        permission: "create_purchase_orders",
-      },
-      {
-        id: uniqueId(),
-        title: "PO List",
-        href: "/inventory/purchase-orders",
-        permission: "view_purchase_orders",
-      },
-      {
-        id: uniqueId(),
-        title: "PO Approvals",
-        href: "/inventory/purchase-orders/approvals",
-        permission: "approve_po",
-      },
-    ],
-  },
-  {
-    id: uniqueId(),
-    title: "Goods Received",
-    icon: IconTruck,
-    permission: "view_grn",
-    children: [
-      {
-        id: uniqueId(),
-        title: "Create GRN",
-        href: "/inventory/grn/create",
-        permission: "create_grn",
-      },
-      {
-        id: uniqueId(),
-        title: "GRN List",
-        href: "/inventory/grn",
-        permission: "view_grn",
-      },
-      {
-        id: uniqueId(),
-        title: "GRN Approvals",
-        href: "/inventory/grn/approvals",
-        permission: "approve_grn",
-      },
-    ],
-  },
-  {
-    id: uniqueId(),
-    title: "Orders",
-    icon: IconShoppingCart,
-    permission: "view_orders",
-    children: [
-      { id: uniqueId(), title: "All Orders", href: "/orders/all" },
-      { id: uniqueId(), title: "Processing", href: "/orders/processing" },
-      { id: uniqueId(), title: "Payment Pending", href: "/orders/payment-pending" },
-    ],
+    subHeader: "Finance & Accounting",
+    navLabel: true,
   },
   {
     id: uniqueId(),
@@ -142,13 +119,13 @@ const Menuitems = [
     children: [
       {
         id: uniqueId(),
-        title: "Dashboard",
+        title: "Financial Overview",
         href: "/finance",
         permission: "view_finance",
       },
       {
         id: uniqueId(),
-        title: "Petty Cash",
+        title: "Petty Cash Vouchers",
         href: "/finance/petty-cash",
         permission: "view_petty_cash",
       },
@@ -166,19 +143,19 @@ const Menuitems = [
       },
       {
         id: uniqueId(),
-        title: "Supplier Invoices",
+        title: "Supplier Invoices (AP)",
         href: "/finance/supplier-invoices",
         permission: "view_supplier_invoices",
       },
     ],
   },
   {
-    subHeader: "Marketing",
+    subHeader: "Marketing & Storefront",
     navLabel: true,
   },
   {
     id: uniqueId(),
-    title: "Campaign",
+    title: "Campaigns",
     icon: IconSpeakerphone,
     permission: "view_promotions",
     children: [
@@ -196,7 +173,7 @@ const Menuitems = [
       },
       {
         id: uniqueId(),
-        title: "Combos",
+        title: "Product Combos",
         href: "/campaign/combos",
         permission: "view_combos",
       },
@@ -204,18 +181,7 @@ const Menuitems = [
   },
   {
     id: uniqueId(),
-    title: "Communications",
-    icon: IconMessage2,
-    href: "/communications",
-    permission: "view_communications",
-  },
-  {
-    subHeader: "Website",
-    navLabel: true,
-  },
-  {
-    id: uniqueId(),
-    title: "Website Manager",
+    title: "Storefront CMS",
     icon: IconWorld,
     permission: "view_website",
     children: [
@@ -240,18 +206,25 @@ const Menuitems = [
     ],
   },
   {
-    subHeader: "Reports",
+    id: uniqueId(),
+    title: "Communications",
+    icon: IconMessage2,
+    href: "/communications",
+    permission: "view_communications",
+  },
+  {
+    subHeader: "Reports & Analytics",
     navLabel: true,
   },
   {
     id: uniqueId(),
-    title: "Analytics",
+    title: "Reports & Analytics",
     icon: IconChartPie,
     href: "/reports",
     permission: "view_reports",
   },
   {
-    subHeader: "Security",
+    subHeader: "Administration",
     navLabel: true,
   },
   {
@@ -269,10 +242,6 @@ const Menuitems = [
     permission: "manage_roles",
   },
   {
-    subHeader: "System",
-    navLabel: true,
-  },
-  {
     id: uniqueId(),
     title: "Settings",
     icon: IconSettings,
@@ -280,13 +249,13 @@ const Menuitems = [
     children: [
       {
         id: uniqueId(),
-        title: "ERP Settings",
+        title: "ERP Configuration",
         href: "/settings",
         permission: "view_settings",
       },
       {
         id: uniqueId(),
-        title: "Shipping Rates",
+        title: "Shipping & Delivery",
         href: "/settings/shipping",
         permission: "view_shipping",
       },
@@ -298,7 +267,7 @@ const Menuitems = [
       },
       {
         id: uniqueId(),
-        title: "Tax Settings",
+        title: "Taxation & Compliance",
         href: "/settings/tax",
         permission: "view_tax_settings",
       },
@@ -314,7 +283,6 @@ const Menuitems = [
         href: "/settings/email-templates",
         permission: "view_settings",
       },
-
     ],
   },
 ];

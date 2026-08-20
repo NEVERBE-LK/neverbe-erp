@@ -10,11 +10,14 @@ import NotificationPanel from "./header/NotificationPanel";
 import { useNotifications } from "@/hooks/useNotifications";
 import api from "@/lib/api";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useSettings } from "@/contexts/SettingsContext";
+import { IconAlertTriangle } from "@tabler/icons-react";
 
 const { Content } = Layout;
 
 export default function AppLayout() {
   const { theme, toggleTheme } = useTheme();
+  const { settings } = useSettings();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(true);
@@ -88,6 +91,14 @@ export default function AppLayout() {
       >
         {/* Global Brand Accent */}
         <div className="w-full h-1 bg-black dark:bg-slate-800 fixed top-0 z-[100] left-0"></div>
+
+        {/* System Maintenance Alert Banner */}
+        {settings?.maintenanceMode && (
+          <div className="bg-amber-500 text-slate-950 px-4 py-1.5 text-xs font-bold font-mono flex items-center justify-center gap-2 z-50 shadow-xs">
+            <IconAlertTriangle size={16} />
+            <span>SYSTEM MAINTENANCE MODE IS ACTIVE — Storefront checkout is locked.</span>
+          </div>
+        )}
 
         <header className="sticky top-0 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800/80 h-16 flex items-center justify-between px-4 z-40">
           <div className="flex items-center gap-4">

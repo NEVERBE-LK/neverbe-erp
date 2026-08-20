@@ -4,7 +4,8 @@ export type PurchaseOrderStatus =
   | "DRAFT"
   | "SUBMITTED"
   | "APPROVED"
-  | "REJECTED";
+  | "REJECTED"
+  | "COMPLETED";
 
 export interface PurchaseOrderItem {
   productId: string;
@@ -47,6 +48,7 @@ export const PO_STATUS_LABELS: Record<PurchaseOrderStatus, string> = {
   SUBMITTED: "Submitted",
   APPROVED: "Approved",
   REJECTED: "Rejected",
+  COMPLETED: "Completed",
 };
 
 export const PO_STATUS_COLORS: Record<PurchaseOrderStatus, string> = {
@@ -54,4 +56,5 @@ export const PO_STATUS_COLORS: Record<PurchaseOrderStatus, string> = {
   SUBMITTED: "bg-blue-100 text-blue-800",
   APPROVED: "bg-green-100 text-green-800",
   REJECTED: "bg-red-100 text-red-800",
+  COMPLETED: "bg-indigo-100 text-indigo-800",
 };

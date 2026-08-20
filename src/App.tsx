@@ -12,6 +12,9 @@ const Unauthorized = lazy(() => import("@/pages/unauthorized/page"));
 const Dashboard = lazy(() => import("@/pages/dashboard/page"));
 const Orders = lazy(() => import("@/pages/orders/page"));
 const OrderDetail = lazy(() => import("@/pages/orders/[orderId]/page"));
+const OrderCustomerEdit = lazy(() => import("@/pages/orders/[orderId]/customer/page"));
+const OrderItemsEdit = lazy(() => import("@/pages/orders/[orderId]/items/page"));
+const OrderTrackingEdit = lazy(() => import("@/pages/orders/[orderId]/tracking/page"));
 const OrderView = lazy(() => import("@/pages/orders/[orderId]/view/page"));
 const OrderInvoice = lazy(
   () => import("@/pages/orders/[orderId]/invoice/page"),
@@ -68,6 +71,12 @@ const SupplierInvoices = lazy(
 const Combos = lazy(() => import("@/pages/campaign/combos/page"));
 const Coupons = lazy(() => import("@/pages/campaign/coupons/page"));
 const Promotions = lazy(() => import("@/pages/campaign/promotions/page"));
+const PromotionCreate = lazy(
+  () => import("@/pages/campaign/promotions/create/page"),
+);
+const PromotionEdit = lazy(
+  () => import("@/pages/campaign/promotions/[id]/page"),
+);
 
 // Reports
 const Reports = lazy(() => import("@/pages/reports/page"));
@@ -179,11 +188,14 @@ export default function App() {
           <Route path="dashboard" element={<ProtectedRoute permission="view_dashboard"><Dashboard /></ProtectedRoute>} />
 
           {/* Orders */}
-          <Route path="orders" element={<Navigate to="/orders/all" replace />} />
+          <Route path="orders" element={<ProtectedRoute permission="view_orders"><Orders /></ProtectedRoute>} />
           <Route path="orders/all" element={<ProtectedRoute permission="view_orders"><Orders /></ProtectedRoute>} />
           <Route path="orders/processing" element={<ProtectedRoute permission="view_orders"><Orders /></ProtectedRoute>} />
           <Route path="orders/payment-pending" element={<ProtectedRoute permission="view_orders"><Orders /></ProtectedRoute>} />
           <Route path="orders/:orderId" element={<ProtectedRoute permission="view_orders"><OrderDetail /></ProtectedRoute>} />
+          <Route path="orders/:orderId/customer" element={<ProtectedRoute permission="view_orders"><OrderCustomerEdit /></ProtectedRoute>} />
+          <Route path="orders/:orderId/items" element={<ProtectedRoute permission="view_orders"><OrderItemsEdit /></ProtectedRoute>} />
+          <Route path="orders/:orderId/tracking" element={<ProtectedRoute permission="view_orders"><OrderTrackingEdit /></ProtectedRoute>} />
           <Route path="orders/:orderId/view" element={<ProtectedRoute permission="view_orders"><OrderView /></ProtectedRoute>} />
           <Route path="orders/:orderId/invoice" element={<ProtectedRoute permission="view_orders"><OrderInvoice /></ProtectedRoute>} />
 
@@ -250,6 +262,14 @@ export default function App() {
           <Route path="campaign/combos" element={<ProtectedRoute permission="view_combos"><Combos /></ProtectedRoute>} />
           <Route path="campaign/coupons" element={<ProtectedRoute permission="view_coupons"><Coupons /></ProtectedRoute>} />
           <Route path="campaign/promotions" element={<ProtectedRoute permission="view_promotions"><Promotions /></ProtectedRoute>} />
+          <Route
+            path="campaign/promotions/create"
+            element={<ProtectedRoute permission="view_promotions"><PromotionCreate /></ProtectedRoute>}
+          />
+          <Route
+            path="campaign/promotions/:id"
+            element={<ProtectedRoute permission="view_promotions"><PromotionEdit /></ProtectedRoute>}
+          />
 
           {/* Reports */}
           <Route path="reports" element={<ProtectedRoute permission="view_reports"><Reports /></ProtectedRoute>} />

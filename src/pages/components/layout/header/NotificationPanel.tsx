@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Drawer, List, Badge, Button, Space, Typography, Tag, Empty, Tooltip } from "antd";
 import { IconBell, IconCheck, IconExternalLink, IconTrash } from "@tabler/icons-react";
-import { useNotifications, Notification } from "@/hooks/useNotifications";
+import { useNotifications, Notification, isOrderAlertTarget } from "@/hooks/useNotifications";
 import { dayjs } from "@/utils/dateUtils";
 import { useNavigate } from "react-router-dom";
 import api from "@/lib/api";
@@ -17,7 +17,6 @@ interface Props {
 export default function NotificationPanel({ open, onClose }: Props) {
   const { notifications, unreadCount } = useNotifications();
   const navigate = useNavigate();
-  const [filter, setFilter] = useState<string>("ALL");
 
   const handleMarkAsRead = async (id: string) => {
     try {
@@ -65,23 +64,20 @@ export default function NotificationPanel({ open, onClose }: Props) {
       );
     };
 
-    const filteredNotifications = notifications.filter(n => {
-      if (filter === "ALL") return true;
-      return n.type === filter;
-    });
+    const filteredNotifications = notifications.filter(isOrderAlertTarget);
 
     return (
       <Drawer
         title={
-          <div className="flex flex-col gap-6 w-full py-2">
+          <div className="flex flex-col gap-4 w-full py-2">
             <div className="flex items-center justify-between">
               <Space size="middle">
-                <div className="p-3 bg-blue-50 rounded-2xl">
-                   <IconBell size={22} className="text-blue-600" />
+                <div className="p-3 bg-blue-50 dark:bg-blue-950/40 rounded-2xl">
+                   <IconBell size={22} className="text-blue-600 dark:text-blue-400" />
                 </div>
                 <div className="flex flex-col">
-                   <Title level={5} style={{ margin: 0 }} className="font-black tracking-tight uppercase text-[12px]">System Notifications</Title>
-                   <Text className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">{unreadCount} UNREAD UPDATES</Text>
+                   <Title level={5} style={{ margin: 0 }} className="font-black tracking-tight uppercase text-[12px] text-text-main dark:text-text-main-dark">Notifications</Title>
+                   <Text className="text-[9px] font-bold text-text-sub dark:text-slate-500 uppercase tracking-widest">{unreadCount} UNREAD UPDATES</Text>
                 </div>
               </Space>
               {unreadCount > 0 && (
@@ -90,25 +86,11 @@ export default function NotificationPanel({ open, onClose }: Props) {
                   size="small" 
                   icon={<IconCheck size={14} />} 
                   onClick={handleMarkAllAsRead}
-                  className="text-blue-600 font-black text-[9px] uppercase tracking-widest hover:bg-blue-50 rounded-lg px-3"
+                  className="text-blue-600 dark:text-blue-400 font-black text-[9px] uppercase tracking-widest hover:bg-blue-50 dark:hover:bg-blue-950/40 rounded-lg px-3"
                 >
                   Mark all
                 </Button>
               )}
-            </div>
-
-            <div className="flex items-center gap-1 bg-gray-50 p-1 rounded-xl">
-               {["ALL", "ORDER", "STOCK", "SYSTEM"].map((t) => (
-                 <Button 
-                   key={t}
-                   type={filter === t ? 'primary' : 'text'}
-                   size="small"
-                   onClick={() => setFilter(t)}
-                   className={`flex-1 text-[9px] font-black uppercase tracking-widest h-8 rounded-lg border-none shadow-none ${filter === t ? 'bg-white text-blue-900! shadow-sm' : 'text-gray-400'}`}
-                 >
-                   {t}
-                 </Button>
-               ))}
             </div>
           </div>
         }

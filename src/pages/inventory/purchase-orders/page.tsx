@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Form, Input, Select, Dropdown, MenuProps, Table } from "antd";
+import { Button, Form, Input, Select, Dropdown, MenuProps, Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import {
   IconPlus,
@@ -60,6 +60,11 @@ const PO_STATUS_STYLING: Record<
     bg: "bg-rose-50 dark:bg-rose-950/40",
     text: "text-rose-700 dark:text-rose-400 border-rose-200/60 dark:border-rose-800/40",
     dot: "bg-rose-500",
+  },
+  COMPLETED: {
+    bg: "bg-indigo-50 dark:bg-indigo-950/40",
+    text: "text-indigo-700 dark:text-indigo-400 border-indigo-200/60 dark:border-indigo-800/40",
+    dot: "bg-indigo-500 animate-pulse",
   },
 };
 
@@ -188,18 +193,12 @@ const PurchaseOrdersPage = () => {
           const payload: any = { status: newStatus, updatedAt: nowIso };
 
           if (newStatus === "APPROVED") {
-            payload.approvedBy = currentUser?.id || "";
-            payload.approvedByName =
-              currentUser?.firstName && currentUser?.lastName
-                ? `${currentUser.firstName} ${currentUser.lastName}`
-                : currentUser?.username || currentUser?.email || "Manager";
+            payload.approvedBy = currentUser?.userId || "";
+            payload.approvedByName = currentUser?.username || currentUser?.email || "Manager";
             payload.approvedAt = nowIso;
           } else if (newStatus === "REJECTED") {
-            payload.rejectedBy = currentUser?.id || "";
-            payload.rejectedByName =
-              currentUser?.firstName && currentUser?.lastName
-                ? `${currentUser.firstName} ${currentUser.lastName}`
-                : currentUser?.username || currentUser?.email || "Manager";
+            payload.rejectedBy = currentUser?.userId || "";
+            payload.rejectedByName = currentUser?.username || currentUser?.email || "Manager";
             payload.rejectedAt = nowIso;
           }
 
@@ -315,29 +314,6 @@ const PurchaseOrdersPage = () => {
           },
         ];
 
-        if (record.status === "SUBMITTED" && canApprovePO) {
-          items.push({
-            key: "approve",
-            icon: <IconCheck size={14} className="text-emerald-500" />,
-            label: (
-              <span className="text-emerald-600 dark:text-emerald-400 font-medium">
-                Approve Order
-              </span>
-            ),
-            onClick: () => handleStatusChange(record, "APPROVED"),
-          });
-          items.push({
-            key: "reject",
-            icon: <IconX size={14} className="text-rose-500" />,
-            label: (
-              <span className="text-rose-600 dark:text-rose-400 font-medium">
-                Reject Order
-              </span>
-            ),
-            onClick: () => handleStatusChange(record, "REJECTED"),
-          });
-        }
-
         if (record.status === "APPROVED") {
           items.push({
             key: "grn",
@@ -347,7 +323,7 @@ const PurchaseOrdersPage = () => {
                 Receive Goods (GRN)
               </span>
             ),
-            onClick: () => navigate(`/inventory/grn/new?poId=${record.id}`),
+            onClick: () => navigate(`/inventory/grn/create?poId=${record.id}`),
           });
         }
 
@@ -384,34 +360,45 @@ const PurchaseOrdersPage = () => {
     <PageContainer title="Purchase Orders">
       <div className="space-y-6">
         {/* Header Bar */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-6 border-b border-slate-200/80 dark:border-slate-800">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-6 border-b border-card-border dark:border-card-border-dark">
           <div className="flex items-center gap-3">
-            <div className="w-1.5 h-8 bg-slate-900 dark:bg-slate-100 rounded-full" />
+            <div className="w-1 h-8 bg-brand dark:bg-brand-dark rounded-full" />
             <div className="flex flex-col">
-              <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400 dark:text-slate-500 leading-none mb-1 font-mono">
+              <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-text-sub dark:text-slate-500 leading-none mb-1 font-mono">
                 Procurement
               </span>
               <div className="flex items-center gap-3">
-                <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight leading-none">
+                <h2 className="text-2xl font-bold text-text-main dark:text-text-main-dark tracking-tight leading-none">
                   Purchase Orders
                 </h2>
-                <span className="text-xs font-mono font-semibold px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
+                <span className="text-xs font-mono font-semibold px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-card-border dark:border-card-border-dark">
                   {filteredOrders.length} Total
                 </span>
               </div>
             </div>
           </div>
 
-          {canCreate && (
-            <button
-              type="button"
-              onClick={() => navigate("/inventory/purchase-orders/create")}
-              className="bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-white text-white dark:text-slate-900 font-semibold text-xs rounded-xl px-4 py-2.5 shadow-xs transition-all flex items-center gap-2 border-none cursor-pointer"
-            >
-              <IconPlus size={16} />
-              Create Purchase Order
-            </button>
-          )}
+          <div className="flex items-center gap-2">
+            {canApprovePO && (
+              <Button
+                onClick={() => navigate("/inventory/purchase-orders/approvals")}
+                icon={<IconCheck size={16} />}
+                className="rounded-xl h-10 font-bold text-xs border-card-border dark:border-card-border-dark bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-text-main dark:text-slate-200 cursor-pointer flex items-center gap-2"
+              >
+                PO Approvals
+              </Button>
+            )}
+            {canCreate && (
+              <Button
+                type="primary"
+                icon={<IconPlus size={16} />}
+                onClick={() => navigate("/inventory/purchase-orders/create")}
+                className="bg-slate-900 dark:bg-slate-100 hover:bg-slate-800 dark:hover:bg-slate-200 text-white dark:text-slate-900 font-bold text-xs rounded-xl px-5 py-2.5 shadow-xs cursor-pointer transition-all h-10 border-none flex items-center gap-2"
+              >
+                New Order
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Filters */}

@@ -10,6 +10,7 @@ import {
   IconWorld,
   IconBuildingStore,
   IconUpload,
+  IconDotsVertical,
 } from "@tabler/icons-react";
 import toast from "react-hot-toast";
 import { PaymentMethod } from "@/model/PaymentMethod";
@@ -21,18 +22,14 @@ import {
   Input,
   Button,
   Select,
-  Tag,
   Switch,
   InputNumber,
-  Space,
-  Tooltip,
-  Image,
   Upload,
-  Divider,
   Row,
   Col,
-  Card,
+  Dropdown,
 } from "antd";
+import type { MenuProps } from "antd";
 
 const { TextArea } = Input;
 
@@ -42,7 +39,6 @@ const PaymentMethodsPage = () => {
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  // Modal State
   const [open, setOpen] = useState(false);
   const [editingMethod, setEditingMethod] = useState<PaymentMethod | null>(null);
   const [form] = Form.useForm();
@@ -148,49 +144,53 @@ const PaymentMethodsPage = () => {
   };
 
   return (
-    <PageContainer title="Payment Methods" description="Manage payment gateway and POS payment options">
-      <div className="flex flex-col gap-6">
-        {/* HEADER */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+    <PageContainer title="Payment Methods">
+      <div className="w-full space-y-6">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-1.5 h-10 bg-emerald-600 rounded-full" />
-            <div className="flex flex-col">
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 leading-none mb-1">
-                Settings / Finance
+            <div className="w-1 h-8 bg-slate-900 dark:bg-slate-100 rounded-full" />
+            <div>
+              <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-text-sub dark:text-slate-500 leading-none mb-1 font-mono block">
+                System Administration
               </span>
-              <h2 className="text-4xl font-black text-gray-900 tracking-tight leading-none">
-                Payment Methods
-              </h2>
+              <div className="flex items-center gap-2 font-mono">
+                <h2 className="text-2xl font-bold text-text-main dark:text-text-main-dark tracking-tight leading-none">
+                  Payment Gateway Methods
+                </h2>
+                <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-slate-100 dark:bg-slate-800 text-text-sub dark:text-slate-400 border border-card-border dark:border-card-border-dark">
+                  {methods.length} Total
+                </span>
+              </div>
             </div>
           </div>
           <Button
             type="primary"
-            size="large"
-            icon={<IconPlus size={18} />}
+            icon={<IconPlus size={16} />}
             onClick={() => handleOpenDialog()}
-            className="bg-black hover:bg-gray-800 border-none h-12 px-6 rounded-xl text-sm font-bold shadow-lg shadow-black/10 flex items-center gap-2"
+            className="bg-slate-900 dark:bg-slate-100 dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-200 border-none h-10 px-4 rounded-xl text-xs font-bold shadow-xs cursor-pointer flex items-center gap-2"
           >
             Add New Method
           </Button>
         </div>
 
         {/* STATS ROW */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm">
-            <span className="text-[10px] font-black uppercase text-gray-400 tracking-wider">Total Methods</span>
-            <p className="text-2xl font-black text-gray-900 mt-1">{methods.length}</p>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 font-mono">
+          <div className="bg-card dark:bg-card-dark border border-card-border dark:border-card-border-dark rounded-2xl p-4 shadow-xs">
+            <span className="text-[10px] font-bold uppercase text-text-sub">Total Methods</span>
+            <p className="text-xl font-bold text-text-main dark:text-text-main-dark mt-1">{methods.length}</p>
           </div>
-          <div className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm">
-            <span className="text-[10px] font-black uppercase text-emerald-500 tracking-wider">Active</span>
-            <p className="text-2xl font-black text-emerald-700 mt-1">{methods.filter(m => m.status).length}</p>
+          <div className="bg-card dark:bg-card-dark border border-card-border dark:border-card-border-dark rounded-2xl p-4 shadow-xs">
+            <span className="text-[10px] font-bold uppercase text-emerald-600 dark:text-emerald-400">Active</span>
+            <p className="text-xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">{methods.filter(m => m.status).length}</p>
           </div>
-          <div className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm">
-            <span className="text-[10px] font-black uppercase text-gray-400 tracking-wider">With Merchant Fee</span>
-            <p className="text-2xl font-black text-amber-600 mt-1">{methods.filter(m => m.fee > 0).length}</p>
+          <div className="bg-card dark:bg-card-dark border border-card-border dark:border-card-border-dark rounded-2xl p-4 shadow-xs">
+            <span className="text-[10px] font-bold uppercase text-amber-600 dark:text-amber-400">With Merchant Fee</span>
+            <p className="text-xl font-bold text-amber-600 dark:text-amber-400 mt-1">{methods.filter(m => m.fee > 0).length}</p>
           </div>
-          <div className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm">
-            <span className="text-[10px] font-black uppercase text-gray-400 tracking-wider">Online</span>
-            <p className="text-2xl font-black text-blue-600 mt-1">
+          <div className="bg-card dark:bg-card-dark border border-card-border dark:border-card-border-dark rounded-2xl p-4 shadow-xs">
+            <span className="text-[10px] font-bold uppercase text-text-sub">Online Enabled</span>
+            <p className="text-xl font-bold text-text-main dark:text-text-main-dark mt-1">
               {methods.filter(m => m.available?.includes("Website")).length}
             </p>
           </div>
@@ -199,124 +199,118 @@ const PaymentMethodsPage = () => {
         {/* METHODS GRID */}
         {loading ? (
           <div className="flex justify-center py-20">
-            <span className="text-xs font-bold text-gray-400">Loading payment methods...</span>
+            <span className="text-xs font-mono font-bold text-text-sub">Loading payment methods...</span>
           </div>
         ) : methods.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 gap-3">
-            <IconCreditCard size={48} className="text-gray-200" />
-            <span className="text-sm font-bold text-gray-400">No payment methods configured</span>
-            <Button type="primary" onClick={() => handleOpenDialog()} className="bg-black border-none rounded-xl">
-              Create First Method
-            </Button>
+          <div className="bg-card dark:bg-card-dark border border-card-border dark:border-card-border-dark p-12 text-center rounded-2xl shadow-xs space-y-3">
+            <IconCreditCard size={48} className="mx-auto text-text-sub" />
+            <p className="text-xs font-bold text-text-sub">No payment methods configured</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {methods.map((method) => (
-              <div
-                key={method.id}
-                className={`relative bg-white border rounded-2xl p-5 shadow-sm hover:shadow-md transition-all group ${
-                  method.status ? "border-gray-100" : "border-gray-200 opacity-60"
-                }`}
-              >
-                {/* Status dot */}
-                <div className={`absolute top-4 right-4 w-2.5 h-2.5 rounded-full ${method.status ? "bg-emerald-500" : "bg-gray-300"}`} />
+            {methods.map((method) => {
+              const menuItems: MenuProps["items"] = [
+                {
+                  key: "edit",
+                  icon: <IconEdit size={14} />,
+                  label: "Edit Method",
+                  onClick: () => handleOpenDialog(method),
+                },
+                {
+                  type: "divider",
+                },
+                {
+                  key: "delete",
+                  icon: <IconTrash size={14} className="text-rose-600 dark:text-rose-400" />,
+                  label: <span className="font-semibold text-rose-600 dark:text-rose-400">Delete Method</span>,
+                  onClick: () => handleDelete(method.id!),
+                },
+              ];
 
-                <div className="flex items-start gap-4 mb-4">
-                  {/* Image or icon */}
-                  {method.imageUrl ? (
-                    <div className="w-14 h-14 rounded-xl overflow-hidden border border-gray-100 shadow-sm flex-shrink-0 bg-gray-50">
-                      <Image
-                        src={method.imageUrl}
-                        alt={method.name}
-                        width={56}
-                        height={56}
-                        className="object-contain"
-                        preview={{
-                          mask: <span className="text-[8px] font-bold">View</span>,
-                        }}
-                      />
-                    </div>
-                  ) : (
-                    <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center flex-shrink-0 border border-gray-100">
-                      <IconCreditCard size={24} className="text-gray-400" />
-                    </div>
-                  )}
+              return (
+                <div
+                  key={method.id}
+                  className="bg-card dark:bg-card-dark border border-card-border dark:border-card-border-dark rounded-2xl p-4 shadow-xs flex flex-col justify-between"
+                >
+                  <div>
+                    <div className="flex items-start justify-between gap-3 mb-3">
+                      <div className="flex items-center gap-3">
+                        {method.imageUrl ? (
+                          <div className="w-12 h-12 rounded-xl overflow-hidden border border-card-border dark:border-card-border-dark bg-slate-50 dark:bg-slate-800 flex-shrink-0">
+                            <img
+                              src={method.imageUrl}
+                              alt={method.name}
+                              className="w-full h-full object-contain"
+                            />
+                          </div>
+                        ) : (
+                          <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center flex-shrink-0 border border-card-border dark:border-card-border-dark text-text-sub">
+                            <IconCreditCard size={20} />
+                          </div>
+                        )}
 
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-black text-sm text-gray-900 truncate">{method.name}</h3>
-                    <span className="text-[10px] font-mono font-bold text-gray-400 block mt-0.5">
-                      {method.paymentId || "—"}
-                    </span>
+                        <div className="min-w-0">
+                          <h3 className="font-bold text-xs text-text-main dark:text-text-main-dark truncate">{method.name}</h3>
+                          <span className="text-[10px] font-mono text-text-sub block mt-0.5">
+                            {method.paymentId || "—"}
+                          </span>
+                        </div>
+                      </div>
+
+                      <Dropdown menu={{ items: menuItems }} trigger={["click"]} placement="bottomRight">
+                        <button
+                          type="button"
+                          className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer border-none bg-transparent"
+                        >
+                          <IconDotsVertical size={16} />
+                        </button>
+                      </Dropdown>
+                    </div>
+
                     {method.description && (
-                      <p className="text-[11px] text-gray-500 mt-1 line-clamp-2">{method.description}</p>
+                      <p className="text-xs text-text-sub dark:text-slate-400 mb-3 line-clamp-2">{method.description}</p>
                     )}
+
+                    <div className="flex flex-wrap gap-1.5 mb-3 font-mono">
+                      {method.fee > 0 ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border border-amber-200/60 dark:border-amber-800/40">
+                          <IconPercentage size={10} />
+                          {method.fee}% Merchant Fee
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/40">
+                          No Fee
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-3 border-t border-card-border dark:border-card-border-dark font-mono">
+                    <div className="flex flex-wrap gap-1">
+                      {method.available?.map((ch) => (
+                        <span
+                          key={ch}
+                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-bold bg-slate-100 dark:bg-slate-800 text-text-sub border border-card-border dark:border-card-border-dark uppercase"
+                        >
+                          {getChannelIcon(ch)} {ch}
+                        </span>
+                      ))}
+                    </div>
+
+                    <span
+                      className={`inline-flex items-center gap-1 px-2 py-0.5 text-[9px] font-bold uppercase rounded-full ${
+                        method.status
+                          ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400"
+                          : "bg-slate-100 dark:bg-slate-800 text-slate-500"
+                      }`}
+                    >
+                      <span className={`w-1.5 h-1.5 rounded-full ${method.status ? "bg-emerald-500 animate-pulse" : "bg-slate-400"}`} />
+                      {method.status ? "ACTIVE" : "INACTIVE"}
+                    </span>
                   </div>
                 </div>
-
-                {/* Fee info */}
-                <div className="flex gap-2 mb-4">
-                  {method.fee > 0 ? (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-100">
-                      <IconPercentage size={11} />
-                      {method.fee}% Merchant Fee
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold bg-green-50 text-green-700 border border-green-100">
-                      No Fee
-                    </span>
-                  )}
-                  {(method.customerFee ?? 0) > 0 && (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-100">
-                      {method.customerFee}% Customer Fee
-                    </span>
-                  )}
-                </div>
-
-                {/* Channels */}
-                <div className="flex flex-wrap gap-1.5 mb-4">
-                  {method.available?.map((ch) => (
-                    <span
-                      key={ch}
-                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-bold bg-gray-50 text-gray-600 border border-gray-100 uppercase tracking-wider"
-                    >
-                      {getChannelIcon(ch)} {ch}
-                    </span>
-                  ))}
-                </div>
-
-                {/* Actions */}
-                <div className="flex justify-end gap-2 pt-3 border-t border-gray-50">
-                  <Tooltip title="Edit">
-                    <Button
-                      type="text"
-                      size="small"
-                      icon={<IconEdit size={15} className="text-gray-400 hover:text-emerald-600" />}
-                      onClick={() => handleOpenDialog(method)}
-                      className="hover:bg-emerald-50 rounded-lg"
-                    />
-                  </Tooltip>
-                  <Tooltip title="Delete">
-                    <Button
-                      type="text"
-                      size="small"
-                      danger
-                      icon={<IconTrash size={15} />}
-                      loading={deletingId === method.id}
-                      onClick={() => {
-                        Modal.confirm({
-                          title: "Delete Payment Method?",
-                          content: `This will deactivate "${method.name}" across all channels.`,
-                          okText: "Delete",
-                          okButtonProps: { danger: true },
-                          onOk: () => handleDelete(method.id!),
-                        });
-                      }}
-                      className="hover:bg-red-50 rounded-lg"
-                    />
-                  </Tooltip>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 
@@ -324,59 +318,38 @@ const PaymentMethodsPage = () => {
         <Modal
           open={open}
           title={
-            <div className="flex items-center gap-2 py-1">
-              <IconCreditCard size={20} className="text-emerald-600" />
-              <span className="font-black text-sm text-gray-800 uppercase tracking-wider">
-                {editingMethod ? "Edit Payment Method" : "New Payment Method"}
-              </span>
-            </div>
+            <span className="font-bold text-sm text-text-main dark:text-text-main-dark font-mono">
+              {editingMethod ? "Edit Payment Method" : "New Payment Method"}
+            </span>
           }
           onCancel={() => {
             setOpen(false);
             setImageFile(null);
             setImagePreview("");
           }}
-          footer={
-            <div className="flex justify-end gap-3 pt-2">
-              <Button
-                onClick={() => {
-                  setOpen(false);
-                  setImageFile(null);
-                  setImagePreview("");
-                }}
-                className="h-10 rounded-xl font-bold"
-              >
-                Cancel
-              </Button>
-              <Button
-                type="primary"
-                onClick={() => form.submit()}
-                loading={saving}
-                className="bg-emerald-600 hover:bg-emerald-700 border-none h-10 rounded-xl font-bold px-6"
-              >
-                {editingMethod ? "Update Method" : "Create Method"}
-              </Button>
-            </div>
-          }
-          width={840}
-          styles={{ body: { padding: "24px" } }}
+          onOk={() => form.submit()}
+          confirmLoading={saving}
+          okText="Save Method"
+          okButtonProps={{ className: "bg-slate-900 dark:bg-slate-100 dark:text-slate-900 border-none h-10 px-6 rounded-xl font-bold text-xs" }}
+          cancelButtonProps={{ className: "h-10 px-4 rounded-xl text-xs font-semibold" }}
+          width={700}
         >
           <Form
             form={form}
             layout="vertical"
             onFinish={handleSave}
             initialValues={{ status: true, fee: 0, customerFee: 0, available: ["Store"] }}
+            className="py-2 space-y-3 font-mono text-xs"
           >
-            {/* Image Upload */}
-            <div className="flex justify-center mb-6">
-              <div className="flex flex-col items-center gap-3">
+            <div className="flex justify-center mb-4">
+              <div className="flex flex-col items-center gap-2">
                 {imagePreview ? (
-                  <div className="w-20 h-20 rounded-2xl overflow-hidden border-2 border-dashed border-emerald-200 bg-gray-50 flex items-center justify-center">
+                  <div className="w-16 h-16 rounded-xl overflow-hidden border border-card-border dark:border-card-border-dark bg-slate-50 dark:bg-slate-800 flex items-center justify-center">
                     <img src={imagePreview} alt="Preview" className="w-full h-full object-contain" />
                   </div>
                 ) : (
-                  <div className="w-20 h-20 rounded-2xl border-2 border-dashed border-gray-200 bg-gray-50 flex items-center justify-center">
-                    <IconPhoto size={28} className="text-gray-300" />
+                  <div className="w-16 h-16 rounded-xl border border-dashed border-card-border dark:border-card-border-dark bg-slate-50 dark:bg-slate-800 flex items-center justify-center">
+                    <IconPhoto size={24} className="text-text-sub" />
                   </div>
                 )}
                 <Upload
@@ -393,7 +366,7 @@ const PaymentMethodsPage = () => {
                     size="small"
                     className="text-[10px] font-bold rounded-lg"
                   >
-                    {imagePreview ? "Change Image" : "Upload Logo"}
+                    {imagePreview ? "Change Logo" : "Upload Logo"}
                   </Button>
                 </Upload>
               </div>
@@ -401,109 +374,48 @@ const PaymentMethodsPage = () => {
 
             <Row gutter={16}>
               <Col span={14}>
-                <Form.Item
-                  name="name"
-                  label={<span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Method Name</span>}
-                  rules={[{ required: true, message: "Name is required" }]}
-                >
-                  <Input className="h-10 rounded-lg border-gray-200" placeholder="e.g. Visa/Mastercard" />
+                <Form.Item name="name" label="Method Name" rules={[{ required: true }]} className="!mb-3">
+                  <Input placeholder="e.g. Visa/Mastercard" className="h-10 rounded-xl text-xs font-sans" />
                 </Form.Item>
               </Col>
               <Col span={10}>
-                <Form.Item
-                  name="paymentId"
-                  label={<span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Payment ID</span>}
-                  rules={[{ required: true, message: "ID is required" }]}
-                >
-                  <Input
-                    className="h-10 rounded-lg border-gray-200 font-mono"
-                    placeholder="PM-001"
-                    disabled={!!editingMethod}
-                    onChange={(e) => {
-                      form.setFieldsValue({
-                        paymentId: e.target.value.toUpperCase(),
-                      });
-                    }}
-                  />
+                <Form.Item name="paymentId" label="Payment ID" rules={[{ required: true }]} className="!mb-3">
+                  <Input placeholder="PM-001" disabled={!!editingMethod} className="h-10 rounded-xl text-xs" />
                 </Form.Item>
               </Col>
             </Row>
 
-            <Form.Item
-              name="description"
-              label={<span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Description</span>}
-            >
-              <TextArea
-                rows={2}
-                placeholder="Brief description of this payment method..."
-                className="rounded-lg border-gray-200"
-              />
+            <Form.Item name="description" label="Description" className="!mb-3">
+              <TextArea rows={2} placeholder="Brief description..." className="rounded-xl text-xs font-sans" />
             </Form.Item>
 
-            <Form.Item
-              name="available"
-              label={<span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Available Channels</span>}
-            >
+            <Form.Item name="available" label="Available Channels" className="!mb-3">
               <Select
                 mode="multiple"
                 placeholder="Select channels"
-                className="rounded-lg"
+                className="w-full rounded-xl"
                 options={[
-                  { value: "Store", label: "🏪 In-Store / POS" },
-                  { value: "Website", label: "🌐 Website / Online" },
+                  { value: "Store", label: "In-Store / POS" },
+                  { value: "Website", label: "Website / Online" },
                 ]}
               />
             </Form.Item>
 
-            <Divider className="my-4">
-              <span className="text-[9px] font-black uppercase text-gray-400 tracking-widest">Fee Structure</span>
-            </Divider>
-
             <Row gutter={16}>
               <Col span={12}>
-                <Form.Item
-                  name="fee"
-                  label={<span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Merchant Fee (%)</span>}
-                  rules={[{ required: true }]}
-                  tooltip="Fee percentage charged to us by the payment gateway (not visible to customers)"
-                >
-                  <InputNumber
-                    min={0}
-                    step={0.01}
-                    className="w-full h-10 rounded-lg"
-                    addonAfter="%"
-                    placeholder="0.00"
-                  />
+                <Form.Item name="fee" label="Merchant Fee (%)" rules={[{ required: true }]} className="!mb-3">
+                  <InputNumber min={0} step={0.01} className="w-full h-10 rounded-xl text-xs" addonAfter="%" />
                 </Form.Item>
               </Col>
               <Col span={12}>
-                <Form.Item
-                  name="customerFee"
-                  label={<span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Customer Fee (%)</span>}
-                  rules={[{ required: true, message: "Customer fee is required" }]}
-                  tooltip="Percentage fee added to the customer's total when they select this payment method"
-                >
-                  <InputNumber
-                    min={0}
-                    step={0.01}
-                    className="w-full h-10 rounded-lg"
-                    addonAfter="%"
-                    placeholder="0.00"
-                  />
+                <Form.Item name="customerFee" label="Customer Fee (%)" rules={[{ required: true }]} className="!mb-3">
+                  <InputNumber min={0} step={0.01} className="w-full h-10 rounded-xl text-xs" addonAfter="%" />
                 </Form.Item>
               </Col>
             </Row>
 
-            <Form.Item
-              name="status"
-              label={<span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Active Status</span>}
-              valuePropName="checked"
-            >
-              <Switch
-                checkedChildren="ACTIVE"
-                unCheckedChildren="INACTIVE"
-                className="bg-gray-300"
-              />
+            <Form.Item name="status" label="Active Status" valuePropName="checked" className="!mb-0">
+              <Switch checkedChildren="ACTIVE" unCheckedChildren="INACTIVE" />
             </Form.Item>
           </Form>
         </Modal>

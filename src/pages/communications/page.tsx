@@ -1,14 +1,15 @@
 import React, { useEffect, useState } from "react";
-import { Table, Tag, Card, Input, Space, Button, Typography, Modal, Descriptions, Form, Select, Row, Col, Divider, Tooltip } from "antd";
-import { IconSearch, IconEye, IconRefresh, IconMessage2, IconCheck, IconAlertTriangle, IconSend, IconPlus, IconTemplate, IconMail, IconLanguage } from "@tabler/icons-react";
+import { Table, Input, Button, Modal, Descriptions, Form, Select, Row, Col, Divider, Tooltip, Dropdown } from "antd";
+import type { MenuProps } from "antd";
+import { IconSearch, IconEye, IconRefresh, IconMessage2, IconPlus, IconTemplate, IconFilter, IconDotsVertical, IconX } from "@tabler/icons-react";
 import { Link } from "react-router-dom";
 import api from "@/lib/api";
 import PageContainer from "../components/container/PageContainer";
 import dayjs from "dayjs";
 import toast from "react-hot-toast";
 import { useAppSelector } from "@/lib/hooks";
+import Spinner from "../components/shared/Spinner";
 
-const { Text, Title, Paragraph } = Typography;
 const { Option } = Select;
 
 interface NotificationLog {
@@ -44,10 +45,8 @@ const CommunicationsPage = () => {
   
   const { currentUser } = useAppSelector((state) => state.authSlice);
 
-  // Helper for permission
   const canCompose = currentUser?.role === "ADMIN" || currentUser?.role === "SUPERADMIN" || currentUser?.permissions?.includes("send_custom_notifications");
   
-  // Compose state
   const [isComposeOpen, setIsComposeOpen] = useState(false);
   const [sending, setSending] = useState(false);
   const [templates, setTemplates] = useState<SMSTemplate[]>([]);
@@ -135,9 +134,9 @@ const CommunicationsPage = () => {
       dataIndex: "createdAt",
       key: "createdAt",
       render: (date: any) => (
-        <Text className="text-gray-500 text-xs">
-          {date ? dayjs(date).format("DD MMM YYYY, hh:mm A") : "-"}
-        </Text>
+        <span className="font-mono text-xs text-text-sub dark:text-slate-400">
+          {date ? dayjs(date).format("DD MMM YYYY, hh:mm A") : "—"}
+        </span>
       ),
     },
     {
@@ -145,9 +144,9 @@ const CommunicationsPage = () => {
       dataIndex: "orderId",
       key: "orderId",
       render: (id: string) => {
-        if (id === "CUSTOM" || !id) return <Text className="text-gray-400 text-xs">N/A</Text>;
+        if (id === "CUSTOM" || !id) return <span className="text-text-sub dark:text-slate-500 text-xs font-mono">—</span>;
         return (
-          <Link to={`/orders/${id.toLowerCase()}`} className="text-emerald-600 hover:text-emerald-700 font-bold hover:underline text-xs">
+          <Link to={`/orders/${id.toLowerCase()}`} className="text-text-main dark:text-text-main-dark font-bold hover:underline font-mono text-xs">
             #{id?.toUpperCase()}
           </Link>
         );
@@ -158,14 +157,13 @@ const CommunicationsPage = () => {
       dataIndex: "type",
       key: "type",
       render: (type: string) => {
-        const isEmail = type?.includes("email");
         let label = type?.replace("_", " ").toUpperCase();
         if (type === "ebill_sms") label = "DIGITAL RECEIPT";
         
         return (
-          <Tag color={isEmail ? "blue" : "green"} className="rounded-full px-3 text-[10px] font-bold">
+          <span className="inline-flex items-center px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-card-border dark:border-card-border-dark font-mono">
             {label}
-          </Tag>
+          </span>
         );
       },
     },
@@ -173,141 +171,161 @@ const CommunicationsPage = () => {
       title: "Recipient",
       dataIndex: "to",
       key: "to",
-      render: (to: string) => <Text className="text-xs font-medium">{to}</Text>,
+      render: (to: string) => <span className="text-xs font-mono text-text-main dark:text-text-main-dark">{to}</span>,
     },
     {
       title: "Status",
       dataIndex: "status",
       key: "status",
       render: (status: string) => {
-        if (!status) {
-          return (
-            <Tooltip title="Message successfully dispatched to provider">
-               <Tag className="rounded-full text-[10px] font-black uppercase border-none bg-gray-100 text-gray-400">DISPATCHED</Tag>
-            </Tooltip>
-          );
-        }
-        const upper = status.toUpperCase();
-        let colorClass = "bg-cyan-50 text-cyan-700";
-        if (upper === "FAILED" || upper === "ERROR") {
-          colorClass = "bg-red-50 text-red-700";
-        } else if (upper === "COMPLETED" || upper === "SENT" || upper === "SUCCESS") {
-          colorClass = "bg-green-50 text-green-700";
-        } else if (upper === "PENDING" || upper === "PROCESSING") {
-          colorClass = "bg-amber-50 text-amber-700";
-        }
+        const isSuccess = status && (status.toUpperCase() === "COMPLETED" || status.toUpperCase() === "SENT" || status.toUpperCase() === "SUCCESS");
+        
         return (
-          <Tooltip title={`Status: ${status}`}>
-             <Tag className={`rounded-full text-[10px] font-black uppercase border-none ${colorClass}`}>{status}</Tag>
-          </Tooltip>
+          <span
+            className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-full font-mono ${
+              isSuccess
+                ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/40"
+                : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-card-border dark:border-card-border-dark"
+            }`}
+          >
+            <span
+              className={`w-1.5 h-1.5 rounded-full ${
+                isSuccess ? "bg-emerald-500 animate-pulse" : "bg-slate-400"
+              }`}
+            />
+            {status || "DISPATCHED"}
+          </span>
         );
       },
     },
     {
       title: "Actions",
       key: "actions",
-      render: (_: any, record: NotificationLog) => (
-        <Button 
-          type="text" 
-          icon={<IconEye size={18} />} 
-          onClick={() => setSelectedLog(record)}
-          className="hover:text-emerald-600"
-        />
-      ),
+      width: 60,
+      align: "right" as const,
+      render: (_: any, record: NotificationLog) => {
+        const menuItems: MenuProps["items"] = [
+          {
+            key: "view",
+            icon: <IconEye size={14} />,
+            label: "View Payload",
+            onClick: () => setSelectedLog(record),
+          },
+        ];
+
+        return (
+          <div className="flex justify-end">
+            <Dropdown menu={{ items: menuItems }} trigger={["click"]} placement="bottomRight">
+              <button
+                type="button"
+                className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer border-none bg-transparent"
+              >
+                <IconDotsVertical size={16} />
+              </button>
+            </Dropdown>
+          </div>
+        );
+      },
     },
   ];
 
   return (
     <PageContainer title="Communication Center">
-      <div className="space-y-6">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-          <div>
-            <Title level={4} className="!m-0 text-gray-800">Communication Logs</Title>
-            <Text className="text-gray-400 text-xs">Track all outbound customer interactions</Text>
+      <div className="w-full space-y-6">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-1 h-8 bg-slate-900 dark:bg-slate-100 rounded-full" />
+            <div>
+              <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-text-sub dark:text-slate-500 leading-none mb-1 font-mono block">
+                Marketing & Storefront
+              </span>
+              <div className="flex items-center gap-2 font-mono">
+                <h2 className="text-2xl font-bold text-text-main dark:text-text-main-dark tracking-tight leading-none">
+                  Communication Logs
+                </h2>
+                <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-slate-100 dark:bg-slate-800 text-text-sub dark:text-slate-400 border border-card-border dark:border-card-border-dark">
+                  {pagination.total} Total
+                </span>
+              </div>
+            </div>
           </div>
-          <Space size="middle">
+          {canCompose && (
+            <Button 
+              type="primary"
+              icon={<IconPlus size={16} />} 
+              onClick={() => setIsComposeOpen(true)}
+              className="bg-slate-900 dark:bg-slate-100 dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-200 border-none h-10 px-4 rounded-xl text-xs font-bold shadow-xs cursor-pointer flex items-center gap-2"
+            >
+              Compose
+            </Button>
+          )}
+        </div>
+
+        {/* Search Panel */}
+        <div className="bg-card dark:bg-card-dark border border-card-border dark:border-card-border-dark rounded-xl p-4 flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-2 flex-1 min-w-[240px]">
             <Input
               placeholder="Search Order, Phone or Email..."
-              prefix={<IconSearch size={16} className="text-gray-400" />}
-              className="w-full md:w-72 h-10 rounded-xl"
+              prefix={<IconSearch size={15} className="text-text-sub" />}
+              className="h-10 rounded-xl"
               value={searchText}
               onChange={e => setSearchText(e.target.value)}
               onPressEnter={() => fetchLogs(1, pagination.pageSize, searchText)}
-              suffix={
-                searchText && (
-                  <Button 
-                    type="text" 
-                    size="small" 
-                    onClick={() => {
-                      setSearchText("");
-                      fetchLogs(1, pagination.pageSize, "");
-                    }}
-                    className="flex justify-center items-center"
-                  >
-                    ×
-                  </Button>
-                )
-              }
+              allowClear
             />
             <Button 
               type="primary" 
               onClick={() => fetchLogs(1, pagination.pageSize, searchText)}
-              className="h-10 px-4 rounded-xl"
+              className="bg-slate-900 dark:bg-slate-100 dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-200 border-none h-10 px-4 rounded-xl text-xs font-bold cursor-pointer"
             >
               Search
             </Button>
-            {canCompose && (
-              <Button 
-                 type="primary"
-                 icon={<IconPlus size={18} />} 
-                 onClick={() => setIsComposeOpen(true)}
-                 className="h-10 px-6 rounded-xl font-bold bg-emerald-600 border-none flex items-center gap-2"
-              >
-                Compose
-              </Button>
-            )}
-            <Button 
-              icon={<IconRefresh size={18} />} 
-              onClick={() => fetchLogs(1, pagination.pageSize, "")}
-              className="h-10 w-10 flex items-center justify-center rounded-xl border-gray-200"
-            />
-          </Space>
+          </div>
+          <Button 
+            icon={<IconRefresh size={16} />} 
+            onClick={() => fetchLogs(1, pagination.pageSize, "")}
+            className="h-10 px-4 rounded-xl border-card-border dark:border-card-border-dark text-text-sub text-xs font-medium cursor-pointer"
+          >
+            Refresh
+          </Button>
         </div>
 
-        <Card className="rounded-2xl border-gray-100 shadow-xl shadow-gray-200/50" bodyStyle={{ padding: 0 }}>
-          <Table
-            columns={columns}
-            dataSource={logs}
-            loading={loading}
-            rowKey="id"
-            pagination={{
-              total: pagination.total,
-              current: pagination.current,
-              pageSize: pagination.pageSize,
-              position: ["bottomCenter"],
-              showSizeChanger: true,
-              pageSizeOptions: ["10", "20", "50", "100"],
-            }}
-            scroll={{ x: 'max-content' }}
-            onChange={(pag: any) => {
-              setPagination(prev => ({
-                ...prev,
-                current: pag.current,
-                pageSize: pag.pageSize,
-              }));
-              // fetchLogs is triggered by the useEffect on pagination state
-            }}
-            className="custom-table"
-          />
-        </Card>
+        {/* Table Container */}
+        <div className="bg-card dark:bg-card-dark border border-card-border dark:border-card-border-dark rounded-2xl shadow-xs overflow-hidden">
+          <div className="[&_.ant-table]:!bg-transparent [&_.ant-table-thead>tr>th]:!bg-slate-50/80 [&_.ant-table-thead>tr>th]:dark:!bg-slate-800/60 [&_.ant-table-thead>tr>th]:!text-text-sub [&_.ant-table-thead>tr>th]:!font-bold [&_.ant-table-thead>tr>th]:!text-[11px] [&_.ant-table-thead>tr>th]:!uppercase [&_.ant-table-thead>tr>th]:!tracking-wider [&_.ant-table-thead>tr>th]:!border-b [&_.ant-table-thead>tr>th]:!border-card-border [&_.ant-table-thead>tr>th]:dark:!border-card-border-dark [&_.ant-table-tbody>tr]:hover:!bg-slate-50/60 [&_.ant-table-tbody>tr]:dark:hover:!bg-slate-800/40 [&_.ant-table-tbody>tr>td]:!border-b [&_.ant-table-tbody>tr>td]:!border-card-border [&_.ant-table-tbody>tr>td]:dark:!border-card-border-dark [&_.ant-table-tbody>tr>td]:!py-3.5">
+            <Table
+              columns={columns}
+              dataSource={logs}
+              loading={loading}
+              rowKey="id"
+              pagination={{
+                total: pagination.total,
+                current: pagination.current,
+                pageSize: pagination.pageSize,
+                position: ["bottomRight"],
+                showSizeChanger: true,
+                pageSizeOptions: ["10", "20", "50", "100"],
+              }}
+              scroll={{ x: 'max-content' }}
+              onChange={(pag: any) => {
+                setPagination(prev => ({
+                  ...prev,
+                  current: pag.current,
+                  pageSize: pag.pageSize,
+                }));
+              }}
+            />
+          </div>
+        </div>
       </div>
 
       {/* Compose Modal */}
       <Modal
         title={
-          <div className="flex items-center gap-2 pb-4 border-b border-gray-100">
-            <IconMessage2 className="text-emerald-600" size={20} />
-            <span className="font-bold">Compose Custom Message</span>
+          <div className="flex items-center gap-2 pb-3 border-b border-card-border dark:border-card-border-dark">
+            <IconMessage2 size={18} className="text-text-main dark:text-text-main-dark" />
+            <span className="font-bold text-sm text-text-main dark:text-text-main-dark font-mono">Compose Custom Message</span>
           </div>
         }
         open={isComposeOpen}
@@ -315,18 +333,17 @@ const CommunicationsPage = () => {
         onOk={() => form.submit()}
         confirmLoading={sending}
         okText="Send Message"
-        okButtonProps={{ className: "bg-emerald-600 h-10 px-8 rounded-lg font-bold" }}
-        cancelButtonProps={{ className: "h-10 px-6 rounded-lg" }}
+        okButtonProps={{ className: "bg-slate-900 dark:bg-slate-100 dark:text-slate-900 border-none h-10 px-6 rounded-xl font-bold text-xs" }}
+        cancelButtonProps={{ className: "h-10 px-4 rounded-xl border-card-border dark:border-card-border-dark text-xs font-semibold" }}
         width={750}
-        className="rounded-2xl overflow-hidden"
       >
-        <Form form={form} layout="vertical" onFinish={handleSend} className="py-6">
-          <Row gutter={24}>
-            <Col span={16}>
-               <div className="space-y-4">
-                  <Row gutter={16}>
+        <Form form={form} layout="vertical" onFinish={handleSend} className="py-4">
+          <Row gutter={20}>
+            <Col span={15}>
+               <div className="space-y-3">
+                  <Row gutter={12}>
                     <Col span={12}>
-                      <Form.Item label="Channel" required>
+                      <Form.Item label="Channel" required className="!mb-3">
                          <Select 
                            value={msgType} 
                            onChange={(val) => {
@@ -342,19 +359,19 @@ const CommunicationsPage = () => {
                       </Form.Item>
                     </Col>
                     <Col span={12}>
-                      <Form.Item name="orderId" label="Link to Order (Optional)">
-                         <Input placeholder="e.g. WB1234" className="h-10 rounded-xl" />
+                      <Form.Item name="orderId" label="Link to Order (Optional)" className="!mb-3">
+                         <Input placeholder="e.g. WB1234" className="h-10 rounded-xl font-mono text-xs" />
                       </Form.Item>
                     </Col>
                   </Row>
 
-                  <Form.Item name="to" label={msgType === 'sms' ? "Recipient Phone" : "Recipient Email"} rules={[{ required: true }]}>
-                    <Input placeholder={msgType === 'sms' ? "+9477..." : "customer@example.com"} className="h-10 rounded-xl" />
+                  <Form.Item name="to" label={msgType === 'sms' ? "Recipient Phone" : "Recipient Email"} rules={[{ required: true }]} className="!mb-3">
+                    <Input placeholder={msgType === 'sms' ? "+9477..." : "customer@example.com"} className="h-10 rounded-xl font-mono text-xs" />
                   </Form.Item>
 
                   {msgType === 'email' && (
-                    <Form.Item name="subject" label="Email Subject" rules={[{ required: true }]}>
-                       <Input placeholder="Enter message subject..." className="h-10 rounded-xl" />
+                    <Form.Item name="subject" label="Email Subject" rules={[{ required: true }]} className="!mb-3">
+                       <Input placeholder="Enter message subject..." className="h-10 rounded-xl text-xs" />
                     </Form.Item>
                   )}
 
@@ -364,77 +381,55 @@ const CommunicationsPage = () => {
                       <div className="flex justify-between items-center w-full">
                         <span>Message Content</span>
                         {msgType === "sms" && messageText.length > 0 && (
-                          <span className={`text-[9px] font-bold ${smsMetrics.parts > 1 ? "text-amber-600" : "text-gray-400"}`}>
+                          <span className={`text-[9px] font-bold font-mono ${smsMetrics.parts > 1 ? "text-amber-600" : "text-text-sub"}`}>
                             {smsMetrics.chars}/{smsMetrics.limit} Chars ({smsMetrics.parts} part{smsMetrics.parts > 1 ? "s" : ""})
                           </span>
                         )}
                       </div>
                     }
                     rules={[{ required: true }]}
+                    className="!mb-3"
                   >
                     <Input.TextArea 
-                      rows={6} 
+                      rows={5} 
                       onChange={(e) => setMessageText(e.target.value)}
                       placeholder="Type your message here..." 
-                      className="rounded-xl" 
+                      className="rounded-xl font-mono text-xs" 
                     />
                   </Form.Item>
 
                   {msgType === "sms" && (
-                    <div className="flex flex-col gap-1.5 mb-4">
-                      {messageText.length > 0 && (
-                        <div className="w-full bg-slate-100 rounded-full h-1 overflow-hidden">
-                          <div
-                            className={`h-full rounded-full transition-all duration-300 ${
-                              smsMetrics.parts > 1
-                                ? "bg-amber-500"
-                                : (smsMetrics.chars / smsMetrics.limit) > 0.85
-                                ? "bg-amber-400"
-                                : "bg-emerald-500"
-                            }`}
-                            style={{
-                              width: `${Math.min(
-                                100,
-                                (((smsMetrics.chars % smsMetrics.limit) || smsMetrics.limit) / smsMetrics.limit) * 100
-                              )}%`,
-                            }}
-                          />
-                        </div>
-                      )}
-                      <div className="flex justify-between items-center text-[9px] font-bold text-gray-400 px-1">
+                    <div className="flex flex-col gap-1">
+                      <div className="flex justify-between items-center text-[9px] font-bold font-mono text-text-sub">
                         <span>
-                          {smsMetrics.isUnicode
-                            ? "✨ Unicode mode (Sinhala/Tamil character detected)"
-                            : "Standard GSM 7-bit alphabet"}
+                          {smsMetrics.isUnicode ? "✨ Unicode mode (Sinhala/Tamil detected)" : "GSM 7-bit alphabet"}
                         </span>
-                        <span>
-                          Limit per part: {smsMetrics.limit} chars
-                        </span>
+                        <span>Limit per part: {smsMetrics.limit} chars</span>
                       </div>
                     </div>
                   )}
                </div>
             </Col>
-            <Col span={8}>
-               <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 h-[520px] flex flex-col justify-between">
+            <Col span={9}>
+               <div className="bg-slate-50 dark:bg-slate-800/40 p-3.5 rounded-xl border border-card-border dark:border-card-border-dark h-[460px] flex flex-col justify-between">
                   <div>
-                    <div className="flex items-center gap-2 mb-4">
-                      <IconTemplate size={18} className="text-gray-400" />
-                      <span className="text-[10px] font-black uppercase text-gray-500 tracking-widest">Use Template</span>
+                    <div className="flex items-center gap-2 mb-3">
+                      <IconTemplate size={16} className="text-text-sub" />
+                      <span className="text-[10px] font-bold uppercase text-text-sub tracking-widest font-mono">Use Template</span>
                     </div>
-                    <div className="space-y-2.5 overflow-y-auto max-h-[320px] pr-1 custom-scrollbar">
+                    <div className="space-y-2 overflow-y-auto max-h-[340px] pr-1 font-mono">
                        {templates.map(t => (
                          <div 
                            key={t.id} 
-                           className="bg-white p-3 rounded-xl border border-gray-200 shadow-sm flex flex-col gap-1.5"
+                           className="bg-card dark:bg-card-dark p-2.5 rounded-xl border border-card-border dark:border-card-border-dark flex flex-col gap-1"
                          >
-                            <div className="text-[10px] font-bold text-gray-800 leading-tight">{t.name}</div>
-                            <div className="flex flex-wrap gap-1.5 mt-1">
+                            <div className="text-[10px] font-bold text-text-main dark:text-text-main-dark truncate">{t.name}</div>
+                            <div className="flex flex-wrap gap-1 mt-1">
                               {t.en && (
                                 <button
                                   type="button"
                                   onClick={() => applyTemplate(t, "en")}
-                                  className="px-2 py-0.5 text-[9px] font-black bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-600 rounded-md transition cursor-pointer"
+                                  className="px-2 py-0.5 text-[9px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-md cursor-pointer border-none"
                                 >
                                   EN
                                 </button>
@@ -443,7 +438,7 @@ const CommunicationsPage = () => {
                                 <button
                                   type="button"
                                   onClick={() => applyTemplate(t, "si")}
-                                  className="px-2 py-0.5 text-[9px] font-black bg-emerald-50 hover:bg-emerald-100 border border-emerald-100 text-emerald-700 rounded-md transition cursor-pointer"
+                                  className="px-2 py-0.5 text-[9px] font-bold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 rounded-md cursor-pointer border-none"
                                 >
                                   සිංහල
                                 </button>
@@ -452,7 +447,7 @@ const CommunicationsPage = () => {
                                 <button
                                   type="button"
                                   onClick={() => applyTemplate(t, "ta")}
-                                  className="px-2 py-0.5 text-[9px] font-black bg-blue-50 hover:bg-blue-100 border border-blue-100 text-blue-700 rounded-md transition cursor-pointer"
+                                  className="px-2 py-0.5 text-[9px] font-bold bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 rounded-md cursor-pointer border-none"
                                 >
                                   தமிழ்
                                 </button>
@@ -462,63 +457,50 @@ const CommunicationsPage = () => {
                        ))}
                     </div>
                   </div>
-                  <div>
-                    <Divider className="my-3" />
-                    <div className="p-3 bg-blue-50/50 text-blue-700 border border-blue-100 rounded-lg text-[10px] leading-relaxed">
-                      <strong>Tip:</strong> Select <strong>EN</strong>, <strong>සිංහල</strong>, or <strong>தமிழ்</strong> on any template to instantly pre-fill in the selected language.
-                    </div>
-                  </div>
                </div>
             </Col>
           </Row>
         </Form>
       </Modal>
 
+      {/* Details Modal */}
       <Modal
         title={
-          <div className="flex items-center gap-2 pb-4 border-b border-gray-100">
-            <div className="p-2 bg-emerald-50 text-emerald-600 rounded-lg">
-              <IconEye size={20} />
-            </div>
-            <span className="font-bold">Message Details</span>
+          <div className="flex items-center gap-2 pb-3 border-b border-card-border dark:border-card-border-dark">
+            <IconEye size={18} className="text-text-main dark:text-text-main-dark" />
+            <span className="font-bold text-sm text-text-main dark:text-text-main-dark font-mono">Message Details</span>
           </div>
         }
         open={!!selectedLog}
         onCancel={() => setSelectedLog(null)}
         footer={[
-          <Button key="close" onClick={() => setSelectedLog(null)} className="rounded-lg h-10 px-8 font-bold">
+          <Button key="close" onClick={() => setSelectedLog(null)} className="rounded-xl h-10 px-6 font-bold text-xs">
             Close
           </Button>
         ]}
         width={600}
-        className="rounded-2xl overflow-hidden"
       >
         {selectedLog && (
-          <div className="py-4 space-y-6">
-            <Descriptions bordered size="small" column={1} className="rounded-lg overflow-hidden border-gray-100">
-              <Descriptions.Item label="Order ID" labelStyle={{ fontWeight: 'bold', width: '30%' }}>
-                <Text strong className="text-emerald-700">{selectedLog.orderId === "CUSTOM" ? "N/A" : `#${selectedLog.orderId?.toUpperCase()}`}</Text>
+          <div className="py-3 space-y-4 font-mono">
+            <Descriptions bordered size="small" column={1} className="rounded-xl overflow-hidden border-card-border dark:border-card-border-dark">
+              <Descriptions.Item label="Order ID">
+                <span className="font-bold text-text-main dark:text-text-main-dark">{selectedLog.orderId === "CUSTOM" ? "—" : `#${selectedLog.orderId?.toUpperCase()}`}</span>
               </Descriptions.Item>
-              <Descriptions.Item label="Channel" labelStyle={{ fontWeight: 'bold' }}>
+              <Descriptions.Item label="Channel">
                 {selectedLog.type?.replace("_", " ").toUpperCase()}
               </Descriptions.Item>
-              <Descriptions.Item label="Recipient" labelStyle={{ fontWeight: 'bold' }}>
+              <Descriptions.Item label="Recipient">
                 {selectedLog.to}
               </Descriptions.Item>
-              <Descriptions.Item label="Date Sent" labelStyle={{ fontWeight: 'bold' }}>
-                {selectedLog.createdAt}
+              <Descriptions.Item label="Date Sent">
+                {selectedLog.createdAt ? dayjs(selectedLog.createdAt).format("DD MMM YYYY, hh:mm A") : "—"}
               </Descriptions.Item>
-              {selectedLog.status && (
-                <Descriptions.Item label="Status Hook" labelStyle={{ fontWeight: 'bold' }}>
-                  <Tag color="cyan" className="rounded-full text-[10px] font-black uppercase border-none bg-cyan-50 text-cyan-700">{selectedLog.status}</Tag>
-                </Descriptions.Item>
-              )}
             </Descriptions>
 
-            <div className="bg-gray-50 p-6 rounded-xl border border-gray-200 flex flex-col gap-3">
-              <Text className="text-[10px] uppercase font-black tracking-widest text-gray-400">Message Payload / Content</Text>
-              <div className="whitespace-pre-wrap text-sm text-gray-700 leading-relaxed font-mono italic">
-                {selectedLog.content || (selectedLog.type === 'ebill_sms' ? "Digital receipt with unique tracking hash generated for the customer." : "Message content was rendered dynamically from a Handlebars template at the time of sending.")}
+            <div className="bg-slate-50 dark:bg-slate-800/40 p-4 rounded-xl border border-card-border dark:border-card-border-dark flex flex-col gap-2">
+              <span className="text-[10px] uppercase font-bold tracking-widest text-text-sub">Payload / Content</span>
+              <div className="whitespace-pre-wrap text-xs text-text-main dark:text-text-main-dark leading-relaxed italic">
+                {selectedLog.content || "Message content rendered dynamically from template at dispatch time."}
               </div>
             </div>
           </div>

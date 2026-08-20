@@ -13,19 +13,49 @@ export interface Notification {
   createdAt: any;
 }
 
+export const isOrderAlertTarget = (n: Partial<Notification>) => {
+  if (n.type !== "ORDER") return true;
+  const meta = n.metadata || {};
+  const title = (n.title || "").toLowerCase();
+  const body = (n.message || "").toLowerCase();
+
+  // 1. Paid Online Orders
+  const isPaid =
+    meta.paymentStatus === "Paid" ||
+    meta.paymentStatus === "Completed" ||
+    title.includes("paid") ||
+    body.includes("paid");
+
+  // 2. COD Payment Pending Orders
+  const isCod =
+    meta.paymentMethod === "COD" ||
+    meta.paymentMethodId === "PM-001" ||
+    title.includes("cod") ||
+    body.includes("cash on delivery");
+
+  const isPending =
+    meta.paymentStatus === "Pending" ||
+    meta.status === "Pending Approval" ||
+    title.includes("pending") ||
+    body.includes("pending");
+
+  const isCodPending = isCod && isPending;
+
+  return isPaid || isCodPending;
+};
+
 export const useNotifications = () => {
   const [fcmToken, setFcmToken] = useState<string | null>(null);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isRegistering, setIsRegistering] = useState(false);
 
-  // 1. Robust Service Worker Registration and Token Retrieval
+  // ... (rest of code)
   const registerAndGetToken = async (vapidKey: string, isRetry = false): Promise<string | null> => {
     if (!('serviceWorker' in navigator) || isRegistering) return null;
     
     setIsRegistering(true);
     try {
-      // Robust registration: Only clear if requested via retry or if no registration found
       if (isRetry) {
         const existingRegs = await navigator.serviceWorker.getRegistrations();
         for (const reg of existingRegs) {
@@ -35,32 +65,24 @@ export const useNotifications = () => {
               await sub.unsubscribe();
               console.log("[useNotifications] Cleared stale push subscription");
             }
-          } catch (e) {
-            // Ignore unsub errors
-          }
+          } catch (e) {}
           await reg.unregister();
         }
-        // Wait for the browser to release the push channel slot
         await new Promise(resolve => setTimeout(resolve, 1500));
       }
 
-      // Fresh registration
       const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js', {
         updateViaCache: 'none'
       });
 
-      // Wait specifically for this registration to be ACTIVE
       await new Promise<void>((resolve, reject) => {
         if (registration.active) return resolve();
-        
         const timeout = setTimeout(() => reject(new Error("SW activation timeout")), 10000);
         const worker = registration.installing || registration.waiting;
-        
         if (!worker) {
           clearTimeout(timeout);
           return resolve();
         }
-
         worker.addEventListener('statechange', (e) => {
           if ((e.target as ServiceWorker).state === 'activated') {
             clearTimeout(timeout);
@@ -78,7 +100,7 @@ export const useNotifications = () => {
       } catch (error: any) {
         if (error.name === 'AbortError' && !isRetry) {
           console.warn("[useNotifications] Retrying push registration...");
-          setIsRegistering(false); // Reset to allow retry
+          setIsRegistering(false);
           return registerAndGetToken(vapidKey, true);
         }
         throw error;
@@ -90,40 +112,27 @@ export const useNotifications = () => {
 
   const requestPermission = async () => {
     try {
-      // 🛡️ PERISTENCE CHECK: If already granted, don't trigger browser prompt
-      if (Notification.permission === "denied") {
-        console.warn("[useNotifications] Permission denied by user previously.");
-        return;
-      }
-
+      if (Notification.permission === "denied") return;
       let permission: NotificationPermission = Notification.permission;
-      
-      // Only request if "default" (hasn't been asked yet in this browser session logic)
       if (permission === "default") {
         permission = await Notification.requestPermission();
       }
-
       if (permission === "granted") {
         const vapidKey = import.meta.env.VITE_FIREBASE_VAPID_KEY;
         if (!vapidKey) return;
-
         const token = await registerAndGetToken(vapidKey);
-        
         if (token) {
           setFcmToken(token);
           saveTokenToUser(token);
-          // SILENT: No success toast as requested
         }
       }
     } catch (error: any) {
-      console.error("[useNotifications] Registration failed:", error.name);
       if (error.name === 'AbortError') {
         toast.error("Push registration connection failed. Please refresh.");
       }
     }
   };
 
-  // 2. Save Token to User Profile
   const saveTokenToUser = async (token: string) => {
     const user = auth.currentUser;
     if (user && token) {
@@ -134,22 +143,26 @@ export const useNotifications = () => {
           notificationsEnabled: true,
           updatedAt: new Date()
         });
-      } catch (error) {
-        // Fail silently for user doc existence
-      }
+      } catch (error) {}
     }
   };
 
-  // 3. Listen for Background/Foreground Messages
+  // 3. Listen for Background/Foreground Messages (Targeted Alert Filter)
   useEffect(() => {
     if (!messaging) return;
 
     const unsubscribe = onMessage(messaging, (payload) => {
-      console.log("[useNotifications] Message received");
-      toast.success(`${payload.notification?.title}: ${payload.notification?.body}`, {
-        icon: "🔔",
-        duration: 5000,
-      });
+      const title = payload.notification?.title || "";
+      const body = payload.notification?.body || "";
+      const meta = payload.data || {};
+
+      const isTarget = isOrderAlertTarget({ title, message: body, metadata: meta, type: "ORDER" });
+      if (isTarget) {
+        toast.success(`${title}: ${body}`, {
+          icon: "🔔",
+          duration: 6000,
+        });
+      }
     });
 
     return () => unsubscribe();
@@ -157,7 +170,6 @@ export const useNotifications = () => {
 
   // 4. Live Firestore Notifications Listener
   useEffect(() => {
-    // Only listen if user is authenticated to avoid permission-denied
     const unsubscribeAuth = auth.onAuthStateChanged((user) => {
       if (!user) {
         setNotifications([]);
@@ -176,11 +188,12 @@ export const useNotifications = () => {
           ...d.data(),
         })) as Notification[];
 
-        setNotifications(docs);
-        setUnreadCount(docs.filter(n => !n.read).length);
+        const validAlerts = docs.filter(isOrderAlertTarget);
+        setNotifications(validAlerts);
+        setUnreadCount(validAlerts.filter(n => !n.read).length);
       }, (error) => {
         if (error.code === 'permission-denied') {
-          console.warn("[useNotifications] Firestore permission denied. Check your security rules.");
+          console.warn("[useNotifications] Firestore permission denied.");
         }
       });
 

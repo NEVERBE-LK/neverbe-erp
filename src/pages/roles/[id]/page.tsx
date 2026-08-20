@@ -1,15 +1,8 @@
 import {
-  Spin,
   Form,
   Input,
   Button,
-  Card,
-  Typography,
-  Row,
-  Col,
-  Tag,
-  Tabs,
-  Badge,
+  Switch,
 } from "antd";
 import api from "@/lib/api";
 import React, { useEffect, useState } from "react";
@@ -20,14 +13,15 @@ import { auth } from "@/firebase/firebaseClient";
 import {
   IconDeviceFloppy,
   IconSearch,
-  IconShield,
-  IconCheck,
   IconArrowLeft,
-  IconListCheck,
+  IconChecklist,
+  IconLock,
+  IconFolder,
+  IconShieldCheck,
+  IconShieldLock,
 } from "@tabler/icons-react";
 import PageContainer from "../../components/container/PageContainer";
-
-const { Text } = Typography;
+import Spinner from "../../components/shared/Spinner";
 
 const EditRolePage = () => {
   const { id } = useParams<{ id: string }>();
@@ -37,10 +31,9 @@ const EditRolePage = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [activeTab, setActiveTab] = useState<string>("");
+  const [activeGroup, setActiveGroup] = useState<string>("");
   const [form] = Form.useForm();
   
-  // Track selected permissions in a local state for real-time reactivity in summary panels
   const [selectedPermissions, setSelectedPermissions] = useState<string[]>([]);
 
   useEffect(() => {
@@ -48,7 +41,7 @@ const EditRolePage = () => {
       if (!id) return;
 
       try {
-        const token = await auth.currentUser?.getIdToken();
+        await auth.currentUser?.getIdToken();
         const [permRes, roleRes] = await Promise.all([
           api.get("/api/v1/erp/users/roles"),
           api.get(`/api/v1/erp/users/roles/${id}`),
@@ -57,11 +50,10 @@ const EditRolePage = () => {
         const perms = permRes.data.permissions || [];
         setPermissionsList(perms);
         
-        // Set first group as active tab
         if (perms.length > 0) {
           const uniqueGroups = Array.from(new Set(perms.map((p: Permission) => p.group)));
           if (uniqueGroups.length > 0) {
-            setActiveTab(uniqueGroups[0] as string);
+            setActiveGroup(uniqueGroups[0] as string);
           }
         }
 
@@ -92,7 +84,7 @@ const EditRolePage = () => {
       const formData = new FormData();
       formData.append("data", JSON.stringify(payload));
 
-      const token = await auth.currentUser?.getIdToken();
+      await auth.currentUser?.getIdToken();
       await api.put(`/api/v1/erp/users/roles/${roleId}`, formData);
       toast.success("Role updated successfully");
       navigate("/roles");
@@ -103,7 +95,6 @@ const EditRolePage = () => {
     }
   };
 
-  // Helper to check/uncheck a specific permission
   const handleTogglePermission = (permKey: string) => {
     const current = form.getFieldValue("permissions") || [];
     let updated: string[];
@@ -116,7 +107,6 @@ const EditRolePage = () => {
     setSelectedPermissions(updated);
   };
 
-  // Select/Deselect all permissions in a specific group
   const handleToggleGroup = (groupName: string, permsInGroup: Permission[]) => {
     const current = form.getFieldValue("permissions") || [];
     const groupKeys = permsInGroup.map((p) => p.key);
@@ -124,17 +114,23 @@ const EditRolePage = () => {
 
     let updated: string[];
     if (allSelected) {
-      // Remove all group keys
       updated = current.filter((k: string) => !groupKeys.includes(k));
     } else {
-      // Add all group keys that are not already present
       updated = Array.from(new Set([...current, ...groupKeys]));
     }
     form.setFieldsValue({ permissions: updated });
     setSelectedPermissions(updated);
   };
 
-  // Group and filter permissions
+  const handleToggleAllSystem = () => {
+    const allKeys = permissionsList.map((p) => p.key);
+    const allSelected = allKeys.length > 0 && allKeys.every((k) => selectedPermissions.includes(k));
+
+    const updated = allSelected ? [] : allKeys;
+    form.setFieldsValue({ permissions: updated });
+    setSelectedPermissions(updated);
+  };
+
   const filteredPermissions = permissionsList.filter(
     (p) =>
       p.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -142,260 +138,280 @@ const EditRolePage = () => {
       p.group.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const groupedPermissions = filteredPermissions.reduce(
-    (acc, perm) => {
-      if (!acc[perm.group]) acc[perm.group] = [];
-      acc[perm.group].push(perm);
-      return acc;
-    },
-    {} as Record<string, Permission[]>,
-  );
-
   const uniqueGroups = Array.from(new Set(permissionsList.map((p) => p.group)));
+
+  const activeGroupPerms = permissionsList.filter((p) => p.group === activeGroup);
+  const activeGroupFilteredPerms = filteredPermissions.filter((p) => p.group === activeGroup);
+  const activeGroupSelectedKeys = activeGroupPerms
+    .map((p) => p.key)
+    .filter((k) => selectedPermissions.includes(k));
+  const isActiveGroupAllSelected =
+    activeGroupPerms.length > 0 && activeGroupSelectedKeys.length === activeGroupPerms.length;
 
   if (loading) {
     return (
-      <PageContainer title="Edit Role" description="Loading...">
-        <div className="flex flex-col items-center justify-center py-32 bg-gray-50/50 rounded-3xl border border-gray-100">
-          <Spin size="large" />
-          <Text type="secondary" className="mt-4 font-bold text-gray-500 uppercase tracking-widest text-xs">
-            Loading Role Configuration...
-          </Text>
+      <PageContainer title="Edit Role">
+        <div className="flex justify-center items-center py-32">
+          <Spinner size="large" tip="Loading Role Configuration..." />
         </div>
       </PageContainer>
     );
   }
 
   return (
-    <PageContainer title="Edit Role" description={`Editing role: ${roleId}`}>
-      <div className="w-full mx-auto py-2 space-y-6">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
-          <div>
-            <div className="flex items-center gap-3">
-              <div className="w-1.5 h-10 bg-emerald-600 rounded-full" />
-              <div className="flex flex-col">
-                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 leading-none mb-1">
-                  Access Management
+    <PageContainer title={`Edit Role: ${roleId}`}>
+      <Form
+        form={form}
+        layout="vertical"
+        onFinish={onFinish}
+        initialValues={{ permissions: [] }}
+        className="w-full space-y-6"
+      >
+        <Form.Item name="permissions" noStyle>
+          <input type="hidden" />
+        </Form.Item>
+
+        {/* INTEGRATED EXECUTIVE PAGE HEADER */}
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 bg-card dark:bg-card-dark border border-card-border dark:border-card-border-dark p-5 rounded-2xl shadow-xs">
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+            <div className="w-1 h-10 bg-slate-900 dark:bg-slate-100 rounded-full shrink-0" />
+            <div className="space-y-1 flex-1 min-w-0">
+              <div className="flex items-center gap-2 font-mono">
+                <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-text-sub dark:text-slate-500 block">
+                  Security Administration
                 </span>
-                <h2 className="text-3xl font-black text-gray-900 tracking-tight leading-none uppercase">
-                  {roleId.replace(/_/g, " ")}
-                </h2>
+                <span className="px-2 py-0.5 text-[9px] font-bold rounded-full bg-slate-100 dark:bg-slate-800 text-text-sub border border-card-border dark:border-card-border-dark font-mono flex items-center gap-1">
+                  <IconLock size={10} /> {roleId}
+                </span>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <Form.Item
+                  name="name"
+                  rules={[{ required: true, message: "Role name is required" }]}
+                  className="!mb-0 flex-1 max-w-md"
+                >
+                  <Input
+                    placeholder="Enter Role Display Name..."
+                    className="h-10 text-lg font-bold text-text-main dark:text-text-main-dark border-card-border dark:border-card-border-dark rounded-xl px-3 font-sans"
+                  />
+                </Form.Item>
+                <span className="px-2.5 py-1 text-[10px] font-bold rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/40 font-mono shrink-0 hidden sm:inline-block">
+                  {selectedPermissions.length} / {permissionsList.length} System Permissions Allowed
+                </span>
               </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-3 bg-emerald-50/50 px-4 py-2.5 rounded-xl border border-emerald-100/50">
-            <IconListCheck size={18} className="text-emerald-600" />
-            <span className="text-xs font-bold text-emerald-950 uppercase tracking-wider">
-              {selectedPermissions.length} / {permissionsList.length} Permissions Selected
-            </span>
+          <div className="flex items-center gap-2 shrink-0">
+            <Button
+              onClick={() => navigate("/roles")}
+              disabled={saving}
+              className="h-10 px-4 rounded-xl text-xs font-semibold border-card-border dark:border-card-border-dark text-text-sub cursor-pointer"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="primary"
+              onClick={() => form.submit()}
+              loading={saving}
+              icon={<IconDeviceFloppy size={16} />}
+              className="bg-slate-900 dark:bg-slate-100 dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-200 border-none h-10 px-5 rounded-xl text-xs font-bold shadow-xs cursor-pointer flex items-center gap-2"
+            >
+              Save Changes
+            </Button>
           </div>
         </div>
 
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={onFinish}
-          initialValues={{ permissions: [] }}
-        >
-          {/* Form hidden field to hold the actual permission keys array */}
-          <Form.Item name="permissions" noStyle>
-            <input type="hidden" />
-          </Form.Item>
+        {/* BALANCED 2-COLUMN SINGLE-DOMAIN WORKSPACE (lg:col-span-3 & lg:col-span-9) */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch font-mono">
+          {/* LEFT SIDEBAR: COMPACT DOMAINS MENU (lg:col-span-3) */}
+          <div className="lg:col-span-3 bg-card dark:bg-card-dark border border-card-border dark:border-card-border-dark rounded-2xl p-3 shadow-xs space-y-1 flex flex-col justify-between">
+            <div>
+              <div className="px-3 py-2 border-b border-card-border dark:border-card-border-dark mb-2 flex items-center justify-between">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-text-sub">
+                  Domains ({uniqueGroups.length})
+                </span>
+                <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+                  {selectedPermissions.length} Active
+                </span>
+              </div>
 
-          <div className="space-y-6">
-            {/* ROLE SETTINGS */}
-            <Card
-              bordered={false}
-              className="border border-gray-100 shadow-sm rounded-2xl"
-            >
-              <Row gutter={24}>
-                <Col xs={24} md={8}>
-                  <div>
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 block mb-1.5">
-                      Role ID (Constant)
-                    </span>
-                    <span className="text-xs font-mono font-black uppercase tracking-widest bg-gray-50 px-3 py-2.5 rounded-xl border border-gray-100 text-gray-500 inline-block w-full">
-                      {roleId}
-                    </span>
-                  </div>
-                </Col>
-                <Col xs={24} md={16}>
-                  <Form.Item
-                    label={
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
-                        Display Name
-                      </span>
-                    }
-                    name="name"
-                    rules={[{ required: true, message: "Display name is required" }]}
-                    className="mb-0"
-                  >
-                    <Input
-                      placeholder="e.g. Supervisor"
-                      size="large"
-                      className="rounded-xl border-gray-200 font-bold h-10"
-                    />
-                  </Form.Item>
-                </Col>
-              </Row>
-            </Card>
+              <div className="space-y-1">
+                {uniqueGroups.map((group) => {
+                  const perms = permissionsList.filter((p) => p.group === group);
+                  const selectedCount = perms.filter((p) => selectedPermissions.includes(p.key)).length;
+                  const isActive = activeGroup === group;
+                  const percent = perms.length > 0 ? Math.round((selectedCount / perms.length) * 100) : 0;
 
-            {/* SEARCH BAR */}
-            <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-3">
-              <IconSearch size={20} className="text-gray-400" />
-              <Input
-                placeholder="Search permissions by name, group, or keyword..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                variant="borderless"
-                className="w-full font-medium text-base placeholder-gray-400"
-                allowClear
-              />
+                  return (
+                    <button
+                      key={group}
+                      type="button"
+                      onClick={() => setActiveGroup(group)}
+                      className={`w-full text-left p-2.5 rounded-xl transition-all cursor-pointer border ${
+                        isActive
+                          ? "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 border-transparent shadow-xs"
+                          : "bg-transparent hover:bg-slate-100 dark:hover:bg-slate-800/60 text-text-main dark:text-text-main-dark border-transparent"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <IconFolder size={15} className={isActive ? "text-white dark:text-slate-900" : "text-text-sub"} />
+                          <span className="font-bold text-xs uppercase tracking-wider truncate">
+                            {group.replace(/_/g, " ")}
+                          </span>
+                        </div>
+                        <span
+                          className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                            isActive
+                              ? "bg-slate-800 text-slate-200 dark:bg-slate-200 dark:text-slate-800"
+                              : selectedCount > 0
+                              ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200/60"
+                              : "bg-slate-100 dark:bg-slate-800 text-text-sub"
+                          }`}
+                        >
+                          {selectedCount}/{perms.length}
+                        </span>
+                      </div>
+
+                      {/* Mini Progress Bar */}
+                      <div className="w-full bg-slate-200 dark:bg-slate-700/50 h-1 rounded-full mt-2 overflow-hidden">
+                        <div
+                          className={`h-full transition-all duration-300 ${
+                            isActive
+                              ? "bg-emerald-400 dark:bg-emerald-600"
+                              : percent === 100
+                              ? "bg-emerald-500"
+                              : "bg-slate-400 dark:bg-slate-500"
+                          }`}
+                          style={{ width: `${percent}%` }}
+                        />
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
+          </div>
 
-            {/* FULL WIDTH TAB ASSIGNMENT MATRIX */}
-            <Card
-              bordered={false}
-              className="border border-gray-100 shadow-sm rounded-2xl overflow-hidden [&_.ant-card-body]:p-6"
-            >
-              {uniqueGroups.length === 0 ? (
-                <div className="text-center py-16 space-y-3">
-                  <IconShield size={40} className="text-gray-300 mx-auto" />
-                  <p className="text-gray-500 font-bold uppercase tracking-wider text-xs">
-                    No permissions found
+          {/* RIGHT MAIN PANEL: ACTIVE DOMAIN MATRIX (lg:col-span-9) */}
+          <div className="lg:col-span-9 bg-card dark:bg-card-dark border border-card-border dark:border-card-border-dark rounded-2xl p-6 shadow-xs space-y-6 flex flex-col justify-between">
+            <div className="space-y-6">
+              {/* Active Domain Hero Header Card with Embedded Search Bar */}
+              <div className="bg-slate-50 dark:bg-slate-800/40 p-5 rounded-2xl border border-card-border dark:border-card-border-dark space-y-4">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-3 bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 rounded-xl">
+                      <IconShieldCheck size={24} />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-text-sub">
+                          Domain Matrix
+                        </span>
+                        <span className="px-2 py-0.5 text-[9px] font-bold rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200/60">
+                          {activeGroupSelectedKeys.length} / {activeGroupPerms.length} Active
+                        </span>
+                      </div>
+                      <h3 className="text-xl font-bold text-text-main dark:text-text-main-dark tracking-tight uppercase mt-0.5">
+                        {activeGroup.replace(/_/g, " ")}
+                      </h3>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <Button
+                      onClick={() => handleToggleGroup(activeGroup, activeGroupPerms)}
+                      className="h-9 px-3.5 rounded-xl border-card-border dark:border-card-border-dark text-text-main dark:text-text-main-dark text-xs font-bold cursor-pointer font-mono"
+                    >
+                      {isActiveGroupAllSelected ? "Deselect Group" : "Select Group"}
+                    </Button>
+
+                    <Button
+                      type="default"
+                      onClick={handleToggleAllSystem}
+                      icon={<IconChecklist size={16} />}
+                      className="h-9 px-3.5 rounded-xl border-card-border dark:border-card-border-dark text-text-sub text-xs font-bold cursor-pointer font-mono whitespace-nowrap"
+                    >
+                      {permissionsList.length > 0 && selectedPermissions.length === permissionsList.length
+                        ? "Deselect System"
+                        : "Select System"}
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Embedded Search Input */}
+                <div className="flex items-center gap-2 px-3 py-2 bg-white dark:bg-slate-900 rounded-xl border border-card-border dark:border-card-border-dark">
+                  <IconSearch size={16} className="text-text-sub shrink-0" />
+                  <Input
+                    placeholder={`Filter permissions in ${activeGroup.replace(/_/g, " ")} by keyword (e.g. view, create, edit)...`}
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    variant="borderless"
+                    className="w-full text-xs font-medium placeholder-text-sub text-text-main dark:text-text-main-dark p-0"
+                    allowClear
+                  />
+                </div>
+              </div>
+
+              {/* Richer Permission Cards Grid (3 Columns) */}
+              {activeGroupFilteredPerms.length === 0 ? (
+                <div className="text-center py-20 space-y-2">
+                  <IconShieldLock size={40} className="text-text-sub mx-auto" />
+                  <p className="text-text-sub font-bold text-xs">
+                    No permissions match "{searchTerm}" in {activeGroup.replace(/_/g, " ")}
                   </p>
                 </div>
               ) : (
-                <Tabs
-                  activeKey={activeTab}
-                  onChange={(key) => setActiveTab(key)}
-                  className="[&_.ant-tabs-nav]:!mb-6 [&_.ant-tabs-tab]:!pb-3 [&_.ant-tabs-tab-btn]:!font-black [&_.ant-tabs-tab-btn]:!text-xs [&_.ant-tabs-tab-btn]:!uppercase [&_.ant-tabs-tab-btn]:!tracking-wider"
-                  items={uniqueGroups.map((group) => {
-                    const perms = permissionsList.filter((p) => p.group === group);
-                    const filteredPerms = groupedPermissions[group] || [];
-                    
-                    const groupKeys = perms.map((p) => p.key);
-                    const selectedGroupKeys = groupKeys.filter((k) =>
-                      selectedPermissions.includes(k)
-                    );
-                    const isAllSelected = selectedGroupKeys.length === groupKeys.length;
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                  {activeGroupFilteredPerms.map((perm) => {
+                    const isChecked = selectedPermissions.includes(perm.key);
 
-                    return {
-                      key: group,
-                      label: (
-                        <div className="flex items-center gap-2">
-                          <span>{group.replace(/_/g, " ")}</span>
-                          <Badge
-                            count={selectedGroupKeys.length}
-                            showZero
-                            className="[&_.ant-badge-count]:bg-emerald-600 [&_.ant-badge-count]:text-[10px] [&_.ant-badge-count]:font-bold"
+                    return (
+                      <div
+                        key={perm.key}
+                        onClick={() => handleTogglePermission(perm.key)}
+                        className={`p-4 rounded-2xl border cursor-pointer transition-all flex flex-col justify-between gap-3 select-none h-32 ${
+                          isChecked
+                            ? "border-emerald-500/80 bg-emerald-50/40 dark:bg-emerald-950/20 shadow-xs"
+                            : "border-card-border dark:border-card-border-dark bg-slate-50/40 dark:bg-slate-800/20 hover:border-slate-400 dark:hover:border-slate-600"
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <span className="text-xs font-bold text-text-main dark:text-text-main-dark font-sans leading-snug">
+                            {perm.label}
+                          </span>
+                          <Switch
+                            checked={isChecked}
+                            size="small"
+                            onChange={() => handleTogglePermission(perm.key)}
                           />
                         </div>
-                      ),
-                      children: (
-                        <div className="space-y-6">
-                          <div className="flex justify-between items-center bg-gray-50/50 p-4 rounded-xl border border-gray-100">
-                            <div>
-                              <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">
-                                Group Actions
-                              </span>
-                              <p className="text-[10px] text-gray-400 font-semibold uppercase mt-0.5">
-                                Toggle all permissions under {group.replace(/_/g, " ")}
-                              </p>
-                            </div>
-                            <Button
-                              type="dashed"
-                              size="middle"
-                              onClick={() => handleToggleGroup(group, perms)}
-                              className={`rounded-xl px-5 font-bold ${
-                                isAllSelected
-                                  ? "border-amber-200 text-amber-600 hover:text-amber-700 hover:border-amber-300 bg-amber-50/20"
-                                  : "border-emerald-200 text-emerald-600 hover:text-emerald-700 hover:border-emerald-300 bg-emerald-50/20"
-                              }`}
-                            >
-                              {isAllSelected ? "Deselect All Group" : "Select All Group"}
-                            </Button>
-                          </div>
 
-                          {filteredPerms.length === 0 ? (
-                            <div className="text-center py-10">
-                              <p className="text-gray-400 font-bold uppercase tracking-wider text-xs">
-                                No permissions matching "{searchTerm}" in this group
-                              </p>
-                            </div>
-                          ) : (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                              {filteredPerms.map((perm) => {
-                                const isChecked = selectedPermissions.includes(perm.key);
-                                return (
-                                  <div
-                                    key={perm.key}
-                                    onClick={() => handleTogglePermission(perm.key)}
-                                    className={`p-4 border rounded-2xl cursor-pointer transition-all duration-200 flex items-center justify-between gap-3 select-none ${
-                                      isChecked
-                                        ? "border-emerald-500 bg-emerald-50/30 hover:bg-emerald-50/50"
-                                        : "border-gray-100 bg-white hover:border-gray-200 hover:bg-gray-50/20"
-                                    }`}
-                                  >
-                                    <div className="space-y-0.5 flex-1">
-                                      <span
-                                        className={`text-sm font-bold block ${
-                                          isChecked ? "text-emerald-950" : "text-gray-800"
-                                        }`}
-                                      >
-                                        {perm.label}
-                                      </span>
-                                      <span className="text-[10px] text-gray-400 font-mono block uppercase tracking-wider">
-                                        {perm.key}
-                                      </span>
-                                    </div>
-                                    <div
-                                      className={`w-5 h-5 rounded-lg border flex items-center justify-center transition-all ${
-                                        isChecked
-                                          ? "bg-emerald-600 border-emerald-600 text-white"
-                                          : "border-gray-200 bg-white"
-                                      }`}
-                                    >
-                                      {isChecked && <IconCheck size={14} stroke={3.5} />}
-                                    </div>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          )}
+                        <div className="pt-2 border-t border-card-border/60 dark:border-card-border-dark/60 flex items-center justify-between">
+                          <span className="text-[10px] text-text-sub dark:text-slate-400 font-mono truncate">
+                            {perm.key}
+                          </span>
+                          <span
+                            className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                              isChecked
+                                ? "bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300"
+                                : "bg-slate-200 dark:bg-slate-700 text-text-sub"
+                            }`}
+                          >
+                            {isChecked ? "Granted" : "Restricted"}
+                          </span>
                         </div>
-                      ),
-                    };
+                      </div>
+                    );
                   })}
-                />
+                </div>
               )}
-            </Card>
-
-            {/* ACTION FOOTER */}
-            <div className="flex justify-end gap-3 bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
-              <Button
-                size="large"
-                onClick={() => navigate("/roles")}
-                disabled={saving}
-                className="h-12 px-6 rounded-xl font-semibold border-gray-200"
-              >
-                Cancel
-              </Button>
-              <Button
-                type="primary"
-                size="large"
-                htmlType="submit"
-                loading={saving}
-                icon={<IconDeviceFloppy size={18} />}
-                className="h-12 px-8 rounded-xl font-bold bg-emerald-600 hover:bg-emerald-500 border-none shadow-md shadow-emerald-500/20"
-              >
-                Save Role
-              </Button>
             </div>
           </div>
-        </Form>
-      </div>
+        </div>
+      </Form>
     </PageContainer>
   );
 };

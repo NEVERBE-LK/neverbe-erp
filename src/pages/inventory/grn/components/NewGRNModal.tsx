@@ -338,10 +338,10 @@ const NewGRNModal: React.FC<NewGRNModalProps> = ({
   return (
     <Modal
       title={
-        <div className="flex items-center gap-3 pb-3 border-b border-slate-100 dark:border-slate-800">
-          <div className="w-1.5 h-6 bg-slate-900 dark:bg-slate-100 rounded-full" />
-          <IconPackage size={20} className="text-slate-700 dark:text-slate-300" />
-          <span className="text-lg font-bold text-slate-900 dark:text-slate-100 tracking-tight">
+        <div className="flex items-center gap-3 pb-3 border-b border-card-border dark:border-card-border-dark">
+          <div className="w-1 h-6 bg-brand dark:bg-brand-dark rounded-full" />
+          <IconPackage size={20} className="text-text-main dark:text-text-main-dark" />
+          <span className="text-lg font-bold text-text-main dark:text-text-main-dark tracking-tight">
             Receive Goods (GRN)
           </span>
         </div>
@@ -361,8 +361,8 @@ const NewGRNModal: React.FC<NewGRNModalProps> = ({
       ) : (
         <div className="space-y-6">
           {/* Order Selection */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-5 rounded-2xl shadow-xs">
-            <h3 className="text-[10px] font-bold text-slate-400 dark:text-slate-500 mb-4 uppercase tracking-wider font-mono border-b border-slate-100 dark:border-slate-800 pb-2">
+          <div className="bg-card dark:bg-card-dark border border-card-border dark:border-card-border-dark p-5 rounded-2xl shadow-xs">
+            <h3 className="text-[10px] font-bold text-text-sub dark:text-slate-400 mb-4 uppercase tracking-wider font-mono border-b border-card-border dark:border-card-border-dark pb-2">
               Purchase Order Selection
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -384,7 +384,7 @@ const NewGRNModal: React.FC<NewGRNModalProps> = ({
               <div>
                 <label className={labelClass}>Received Date</label>
                 <DatePicker
-                  className="w-full h-10 rounded-lg border-slate-200 dark:border-slate-700 bg-transparent text-slate-900 dark:text-slate-100"
+                  className="w-full h-10 rounded-lg border-card-border dark:border-card-border-dark bg-transparent text-text-main dark:text-text-main-dark"
                   placeholder="Select Date"
                   value={receivedDate ? dayjs(receivedDate) : null}
                   onChange={(_, dateString) =>
@@ -400,7 +400,7 @@ const NewGRNModal: React.FC<NewGRNModalProps> = ({
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder="Optional notes..."
-                  className="rounded-lg h-10 border-slate-200 dark:border-slate-700 bg-transparent text-slate-900 dark:text-slate-100"
+                  className="rounded-lg h-10 border-card-border dark:border-card-border-dark bg-transparent text-text-main dark:text-text-main-dark"
                 />
               </div>
             </div>
@@ -416,14 +416,14 @@ const NewGRNModal: React.FC<NewGRNModalProps> = ({
                 </span>
               </div>
               <Descriptions size="small" column={{ xs: 1, sm: 2, md: 3 }} className="p-2">
-                <Descriptions.Item label={<span className="font-semibold text-slate-500 dark:text-slate-400">PO Number</span>}>
-                  <span className="font-mono font-bold text-slate-900 dark:text-slate-100">{selectedPO.poNumber}</span>
+                <Descriptions.Item label={<span className="font-semibold text-text-sub dark:text-slate-400">PO Number</span>}>
+                  <span className="font-mono font-bold text-text-main dark:text-text-main-dark">{selectedPO.poNumber}</span>
                 </Descriptions.Item>
-                <Descriptions.Item label={<span className="font-semibold text-slate-500 dark:text-slate-400">Supplier</span>}>
-                  <span className="font-bold text-slate-900 dark:text-slate-100">{selectedPO.supplierName}</span>
+                <Descriptions.Item label={<span className="font-semibold text-text-sub dark:text-slate-400">Supplier</span>}>
+                  <span className="font-bold text-text-main dark:text-text-main-dark">{selectedPO.supplierName}</span>
                 </Descriptions.Item>
-                <Descriptions.Item label={<span className="font-semibold text-slate-500 dark:text-slate-400">Expected Date</span>}>
-                  <span className="font-bold text-slate-900 dark:text-slate-100">{selectedPO.expectedDate || "Not Specified"}</span>
+                <Descriptions.Item label={<span className="font-semibold text-text-sub dark:text-slate-400">Expected Date</span>}>
+                  <span className="font-bold text-text-main dark:text-text-main-dark">{selectedPO.expectedDate || "Not Specified"}</span>
                 </Descriptions.Item>
               </Descriptions>
             </div>
@@ -433,17 +433,16 @@ const NewGRNModal: React.FC<NewGRNModalProps> = ({
           {selectedPO && items.length > 0 && (
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
               <div className="lg:col-span-3">
-                <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl shadow-xs overflow-hidden min-h-[200px] [&_.ant-table]:!bg-transparent [&_.ant-table-thead>tr>th]:!bg-slate-50/80 [&_.ant-table-thead>tr>th]:dark:!bg-slate-800/60 [&_.ant-table-thead>tr>th]:!text-slate-500 [&_.ant-table-thead>tr>th]:!font-bold [&_.ant-table-thead>tr>th]:!text-[11px] [&_.ant-table-thead>tr>th]:!uppercase [&_.ant-table-thead>tr>th]:!tracking-wider [&_.ant-table-thead>tr>th]:!border-b [&_.ant-table-thead>tr>th]:!border-slate-100 [&_.ant-table-thead>tr>th]:dark:!border-slate-800 [&_.ant-table-tbody>tr]:hover:!bg-slate-50/60 [&_.ant-table-tbody>tr]:dark:hover:!bg-slate-800/40 [&_.ant-table-tbody>tr>td]:!border-b [&_.ant-table-tbody>tr>td]:!border-slate-100 [&_.ant-table-tbody>tr>td]:dark:!border-slate-800/60 [&_.ant-table-tbody>tr>td]:!py-3.5">
-                  <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-800/60 flex justify-between items-center">
-                    <h3 className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider font-mono">
+                <div className="bg-card dark:bg-card-dark border border-card-border dark:border-card-border-dark rounded-2xl shadow-xs overflow-hidden min-h-[200px] [&_.ant-table]:!bg-transparent [&_.ant-table-thead>tr>th]:!bg-slate-50/80 [&_.ant-table-thead>tr>th]:dark:!bg-slate-800/60 [&_.ant-table-thead>tr>th]:!text-text-sub [&_.ant-table-thead>tr>th]:!font-bold [&_.ant-table-thead>tr>th]:!text-[11px] [&_.ant-table-thead>tr>th]:!uppercase [&_.ant-table-thead>tr>th]:!tracking-wider [&_.ant-table-thead>tr>th]:!border-b [&_.ant-table-thead>tr>th]:!border-card-border [&_.ant-table-thead>tr>th]:dark:!border-card-border-dark [&_.ant-table-tbody>tr]:hover:!bg-slate-50/60 [&_.ant-table-tbody>tr]:dark:hover:!bg-slate-800/40 [&_.ant-table-tbody>tr>td]:!border-b [&_.ant-table-tbody>tr>td]:!border-card-border [&_.ant-table-tbody>tr>td]:dark:!border-card-border-dark [&_.ant-table-tbody>tr>td]:!py-3.5">
+                  <div className="px-4 py-3 border-b border-card-border dark:border-card-border-dark bg-slate-50/80 dark:bg-slate-800/60 flex justify-between items-center">
+                    <h3 className="text-[10px] font-bold text-text-sub dark:text-slate-400 uppercase tracking-wider font-mono">
                       Items to Receive
                     </h3>
-                    <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold font-mono">
+                    <span className="text-[10px] text-text-sub dark:text-slate-400 font-bold font-mono">
                       {items.length} Items
                     </span>
                   </div>
                   <Table
-                    bordered={false}
                     scroll={{ y: 350, x: 800 }}
                     columns={columns}
                     dataSource={items}
@@ -456,23 +455,23 @@ const NewGRNModal: React.FC<NewGRNModalProps> = ({
 
               {/* Action Sidebar */}
               <div className="lg:col-span-1 space-y-4">
-                <div className="bg-emerald-600 dark:bg-emerald-700 text-white p-5 rounded-2xl shadow-xs">
+                <div className="bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 p-5 rounded-2xl shadow-xs">
                   <h4 className="text-[10px] font-bold mb-1 uppercase opacity-80 font-mono tracking-wider">
                     Received Value
                   </h4>
-                  <div className="text-3xl font-bold tracking-tight leading-none">
+                  <div className="text-3xl font-extrabold tracking-tight leading-none font-mono">
                     Rs {totalAmount.toLocaleString()}
                   </div>
                 </div>
 
-                <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-4 space-y-3 rounded-2xl shadow-xs">
+                <div className="bg-card dark:bg-card-dark border border-card-border dark:border-card-border-dark p-4 space-y-3 rounded-2xl shadow-xs">
                   <Button
                     type="primary"
                     size="large"
                     block
                     onClick={() => handleSave("SUBMITTED")}
                     loading={saving}
-                    className="bg-slate-900 dark:bg-slate-100 hover:bg-slate-800 dark:hover:bg-white text-white dark:text-slate-900 font-semibold text-xs rounded-xl h-12 shadow-xs cursor-pointer transition-all border-none"
+                    className="bg-slate-900 dark:bg-slate-100 hover:bg-slate-800 dark:hover:bg-slate-200 text-white dark:text-slate-900 font-bold text-xs rounded-xl h-12 shadow-xs cursor-pointer transition-all border-none"
                   >
                     Submit for Review
                   </Button>
@@ -481,7 +480,7 @@ const NewGRNModal: React.FC<NewGRNModalProps> = ({
                     block
                     onClick={() => handleSave("DRAFT")}
                     disabled={saving}
-                    className="h-12 rounded-xl font-semibold text-xs border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 cursor-pointer"
+                    className="h-12 rounded-xl font-bold text-xs border-card-border dark:border-card-border-dark bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-text-main dark:text-slate-300 cursor-pointer"
                   >
                     Save as Draft
                   </Button>
@@ -489,7 +488,7 @@ const NewGRNModal: React.FC<NewGRNModalProps> = ({
                     block
                     onClick={onClose}
                     disabled={saving}
-                    className="border-none text-slate-400 dark:text-slate-500 text-xs hover:text-slate-600 dark:hover:text-slate-300 cursor-pointer"
+                    className="border-none text-text-sub dark:text-slate-500 text-xs hover:text-slate-600 dark:hover:text-slate-300 cursor-pointer"
                   >
                     Cancel
                   </Button>
@@ -503,7 +502,7 @@ const NewGRNModal: React.FC<NewGRNModalProps> = ({
           )}
 
           {!selectedPO && !loading && (
-            <div className="flex flex-col items-center justify-center py-20 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-500 font-medium">
+            <div className="flex flex-col items-center justify-center py-20 bg-card dark:bg-card-dark rounded-2xl border border-dashed border-card-border dark:border-card-border-dark text-text-sub dark:text-slate-500 font-medium">
               <IconShoppingCart size={40} className="text-slate-300 dark:text-slate-600 mb-2" />
               <span className="text-xs font-bold uppercase tracking-widest font-mono">
                 Select an order to begin

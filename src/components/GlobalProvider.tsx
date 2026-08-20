@@ -11,9 +11,30 @@ const GlobalProvider = ({ children }: { children: ReactNode }) => {
   const currentUidRef = useRef<string | null>(null);
 
   useEffect(() => {
+    // 1. Instant hydration from localStorage if available
+    try {
+      const cached = window.localStorage.getItem("nvrUser");
+      if (cached) {
+        const cachedUser: User = JSON.parse(cached);
+        if (cachedUser && (cachedUser.userId || (cachedUser as any).uid)) {
+          currentUidRef.current = cachedUser.userId || (cachedUser as any).uid;
+          dispatch(setUser(cachedUser));
+        }
+      }
+    } catch (err) {
+      console.warn("Failed to parse cached nvrUser", err);
+    }
+
+    // 2. Safety timeout fallback (3 seconds) to prevent infinite spinner loop if Firebase iframe message channel fails
+    const safetyTimer = setTimeout(() => {
+      dispatch(setLoading(false));
+    }, 3000);
+
+    // 3. Firebase Auth State Listener
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      clearTimeout(safetyTimer);
+
       if (user) {
-        // Skip re-fetching if the same user is already loaded
         if (currentUidRef.current === user.uid) {
           dispatch(setLoading(false));
           return;
@@ -31,10 +52,15 @@ const GlobalProvider = ({ children }: { children: ReactNode }) => {
             dispatch(setUser(null));
           }
         } catch (e) {
-          console.error("Error fetching user", e);
-          currentUidRef.current = null;
-          window.localStorage.removeItem("nvrUser");
-          dispatch(setUser(null));
+          console.error("Error fetching user session", e);
+          // If network error happens but we had cached user, preserve cached user
+          const cached = window.localStorage.getItem("nvrUser");
+          if (!cached) {
+            currentUidRef.current = null;
+            dispatch(setUser(null));
+          } else {
+            dispatch(setLoading(false));
+          }
         }
       } else {
         currentUidRef.current = null;
@@ -42,7 +68,11 @@ const GlobalProvider = ({ children }: { children: ReactNode }) => {
         dispatch(setUser(null));
       }
     });
-    return () => unsubscribe();
+
+    return () => {
+      clearTimeout(safetyTimer);
+      unsubscribe();
+    };
   }, [dispatch]);
 
   return <>{children}</>;

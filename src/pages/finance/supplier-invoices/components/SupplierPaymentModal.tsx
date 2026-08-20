@@ -1,13 +1,7 @@
 import { Button, Input, Select, Modal } from "antd";
 import api from "@/lib/api";
 import React, { useState, useEffect } from "react";
-import {
-  IconX,
-  IconLoader2,
-  IconBuildingBank,
-  IconCurrencyDollar,
-  IconNote,
-} from "@tabler/icons-react";
+import { IconCurrencyDollar } from "@tabler/icons-react";
 import { SupplierInvoice } from "@/model/SupplierInvoice";
 import toast from "react-hot-toast";
 
@@ -18,14 +12,6 @@ interface SupplierPaymentModalProps {
   invoice: SupplierInvoice | null;
 }
 
-const styles = {
-  label: "block text-xs font-bold text-gray-500   mb-2",
-  input:
-    "block w-full bg-[#f5f5f5] text-gray-900 text-sm font-medium px-4 py-3 rounded-lg border border-transparent focus:bg-white focus:border-gray-200 transition-all duration-200 outline-none placeholder:text-gray-400",
-  select:
-    "block w-full bg-[#f5f5f5] text-gray-900 text-sm font-medium px-4 py-3 rounded-lg border border-transparent focus:bg-white focus:border-gray-200 transition-all duration-200 outline-none appearance-none cursor-pointer",
-};
-
 const SupplierPaymentModal: React.FC<SupplierPaymentModalProps> = ({
   open,
   onClose,
@@ -35,9 +21,7 @@ const SupplierPaymentModal: React.FC<SupplierPaymentModalProps> = ({
   const [amount, setAmount] = useState("");
   const [bankAccountId, setBankAccountId] = useState("");
   const [notes, setNotes] = useState("");
-  const [bankAccounts, setBankAccounts] = useState<
-    { id: string; label: string }[]
-  >([]);
+  const [bankAccounts, setBankAccounts] = useState<{ id: string; label: string }[]>([]);
   const [loading, setLoading] = useState(false);
   const [processing, setProcessing] = useState(false);
 
@@ -53,9 +37,7 @@ const SupplierPaymentModal: React.FC<SupplierPaymentModalProps> = ({
   const fetchBankAccounts = async () => {
     setLoading(true);
     try {
-      const res = await api.get(
-        "/api/v1/erp/finance/bank-accounts?dropdown=true",
-      );
+      const res = await api.get("/api/v1/erp/finance/bank-accounts?dropdown=true");
       setBankAccounts(res.data);
     } catch (error) {
       console.error(error);
@@ -66,11 +48,11 @@ const SupplierPaymentModal: React.FC<SupplierPaymentModalProps> = ({
 
   const handleSubmit = async () => {
     if (!amount || Number(amount) <= 0) {
-      toast("Enter a valid amount");
+      toast.error("Enter a valid payment amount");
       return;
     }
     if (Number(amount) > (invoice?.balance || 0)) {
-      toast("Amount exceeds balance");
+      toast.error("Amount exceeds balance");
       return;
     }
 
@@ -83,14 +65,11 @@ const SupplierPaymentModal: React.FC<SupplierPaymentModalProps> = ({
           amount: Number(amount),
           bankAccountId: bankAccountId || undefined,
           notes,
-        }),
+        })
       );
-      await api.post(
-        `/api/v1/erp/finance/supplier-invoices/${invoice?.id}/payment`,
-        fd,
-      );
+      await api.post(`/api/v1/erp/finance/supplier-invoices/${invoice?.id}/payment`, fd);
 
-      toast.success("Payment recorded");
+      toast.success("Payment recorded successfully");
       onPaymentSuccess();
       onClose();
     } catch (error: any) {
@@ -106,29 +85,35 @@ const SupplierPaymentModal: React.FC<SupplierPaymentModalProps> = ({
       open={open && !!invoice}
       title={
         <div>
-          <div className="text-sm font-bold text-gray-900">Record Payment</div>
-          <p className="text-xs text-gray-500 tracking-wide">
-            {invoice?.invoiceNumber} • Balance:{" "}
-            {invoice?.balance.toLocaleString()}
+          <div className="text-sm font-bold text-text-main dark:text-text-main-dark font-mono uppercase">
+            Record Supplier Payment
+          </div>
+          <p className="text-xs text-text-sub font-mono mt-0.5">
+            Invoice: {invoice?.invoiceNumber} • Remaining Balance: Rs {invoice?.balance.toLocaleString()}
           </p>
         </div>
       }
       onCancel={onClose}
       footer={
-        <div className="flex justify-end gap-3">
-          <Button onClick={onClose} disabled={processing}>
+        <div className="flex justify-end gap-2 pt-2">
+          <Button onClick={onClose} disabled={processing} className="rounded-xl h-10 font-bold text-xs">
             Cancel
           </Button>
-          <Button type="primary" onClick={handleSubmit} loading={processing}>
+          <Button
+            type="primary"
+            onClick={handleSubmit}
+            loading={processing}
+            className="bg-slate-900 dark:bg-slate-100 dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-200 border-none rounded-xl h-10 px-5 font-bold text-xs cursor-pointer"
+          >
             Confirm Payment
           </Button>
         </div>
       }
     >
-      <div className="space-y-6 pt-2">
+      <div className="space-y-4 pt-2 font-mono">
         <div>
-          <label className={styles.label}>
-            Payment Amount <span className="text-red-500">*</span>
+          <label className="block text-xs font-bold text-text-sub uppercase mb-1">
+            Payment Amount (Rs) <span className="text-rose-500">*</span>
           </label>
           <Input
             type="number"
@@ -137,14 +122,17 @@ const SupplierPaymentModal: React.FC<SupplierPaymentModalProps> = ({
             placeholder="0.00"
             disabled={processing}
             autoFocus
-            prefix={<IconCurrencyDollar size={16} className="text-gray-400" />}
+            className="rounded-xl h-10 font-mono"
+            prefix={<IconCurrencyDollar size={16} className="text-text-sub" />}
           />
         </div>
 
         <div>
-          <label className={styles.label}>Pay From (Optional)</label>
+          <label className="block text-xs font-bold text-text-sub uppercase mb-1">
+            Pay From Account (Optional)
+          </label>
           <Select
-            className="w-full"
+            className="w-full h-10"
             value={bankAccountId || undefined}
             onChange={(val) => setBankAccountId(val)}
             placeholder="Cash / Other"
@@ -156,19 +144,22 @@ const SupplierPaymentModal: React.FC<SupplierPaymentModalProps> = ({
               label: acc.label,
             }))}
           />
-          <p className="text-xs text-gray-400 mt-1">
-            Select a bank account to automatically deduct this amount.
-          </p>
+          <span className="text-[10px] text-text-sub font-sans block mt-1">
+            Select a bank account to automatically deduct this payment amount from its balance.
+          </span>
         </div>
 
         <div>
-          <label className={styles.label}>Notes</label>
+          <label className="block text-xs font-bold text-text-sub uppercase mb-1">
+            Notes / Reference
+          </label>
           <Input.TextArea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             rows={2}
-            placeholder="Cheque No, Ref ID..."
+            placeholder="Cheque No, Bank Transfer Ref ID..."
             disabled={processing}
+            className="rounded-xl"
           />
         </div>
       </div>

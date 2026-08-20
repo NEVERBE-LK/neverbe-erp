@@ -8,8 +8,6 @@ import {
   IconX,
   IconFileText,
   IconCalendar,
-  IconUser,
-  IconPigMoney,
   IconDotsVertical,
 } from "@tabler/icons-react";
 import PageContainer from "@/pages/components/container/PageContainer";
@@ -94,18 +92,12 @@ const POApprovalsPage = () => {
           const payload: any = { status, updatedAt: nowIso };
 
           if (status === "APPROVED") {
-            payload.approvedBy = currentUser?.id || "";
-            payload.approvedByName =
-              currentUser?.firstName && currentUser?.lastName
-                ? `${currentUser.firstName} ${currentUser.lastName}`
-                : currentUser?.username || currentUser?.email || "Manager";
+            payload.approvedBy = currentUser?.userId || "";
+            payload.approvedByName = currentUser?.username || currentUser?.email || "Manager";
             payload.approvedAt = nowIso;
           } else if (status === "REJECTED") {
-            payload.rejectedBy = currentUser?.id || "";
-            payload.rejectedByName =
-              currentUser?.firstName && currentUser?.lastName
-                ? `${currentUser.firstName} ${currentUser.lastName}`
-                : currentUser?.username || currentUser?.email || "Manager";
+            payload.rejectedBy = currentUser?.userId || "";
+            payload.rejectedByName = currentUser?.username || currentUser?.email || "Manager";
             payload.rejectedAt = nowIso;
           }
 
@@ -232,40 +224,6 @@ const POApprovalsPage = () => {
                 <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200/80 dark:border-slate-700/80">
                   {orders.length} pending
                 </span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-2">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 shadow-xs">
-            <div className="flex items-center justify-between">
-              <div>
-                <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400 dark:text-slate-500 font-mono">
-                  Pending Approvals
-                </span>
-                <div className="text-2xl font-bold text-slate-900 dark:text-slate-100 mt-1">
-                  {orders.length}
-                </div>
-              </div>
-              <div className="p-2.5 bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 rounded-xl border border-amber-100 dark:border-amber-900/50">
-                <IconUser size={20} />
-              </div>
-            </div>
-          </div>
-          <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 shadow-xs">
-            <div className="flex items-center justify-between">
-              <div>
-                <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400 dark:text-slate-500 font-mono">
-                  Total Value Pending
-                </span>
-                <div className="text-2xl font-bold text-slate-900 dark:text-slate-100 mt-1 truncate">
-                  Rs {totalValue.toLocaleString()}
-                </div>
-              </div>
-              <div className="p-2.5 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 rounded-xl border border-emerald-100 dark:border-emerald-900/50">
-                <IconPigMoney size={20} />
               </div>
             </div>
           </div>

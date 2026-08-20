@@ -6,9 +6,9 @@ import {
   IconFilter,
   IconSearch,
   IconX,
-  IconUsers,
   IconEdit,
   IconTrash,
+  IconDotsVertical,
 } from "@tabler/icons-react";
 import { useAppSelector } from "@/lib/hooks";
 import { User } from "@/model/User";
@@ -32,19 +32,15 @@ import {
   Button,
   Input,
   Select,
-  Tag,
-  Space,
-  Tooltip,
   Modal,
   Form,
   Row,
   Col,
-  Typography,
-  Statistic,
   Switch,
-  Card,
+  Dropdown,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
+import type { MenuProps } from "antd";
 import { formatSLDate, dayjs } from "@/utils/dateUtils";
 
 const { Option } = Select;
@@ -96,7 +92,7 @@ const UserForm = ({
 
   const fetchRoles = async () => {
     try {
-      const token = await auth.currentUser?.getIdToken();
+      await auth.currentUser?.getIdToken();
       const res = await api.get("/api/v1/erp/users/roles");
       setRoles(res.data.roles || []);
     } catch (error) {
@@ -139,22 +135,27 @@ const UserForm = ({
 
   return (
     <Modal
-      title={user ? "Modify User" : "New User"}
+      title={
+        <span className="font-bold text-sm text-text-main dark:text-text-main-dark font-mono">
+          {user ? "Modify User Account" : "New User Account"}
+        </span>
+      }
       open={visible}
       onCancel={onClose}
       footer={null}
       destroyOnClose
     >
-      <Form form={form} layout="vertical" onFinish={handleSubmit}>
-        <Form.Item label="User ID" name="userId">
-          <Input disabled className="bg-gray-100 text-gray-500" />
+      <Form form={form} layout="vertical" onFinish={handleSubmit} className="py-2 space-y-3 font-mono text-xs">
+        <Form.Item label="User ID" name="userId" className="!mb-3">
+          <Input disabled className="bg-slate-100 dark:bg-slate-800 text-text-sub h-10 rounded-xl font-mono text-xs" />
         </Form.Item>
         <Form.Item
           label="Full Name"
           name="username"
           rules={[{ required: true, message: "Please enter name" }]}
+          className="!mb-3"
         >
-          <Input placeholder="Enter Name..." />
+          <Input placeholder="Enter Name..." className="h-10 rounded-xl text-xs" />
         </Form.Item>
         <Form.Item
           label="Email Address"
@@ -162,8 +163,9 @@ const UserForm = ({
           rules={[
             { required: true, message: "Please enter email", type: "email" },
           ]}
+          className="!mb-3"
         >
-          <Input placeholder="Enter Email..." disabled={!!user} />
+          <Input placeholder="Enter Email..." disabled={!!user} className="h-10 rounded-xl text-xs" />
         </Form.Item>
         <Form.Item
           label="Phone Number"
@@ -172,21 +174,22 @@ const UserForm = ({
             { required: true, message: "Please enter phone number" },
             { pattern: /^\+?[0-9]{10,15}$/, message: "Please enter a valid phone number (e.g. +94771234567)" }
           ]}
+          className="!mb-3"
         >
-          <Input placeholder="Enter Phone Number..." />
+          <Input placeholder="Enter Phone Number..." className="h-10 rounded-xl text-xs" />
         </Form.Item>
         <Row gutter={16}>
           <Col span={12}>
-            <Form.Item label="Account Status" name="status">
-              <Select>
+            <Form.Item label="Account Status" name="status" className="!mb-3">
+              <Select className="h-10">
                 <Option value="Active">Active</Option>
                 <Option value="Inactive">Inactive</Option>
               </Select>
             </Form.Item>
           </Col>
           <Col span={12}>
-            <Form.Item label="Access Role" name="role">
-              <Select>
+            <Form.Item label="Access Role" name="role" className="!mb-3">
+              <Select className="h-10">
                 {roles.map((r) => (
                   <Option key={r.id} value={r.id}>
                     {r.name.toUpperCase()}
@@ -196,11 +199,11 @@ const UserForm = ({
             </Form.Item>
           </Col>
         </Row>
-        <div className="flex justify-end gap-2 mt-4">
-          <Button onClick={onClose} disabled={isLoading}>
+        <div className="flex justify-end gap-2 pt-3 border-t border-card-border dark:border-card-border-dark">
+          <Button onClick={onClose} disabled={isLoading} className="h-10 px-4 rounded-xl text-xs font-semibold">
             Cancel
           </Button>
-          <Button type="primary" htmlType="submit" loading={isLoading}>
+          <Button type="primary" htmlType="submit" loading={isLoading} className="bg-slate-900 dark:bg-slate-100 dark:text-slate-900 border-none h-10 px-6 rounded-xl font-bold text-xs">
             {user ? "Save Changes" : "Create Account"}
           </Button>
         </div>
@@ -213,7 +216,6 @@ const UserForm = ({
 const UsersPage = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
-  const [hasMore, setHasMore] = useState(false);
   const [pagination, setPagination] = useState({
     current: 1,
     pageSize: 20,
@@ -245,7 +247,6 @@ const UsersPage = () => {
     }
   };
 
-  // Fetch users
   const fetchUsers = useCallback(
     async (params?: { page?: number; size?: number }) => {
       if (!currentUser) return;
@@ -265,7 +266,6 @@ const UsersPage = () => {
           current: params?.page ?? prev.current,
           pageSize: params?.size ?? prev.pageSize,
         }));
-        setHasMore(response.hasMore);
       } catch (e: any) {
         console.error(e);
         toast.error(e.message);
@@ -287,29 +287,8 @@ const UsersPage = () => {
     fetchUsers();
   }, [fetchUsers]);
 
-  // Handlers
   const handleFilterSubmit = (values: any) => {
     setFilters(values);
-    // We need to trigger fetch, but state update is async.
-    // Best way: duplicate logic or use useEffect listening to filters?
-    // Or just call fetch with new values.
-    // We will override local state with values passed.
-
-    // Update state for persistence
-    setFilters(values);
-
-    // Fetch with new values immediately
-    // NOTE: getUsersV2Action takes args, so we pass them.
-    // But fetchUsers uses 'filters' state. We should pass overrides.
-    // Let's modify fetchUsers to accept overrides or rely on updated state (but we can't wait).
-    // I'll manually call getUsersV2Action here for clarity or update fetchUsers signature.
-    // Easiest: Just set pagination to 1 and let existing effect run?
-    // We don't have an effect on filters. UsersPage had specific manual calls.
-
-    // Let's update state and call fetch.
-    // To be safe, we pass the new filters explicitly to a helper or rely on the function using the arguments.
-    // The original fetchUsers used `search` state. I'll stick to updating state and calling fetch with explicit args.
-
     setLoading(true);
     getUsersV2Action({
       page: 1,
@@ -321,7 +300,6 @@ const UsersPage = () => {
       .then((res) => {
         setUsers(res.users);
         setPagination((prev) => ({ ...prev, total: res.total, current: 1 }));
-        setHasMore(res.hasMore);
         setLoading(false);
       })
       .catch((e) => {
@@ -334,13 +312,6 @@ const UsersPage = () => {
     form.resetFields();
     setFilters({ search: "", role: "all", status: "all" });
     setPagination((prev) => ({ ...prev, current: 1 }));
-    fetchUsers({ page: 1 }); // this will use empty filters as state might not be updated yet?
-    // Wait, fetchUsers uses `filters`. State update is not immediate.
-    // Better to call fetch with explicit defaults.
-
-    // Quick fix: Just reload page equivalent
-    window.location.reload(); // Too aggressive?
-    // Let's just do manual fetch
     getUsersV2Action({
       page: 1,
       size: pagination.pageSize,
@@ -360,9 +331,10 @@ const UsersPage = () => {
 
   const handleDelete = async (userId: string) => {
     showConfirmation({
-      title: "DELETE USER?",
+      title: "Delete User Account?",
       message: "This action cannot be undone.",
       variant: "danger",
+      confirmText: "Delete Account",
       onSuccess: async () => {
         try {
           await deleteUserByIdAction(userId);
@@ -380,7 +352,6 @@ const UsersPage = () => {
     setShowUserForm(true);
   };
 
-  // Filter users based on anonymous toggle (client side filtering as per original)
   const isAnonymousUser = (u: User) =>
     u.role === "Pending" || u.email?.includes("anonymous") || !u.email;
 
@@ -416,18 +387,11 @@ const UsersPage = () => {
       key: "details",
       render: (_, record) => (
         <div className="flex flex-col">
-          <Typography.Text strong>{record.username}</Typography.Text>
-          <Typography.Text type="secondary" className="text-xs">
-            {record.email}
-          </Typography.Text>
+          <span className="font-semibold text-xs text-text-main dark:text-text-main-dark">{record.username}</span>
+          <span className="text-xs text-text-sub dark:text-slate-400">{record.email}</span>
           {record.phoneNumber && (
-            <Typography.Text type="secondary" className="text-xs">
-              {record.phoneNumber}
-            </Typography.Text>
+            <span className="text-xs text-text-sub dark:text-slate-500 font-mono">{record.phoneNumber}</span>
           )}
-          <Typography.Text type="secondary" className="text-[10px]">
-            ID: {record.userId.slice(0, 8)}...
-          </Typography.Text>
         </div>
       ),
     },
@@ -436,23 +400,38 @@ const UsersPage = () => {
       key: "status",
       align: "center",
       render: (_, record) => (
-        <Tag color={record.status ? "success" : "default"}>
+        <span
+          className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-full font-mono ${
+            record.status
+              ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/40"
+              : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-card-border dark:border-card-border-dark"
+          }`}
+        >
+          <span
+            className={`w-1.5 h-1.5 rounded-full ${
+              record.status ? "bg-emerald-500 animate-pulse" : "bg-slate-400"
+            }`}
+          />
           {record.status ? "ACTIVE" : "INACTIVE"}
-        </Tag>
+        </span>
       ),
     },
     {
       title: "Role",
       key: "role",
       align: "center",
-      render: (_, record) => <Tag>{record.role}</Tag>,
+      render: (_, record) => (
+        <span className="inline-flex items-center px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-card-border dark:border-card-border-dark font-mono">
+          {record.role}
+        </span>
+      ),
     },
     {
       title: "Joined",
       key: "joined",
       align: "center",
       render: (_, record) => (
-        <span className="text-xs text-gray-500">
+        <span className="text-xs font-mono text-text-sub dark:text-slate-400">
           {formatSLDate(record.createdAt)}
         </span>
       ),
@@ -460,153 +439,163 @@ const UsersPage = () => {
     {
       title: "Actions",
       key: "actions",
+      width: 60,
       align: "right",
-      render: (_, record) => (
-        <Space>
-          <Tooltip title="Edit">
-            <Button
-              size="small"
-              icon={<IconEdit size={16} />}
-              onClick={() => executeWithPermission(() => handleEdit(record))}
-            />
-          </Tooltip>
-          <Tooltip title="Delete">
-            <Button
-              size="small"
-              danger
-              icon={<IconTrash size={16} />}
-              onClick={() => executeWithPermission(() => handleDelete(record.userId))}
-            />
-          </Tooltip>
-          <Tooltip title="Export">
-            <Button
-              size="small"
-              icon={<IconDownload size={16} />}
-              onClick={() => handleRowExport(record)}
-            />
-          </Tooltip>
-        </Space>
-      ),
+      render: (_, record) => {
+        const menuItems: MenuProps["items"] = [
+          {
+            key: "edit",
+            icon: <IconEdit size={14} />,
+            label: "Edit Account",
+            onClick: () => executeWithPermission(() => handleEdit(record)),
+          },
+          {
+            key: "export",
+            icon: <IconDownload size={14} />,
+            label: "Export User Data",
+            onClick: () => handleRowExport(record),
+          },
+          {
+            type: "divider",
+          },
+          {
+            key: "delete",
+            icon: <IconTrash size={14} className="text-rose-600 dark:text-rose-400" />,
+            label: <span className="font-semibold text-rose-600 dark:text-rose-400">Delete Account</span>,
+            onClick: () => executeWithPermission(() => handleDelete(record.userId)),
+          },
+        ];
+
+        return (
+          <div className="flex justify-end">
+            <Dropdown menu={{ items: menuItems }} trigger={["click"]} placement="bottomRight">
+              <button
+                type="button"
+                className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer border-none bg-transparent"
+              >
+                <IconDotsVertical size={16} />
+              </button>
+            </Dropdown>
+          </div>
+        );
+      },
     },
   ];
 
   return (
-    <PageContainer
-      title="Users"
-      description="System Access Management"
-      loading={loading}
-    >
-      <div className="space-y-6">
-        {/* PREMIUM HEADER */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 gap-4">
+    <PageContainer title="Users">
+      <div className="w-full space-y-6">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-1.5 h-10 bg-green-600 rounded-full" />
-            <div className="flex flex-col">
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 leading-none mb-1">
+            <div className="w-1 h-8 bg-slate-900 dark:bg-slate-100 rounded-full" />
+            <div>
+              <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-text-sub dark:text-slate-500 leading-none mb-1 font-mono block">
                 System Administration
               </span>
-              <h2 className="text-4xl font-black text-gray-900 tracking-tight leading-none">
-                User Management
-              </h2>
+              <div className="flex items-center gap-2 font-mono">
+                <h2 className="text-2xl font-bold text-text-main dark:text-text-main-dark tracking-tight leading-none">
+                  User Accounts
+                </h2>
+                <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-slate-100 dark:bg-slate-800 text-text-sub dark:text-slate-400 border border-card-border dark:border-card-border-dark">
+                  {pagination.total} Accounts
+                </span>
+              </div>
             </div>
           </div>
-
-          <div className="flex items-center gap-3">
-            <Button
-              icon={<IconDownload size={18} />}
-              onClick={() => toast.error("Export coming soon")}
-              className="h-12 px-6 rounded-lg text-sm font-bold border-gray-200 hover:border-gray-300 flex items-center gap-2"
-            >
-              Export
-            </Button>
-            <Button
-              type="primary"
-              size="large"
-              icon={<IconPlus size={18} />}
-              onClick={() => {
-                executeWithPermission(() => {
-                  setSelectedUser(null);
-                  setShowUserForm(true);
-                });
-              }}
-              className="bg-black hover:bg-gray-800 border-none h-12 px-6 rounded-lg text-sm font-bold shadow-lg shadow-black/10 flex items-center gap-2"
-            >
-              New User
-            </Button>
-          </div>
+          <Button
+            type="primary"
+            icon={<IconPlus size={16} />}
+            onClick={() => {
+              executeWithPermission(() => {
+                setSelectedUser(null);
+                setShowUserForm(true);
+              });
+            }}
+            className="bg-slate-900 dark:bg-slate-100 dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-200 border-none h-10 px-4 rounded-xl text-xs font-bold shadow-xs cursor-pointer flex items-center gap-2"
+          >
+            New User
+          </Button>
         </div>
 
-        {/* Filters */}
-        <Card size="small" className="shadow-sm">
+        {/* Filter Panel */}
+        <div className="bg-card dark:bg-card-dark border border-card-border dark:border-card-border-dark rounded-xl p-4">
           <Form
             form={form}
             layout="inline"
             onFinish={handleFilterSubmit}
             initialValues={{ role: "all", status: "all" }}
-            className="flex flex-wrap gap-2 w-full"
+            className="flex flex-wrap items-center gap-2 w-full"
           >
             <Form.Item name="search" className="!mb-0 flex-1 min-w-[200px]">
               <Input
-                prefix={<IconSearch size={15} className="text-gray-400" />}
+                prefix={<IconSearch size={15} className="text-text-sub" />}
                 placeholder="Search by name or email..."
                 allowClear
+                className="rounded-xl h-10"
               />
             </Form.Item>
             <Form.Item name="status" className="!mb-0 w-36">
-              <Select>
+              <Select className="h-10">
                 <Option value="all">All Status</Option>
                 <Option value="Active">Active</Option>
                 <Option value="Inactive">Inactive</Option>
               </Select>
             </Form.Item>
             <Form.Item name="role" className="!mb-0 w-36">
-              <Select>
+              <Select className="h-10">
                 <Option value="all">All Roles</Option>
                 <Option value="ADMIN">ADMIN</Option>
                 <Option value="USER">USER</Option>
               </Select>
             </Form.Item>
             <Form.Item className="!mb-0">
-              <div className="flex items-center h-8 px-3 bg-gray-50 rounded border border-gray-200 gap-2">
+              <div className="flex items-center h-10 px-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-card-border dark:border-card-border-dark gap-2">
                 <Switch
                   checked={showAnonymous}
                   onChange={setShowAnonymous}
                   size="small"
                 />
-                <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 whitespace-nowrap">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-text-sub font-mono whitespace-nowrap">
                   {showAnonymous ? "Anonymous" : "Registered"}
                 </span>
               </div>
             </Form.Item>
             <Form.Item className="!mb-0">
-              <Space>
+              <div className="flex items-center gap-2">
                 <Button
                   type="primary"
                   htmlType="submit"
                   icon={<IconFilter size={15} />}
+                  className="bg-slate-900 dark:bg-slate-100 dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-200 border-none h-10 px-4 rounded-xl text-xs font-bold cursor-pointer"
                 >
                   Filter
                 </Button>
-                <Button icon={<IconX size={15} />} onClick={handleReset}>
+                <Button
+                  icon={<IconX size={15} />}
+                  onClick={handleReset}
+                  className="h-10 px-4 rounded-xl border-card-border dark:border-card-border-dark text-text-sub text-xs font-medium cursor-pointer"
+                >
                   Clear
                 </Button>
-              </Space>
+              </div>
             </Form.Item>
           </Form>
-        </Card>
+        </div>
 
-        {/* Table */}
-        <div className="mt-6">
-          <Table
-            scroll={{ x: 1000 }}
-            columns={columns}
-            dataSource={displayedUsers}
-            rowKey="userId"
-            pagination={{ ...pagination, position: ["bottomRight"] }}
-            loading={loading}
-            onChange={handleTableChange}
-            bordered
-          />
+        {/* Table Container */}
+        <div className="bg-card dark:bg-card-dark border border-card-border dark:border-card-border-dark rounded-2xl shadow-xs overflow-hidden">
+          <div className="[&_.ant-table]:!bg-transparent [&_.ant-table-thead>tr>th]:!bg-slate-50/80 [&_.ant-table-thead>tr>th]:dark:!bg-slate-800/60 [&_.ant-table-thead>tr>th]:!text-text-sub [&_.ant-table-thead>tr>th]:!font-bold [&_.ant-table-thead>tr>th]:!text-[11px] [&_.ant-table-thead>tr>th]:!uppercase [&_.ant-table-thead>tr>th]:!tracking-wider [&_.ant-table-thead>tr>th]:!border-b [&_.ant-table-thead>tr>th]:!border-card-border [&_.ant-table-thead>tr>th]:dark:!border-card-border-dark [&_.ant-table-tbody>tr]:hover:!bg-slate-50/60 [&_.ant-table-tbody>tr]:dark:hover:!bg-slate-800/40 [&_.ant-table-tbody>tr>td]:!border-b [&_.ant-table-tbody>tr>td]:!border-card-border [&_.ant-table-tbody>tr>td]:dark:!border-card-border-dark [&_.ant-table-tbody>tr>td]:!py-3.5">
+            <Table
+              scroll={{ x: 800 }}
+              columns={columns}
+              dataSource={displayedUsers}
+              rowKey="userId"
+              pagination={{ ...pagination, position: ["bottomRight"] }}
+              loading={loading}
+              onChange={handleTableChange}
+            />
+          </div>
         </div>
       </div>
 

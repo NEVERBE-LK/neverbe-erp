@@ -11,6 +11,8 @@ import { ThemeProvider, useTheme } from "@/contexts/ThemeContext";
 import App from "./App";
 import "./index.css";
 
+import { SettingsProvider } from "@/contexts/SettingsContext";
+
 const AntdAppWrapper = () => {
   const { theme } = useTheme();
 
@@ -47,10 +49,6 @@ const AntdAppWrapper = () => {
             colorPrimaryHover: theme === "dark" ? "#cbd5e1" : "#1e293b",
             activeBorderColor: theme === "dark" ? "#f8fafc" : "#0f172a",
             hoverBorderColor: theme === "dark" ? "#475569" : "#cbd5e1",
-            activeShadow:
-              theme === "dark"
-                ? "0 0 0 2px rgba(248, 250, 252, 0.15)"
-                : "0 0 0 2px rgba(15, 23, 42, 0.08)",
           },
           Pagination: {
             itemActiveBg: theme === "dark" ? "#1e293b" : "#0f172a",
@@ -60,10 +58,12 @@ const AntdAppWrapper = () => {
       }}
     >
       <GlobalProvider>
-        <ConfirmationDialogProvider>
-          <Toaster position="top-right" />
-          <App />
-        </ConfirmationDialogProvider>
+        <SettingsProvider>
+          <ConfirmationDialogProvider>
+            <Toaster position="top-right" />
+            <App />
+          </ConfirmationDialogProvider>
+        </SettingsProvider>
       </GlobalProvider>
     </ConfigProvider>
   );

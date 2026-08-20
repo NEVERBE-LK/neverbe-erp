@@ -1,9 +1,10 @@
-import { Spin, Button } from "antd";
+import { Button } from "antd";
 import api from "@/lib/api";
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Order } from "@/model/Order";
 import PageContainer from "@/pages/components/container/PageContainer";
+import Spinner from "@/pages/components/shared/Spinner";
 
 import { useAppSelector } from "@/lib/hooks";
 
@@ -37,13 +38,8 @@ const OrderInvoice = () => {
 
   if (loading)
     return (
-      <div className="flex items-center justify-center min-h-screen bg-white">
-        <div className="flex flex-col items-center gap-4">
-          <Spin />
-          <p className="text-gray-400 font-bold text-xs  ">
-            Generating Invoice...
-          </p>
-        </div>
+      <div className="flex items-center justify-center min-h-screen bg-canvas dark:bg-canvas-dark">
+        <Spinner spinning={true} tip="Generating Invoice..." />
       </div>
     );
 
@@ -64,30 +60,29 @@ const OrderInvoice = () => {
       </style>
 
       {/* Nav - Hidden on print */}
-      <div className="flex justify-between items-end mb-8 no-print">
+      <div className="flex justify-between items-center mb-8 no-print pb-6 border-b border-card-border dark:border-card-border-dark">
         <div className="flex items-center gap-3">
-          <div className="w-1.5 h-10 bg-green-600 rounded-full" />
+          <div className="w-1 h-8 bg-brand dark:bg-brand-dark rounded-full" />
           <div className="flex flex-col">
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 leading-none mb-1">
+            <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-text-sub dark:text-slate-500 leading-none mb-1 font-mono">
               Official Document
             </span>
-            <h2 className="text-4xl font-black text-gray-900 tracking-tight leading-none">
+            <h2 className="text-2xl font-bold text-text-main dark:text-text-main-dark tracking-tight leading-none font-mono">
               Invoice #{order.orderId}
             </h2>
           </div>
         </div>
-        <div className="flex gap-3">
+        <div className="flex items-center gap-3">
           <Link
             to="/orders"
-            className="flex items-center gap-2 text-xs font-bold text-gray-400! hover:text-green-600! transition-colors uppercase tracking-widest px-4"
+            className="flex items-center gap-1.5 text-xs font-bold text-text-sub dark:text-slate-400 hover:text-text-main dark:hover:text-white transition-colors uppercase tracking-wider px-3 py-2"
           >
             <IconChevronLeft size={16} /> Back to Orders
           </Link>
           <Button
             type="primary"
-            size="large"
-            icon={<IconPrinter size={18} />}
-            className="rounded-xl px-6 font-bold"
+            icon={<IconPrinter size={16} />}
+            className="bg-slate-900 dark:bg-slate-100 dark:text-slate-900 hover:bg-slate-800 border-none font-bold text-xs rounded-xl h-10 px-5 flex items-center gap-1.5 cursor-pointer shadow-xs"
             onClick={handlePrint}
           >
             Print Document

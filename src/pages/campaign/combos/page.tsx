@@ -9,7 +9,7 @@ import {
 } from "@tabler/icons-react";
 import { ComboProduct } from "@/model/ComboProduct";
 import ComboListTable from "./components/ComboListTable";
-import ComboFormModal from "./components/ComboFormModal"; // Will create next
+import ComboFormModal from "./components/ComboFormModal";
 import toast from "react-hot-toast";
 import PageContainer from "../../components/container/PageContainer";
 import { useAppSelector } from "@/lib/hooks";
@@ -102,45 +102,49 @@ const CombosPage = () => {
   };
 
   return (
-    <PageContainer
-      title="Combo Products"
-      description="Manage product bundles and deals"
-    >
-      <div className="space-y-6">
-        {/* PREMIUM HEADER */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 gap-4">
+    <PageContainer title="Combo Products">
+      <div className="w-full space-y-6">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-1.5 h-10 bg-green-600 rounded-full" />
-            <div className="flex flex-col">
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 leading-none mb-1">
+            <div className="w-1 h-8 bg-slate-900 dark:bg-slate-100 rounded-full" />
+            <div>
+              <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-text-sub dark:text-slate-500 leading-none mb-1 font-mono block">
                 Campaign Management
               </span>
-              <h2 className="text-4xl font-black text-gray-900 tracking-tight leading-none">
-                Combo Products
-              </h2>
+              <div className="flex items-center gap-2 font-mono">
+                <h2 className="text-2xl font-bold text-text-main dark:text-text-main-dark tracking-tight leading-none">
+                  Combo Products
+                </h2>
+                <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-slate-100 dark:bg-slate-800 text-text-sub dark:text-slate-400 border border-card-border dark:border-card-border-dark">
+                  {pagination.total} Total
+                </span>
+              </div>
             </div>
           </div>
           <Button
             type="primary"
-            size="large"
-            icon={<IconPlus size={18} />}
+            icon={<IconPlus size={16} />}
             onClick={handleOpenCreateModal}
-            className="bg-black hover:bg-gray-800 border-none h-12 px-6 rounded-lg text-sm font-bold shadow-lg shadow-black/10 flex items-center gap-2"
+            className="bg-slate-900 dark:bg-slate-100 dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-200 border-none h-10 px-4 rounded-xl text-xs font-bold shadow-xs cursor-pointer flex items-center gap-2"
           >
             New Combo
           </Button>
         </div>
 
-        <div className="bg-transparent space-y-6">
-          <ComboListTable
-            items={combos}
-            loading={loading}
-            onEdit={handleOpenEditModal}
-            onDelete={handleDelete}
-          />
+        {/* Table Container */}
+        <div className="bg-card dark:bg-card-dark border border-card-border dark:border-card-border-dark rounded-2xl shadow-xs overflow-hidden">
+          <div className="[&_.ant-table]:!bg-transparent [&_.ant-table-thead>tr>th]:!bg-slate-50/80 [&_.ant-table-thead>tr>th]:dark:!bg-slate-800/60 [&_.ant-table-thead>tr>th]:!text-text-sub [&_.ant-table-thead>tr>th]:!font-bold [&_.ant-table-thead>tr>th]:!text-[11px] [&_.ant-table-thead>tr>th]:!uppercase [&_.ant-table-thead>tr>th]:!tracking-wider [&_.ant-table-thead>tr>th]:!border-b [&_.ant-table-thead>tr>th]:!border-card-border [&_.ant-table-thead>tr>th]:dark:!border-card-border-dark [&_.ant-table-tbody>tr]:hover:!bg-slate-50/60 [&_.ant-table-tbody>tr]:dark:hover:!bg-slate-800/40 [&_.ant-table-tbody>tr>td]:!border-b [&_.ant-table-tbody>tr>td]:!border-card-border [&_.ant-table-tbody>tr>td]:dark:!border-card-border-dark [&_.ant-table-tbody>tr>td]:!py-3.5">
+            <ComboListTable
+              items={combos}
+              loading={loading}
+              onEdit={handleOpenEditModal}
+              onDelete={handleDelete}
+            />
+          </div>
 
           {/* Pagination */}
-          <div className="flex justify-end mt-6">
+          <div className="flex justify-end p-4 border-t border-card-border dark:border-card-border-dark font-mono">
             <div className="flex items-center gap-2">
               <button
                 onClick={() =>
@@ -150,11 +154,11 @@ const CombosPage = () => {
                   }))
                 }
                 disabled={pagination.page === 1 || loading}
-                className="p-2 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:hover:bg-white transition-colors"
+                className="p-2 border border-card-border dark:border-card-border-dark rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-40 transition-colors cursor-pointer"
               >
-                <IconChevronLeft size={18} />
+                <IconChevronLeft size={16} />
               </button>
-              <span className="text-sm font-bold text-gray-700 px-4">
+              <span className="text-xs font-bold text-text-sub px-3">
                 Page {pagination.page}
               </span>
               <button
@@ -165,9 +169,9 @@ const CombosPage = () => {
                   }))
                 }
                 disabled={loading || combos.length < pagination.size}
-                className="p-2 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:hover:bg-white transition-colors"
+                className="p-2 border border-card-border dark:border-card-border-dark rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-40 transition-colors cursor-pointer"
               >
-                <IconChevronRight size={18} />
+                <IconChevronRight size={16} />
               </button>
             </div>
           </div>

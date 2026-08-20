@@ -1,9 +1,43 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { IconSparkles, IconArrowUpRight, IconAlertTriangle, IconCheck } from "@tabler/icons-react";
 import { useAppSelector } from "@/lib/hooks";
+import { useSettings } from "@/contexts/SettingsContext";
+import api from "@/lib/api";
 
 const AIOperationalInsights = () => {
   const { currentUser } = useAppSelector((state) => state.authSlice);
+  const { settings, formatCurrency, isLowStock } = useSettings();
+
+  const [metrics, setMetrics] = useState({
+    lowStockCount: 0,
+    todaySales: 0,
+    loading: true,
+  });
+
+  useEffect(() => {
+    const fetchLiveMetrics = async () => {
+      try {
+        const [productsRes, salesRes] = await Promise.all([
+          api.get("/api/v1/erp/master/products?page=1&size=100").catch(() => ({ data: { data: [] } })),
+          api.get("/api/v1/erp/reports/sales-overview").catch(() => ({ data: { totalSales: 0 } })),
+        ]);
+
+        const products = productsRes.data?.data || [];
+        const lowStockItems = products.filter((p: any) => isLowStock(p.totalStock || 0));
+
+        setMetrics({
+          lowStockCount: lowStockItems.length,
+          todaySales: salesRes.data?.totalSales || 0,
+          loading: false,
+        });
+      } catch (err) {
+        console.error("Failed to load AI operational insights", err);
+        setMetrics((prev) => ({ ...prev, loading: false }));
+      }
+    };
+
+    fetchLiveMetrics();
+  }, [settings.lowStockThreshold]);
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -12,7 +46,7 @@ const AIOperationalInsights = () => {
     return "Good evening";
   };
 
-  const username = currentUser?.username || currentUser?.email?.split("@")[0] || "operator";
+  const username = currentUser?.username || currentUser?.email?.split("@")[0] || "Operator";
 
   return (
     <div className="relative overflow-hidden rounded-xl border border-card-border dark:border-card-border-dark bg-linear-to-r from-panel via-panel/30 to-panel dark:from-slate-900 dark:via-slate-950 dark:to-slate-900 p-6 text-text-main dark:text-white shadow-sm transition-all hover:shadow-md">
@@ -31,13 +65,13 @@ const AIOperationalInsights = () => {
             <h3 className="text-sm font-semibold text-text-main dark:text-white tracking-tight m-0">
               {getGreeting()}, {username}
             </h3>
-            <p className="text-xs text-text-sub dark:text-slate-400 font-normal mt-0.5 m-0">
-              AI-generated operational overview for today
+            <p className="text-xs text-text-sub dark:text-slate-400 font-normal mt-0.5 m-0 font-mono">
+              AI-generated live operational overview for today
             </p>
           </div>
         </div>
-        <span className="text-[10px] font-medium px-2.5 py-1 rounded-md bg-blue-50/80 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-500/20 uppercase tracking-wider">
-          System Active
+        <span className={`text-[10px] font-bold px-2.5 py-1 rounded-md border uppercase tracking-wider font-mono ${settings.maintenanceMode ? "bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border-amber-200" : "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-200/60"}`}>
+          {settings.maintenanceMode ? "Maintenance Active" : "System Active"}
         </span>
       </div>
  
@@ -50,8 +84,8 @@ const AIOperationalInsights = () => {
           </div>
           <div>
             <h4 className="text-xs font-semibold text-text-main dark:text-slate-200 m-0">Revenue Growth</h4>
-            <p className="text-xs text-text-sub dark:text-slate-400 font-normal mt-1 leading-relaxed m-0">
-              Sales performance shows steady growth this week, driven mostly by digital web transactions. Net sales are on track.
+            <p className="text-xs text-text-sub dark:text-slate-400 font-normal mt-1 leading-relaxed m-0 font-mono">
+              Sales performance shows steady growth. Net revenue is running at <span className="font-bold text-text-main dark:text-white">{formatCurrency(metrics.todaySales)}</span>.
             </p>
           </div>
         </div>
@@ -63,8 +97,10 @@ const AIOperationalInsights = () => {
           </div>
           <div>
             <h4 className="text-xs font-semibold text-text-main dark:text-slate-200 m-0">Inventory Status</h4>
-            <p className="text-xs text-text-sub dark:text-slate-400 font-normal mt-1 leading-relaxed m-0">
-              Some key items are approaching restock thresholds. Reordering processes should be initiated to avoid potential stockouts.
+            <p className="text-xs text-text-sub dark:text-slate-400 font-normal mt-1 leading-relaxed m-0 font-mono">
+              {metrics.lowStockCount > 0
+                ? `${metrics.lowStockCount} product(s) below low stock threshold (${settings.lowStockThreshold || 10} units). Reordering recommended.`
+                : `All catalog inventory items are above safety threshold (${settings.lowStockThreshold || 10} units).`}
             </p>
           </div>
         </div>
@@ -76,8 +112,8 @@ const AIOperationalInsights = () => {
           </div>
           <div>
             <h4 className="text-xs font-semibold text-text-main dark:text-slate-200 m-0">System Integrity</h4>
-            <p className="text-xs text-text-sub dark:text-slate-400 font-normal mt-1 leading-relaxed m-0">
-              Order integrity check verification successfully retired. Database collections and runtime processes are running optimally.
+            <p className="text-xs text-text-sub dark:text-slate-400 font-normal mt-1 leading-relaxed m-0 font-mono">
+              Database collections and runtime processes operating in {settings.currencyCode || "LKR"} region.
             </p>
           </div>
         </div>

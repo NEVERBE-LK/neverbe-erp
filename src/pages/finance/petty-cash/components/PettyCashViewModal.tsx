@@ -1,26 +1,18 @@
 import api from "@/lib/api";
 import React, { useState } from "react";
 import {
-  IconLoader,
   IconCheck,
   IconBan,
   IconExternalLink,
   IconDownload,
-  IconPaperclip,
 } from "@tabler/icons-react";
 import { PettyCash } from "@/model/PettyCash";
 import toast from "react-hot-toast";
 import {
   Modal,
   Descriptions,
-  Tag,
   Button,
-  Space,
-  Statistic,
-  Typography,
 } from "antd";
-
-const { Title, Text } = Typography;
 
 interface PettyCashViewModalProps {
   open: boolean;
@@ -35,9 +27,7 @@ const PettyCashViewModal: React.FC<PettyCashViewModalProps> = ({
   onStatusChange,
   entry,
 }) => {
-  const [processing, setProcessing] = useState<"approve" | "reject" | null>(
-    null,
-  );
+  const [processing, setProcessing] = useState<"approve" | "reject" | null>(null);
 
   const handleStatusUpdate = async (newStatus: "APPROVED" | "REJECTED") => {
     if (!entry) return;
@@ -48,18 +38,18 @@ const PettyCashViewModal: React.FC<PettyCashViewModalProps> = ({
       fd.append("data", JSON.stringify({ status: newStatus }));
       await api.put(`/api/v1/erp/finance/petty-cash/${entry.id}`, fd);
 
-      toast.success(`ENTRY ${newStatus}`);
+      toast.success(`VOUCHER ${newStatus}`);
       onStatusChange();
       onClose();
     } catch (err: any) {
-      toast.error(err.message);
+      toast.error(err.message || "Failed to update status");
     } finally {
       setProcessing(null);
     }
   };
 
   const formatDate = (date: string | any) => {
-    if (!date) return "-";
+    if (!date) return "—";
     return new Date(date).toLocaleString("en-US", {
       month: "short",
       day: "2-digit",
@@ -69,14 +59,36 @@ const PettyCashViewModal: React.FC<PettyCashViewModalProps> = ({
     });
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
+  const renderStatus = (status: string) => {
+    const st = status?.toUpperCase();
+    switch (st) {
       case "APPROVED":
-        return "green";
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/40 font-mono">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+            APPROVED
+          </span>
+        );
+      case "PENDING":
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border border-amber-200/60 dark:border-amber-800/40 font-mono">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+            PENDING
+          </span>
+        );
       case "REJECTED":
-        return "red";
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 border border-rose-200/60 dark:border-rose-800/40 font-mono">
+            <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+            REJECTED
+          </span>
+        );
       default:
-        return "orange";
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-card-border dark:border-card-border-dark font-mono">
+            {status || "UNKNOWN"}
+          </span>
+        );
     }
   };
 
@@ -86,15 +98,18 @@ const PettyCashViewModal: React.FC<PettyCashViewModalProps> = ({
     <Modal
       open={open}
       title={
-        <Space>
-          <Text strong>Record #{entry.id?.slice(-6)}</Text>
-          <Tag color={getStatusColor(entry.status)}>{entry.status}</Tag>
-        </Space>
+        <div className="flex items-center gap-3">
+          <span className="text-sm font-bold text-text-main dark:text-text-main-dark font-mono">
+            Voucher {entry.voucherNo || `#${entry.id?.slice(-6)}`}
+          </span>
+          {renderStatus(entry.status)}
+        </div>
       }
       onCancel={onClose}
+      width={840}
       footer={
-        <div className="flex justify-end gap-2">
-          <Button onClick={onClose} disabled={!!processing}>
+        <div className="flex justify-end gap-2 pt-2">
+          <Button onClick={onClose} disabled={!!processing} className="rounded-xl h-10 font-bold text-xs">
             Close
           </Button>
           {entry.status === "PENDING" && (
@@ -104,6 +119,7 @@ const PettyCashViewModal: React.FC<PettyCashViewModalProps> = ({
                 onClick={() => handleStatusUpdate("REJECTED")}
                 loading={processing === "reject"}
                 icon={<IconBan size={16} />}
+                className="rounded-xl h-10 font-bold text-xs flex items-center gap-1.5"
               >
                 Reject
               </Button>
@@ -112,6 +128,7 @@ const PettyCashViewModal: React.FC<PettyCashViewModalProps> = ({
                 onClick={() => handleStatusUpdate("APPROVED")}
                 loading={processing === "approve"}
                 icon={<IconCheck size={16} />}
+                className="bg-emerald-600 hover:bg-emerald-700 border-none rounded-xl h-10 px-5 font-bold text-xs cursor-pointer flex items-center gap-1.5"
               >
                 Approve
               </Button>
@@ -119,71 +136,72 @@ const PettyCashViewModal: React.FC<PettyCashViewModalProps> = ({
           )}
         </div>
       }
-      width={700}
     >
-      <div className="bg-gray-50 p-6 text-center border rounded-lg mb-6">
-        <Statistic
-          title={
-            <Tag color={entry.type === "income" ? "green" : "red"}>
-              {entry.type.toUpperCase()}
-            </Tag>
-          }
-          value={entry.amount}
-          precision={2}
-          prefix="LKR"
-          valueStyle={{ fontWeight: "bold" }}
-        />
+      <div className="bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 p-6 rounded-2xl shadow-xs text-center mb-6 font-mono">
+        <span className={`inline-block px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-full mb-2 ${
+          entry.type === "income" ? "bg-emerald-500/20 text-emerald-400" : "bg-rose-500/20 text-rose-400"
+        }`}>
+          {entry.type === "income" ? "INCOME / TOP-UP" : "EXPENSE VOUCHER"}
+        </span>
+        <p className="text-3xl font-bold tracking-tight">
+          Rs {Number(entry.amount).toLocaleString()}
+        </p>
       </div>
 
-      <Descriptions bordered column={2} size="small">
-        <Descriptions.Item label="Category">{entry.category}</Descriptions.Item>
-        <Descriptions.Item label="Sub Category">
-          {entry.subCategory || "-"}
+      <Descriptions bordered column={2} size="small" className="font-mono text-xs">
+        <Descriptions.Item label="Voucher No">
+          {entry.voucherNo || `PCV-${entry.id?.slice(-6).toUpperCase()}`}
         </Descriptions.Item>
-        <Descriptions.Item label="Method">
-          {entry.paymentMethod}
+        <Descriptions.Item label="Payee / Recipient">
+          {entry.payee || "—"}
         </Descriptions.Item>
-        <Descriptions.Item label="Bank Account">
-          {entry.bankAccountName || "-"}
+        <Descriptions.Item label="Category">{entry.category || "—"}</Descriptions.Item>
+        <Descriptions.Item label="Payment Method">
+          {entry.paymentMethod?.toUpperCase() || "CASH"}
         </Descriptions.Item>
-        <Descriptions.Item label="Note" span={2}>
-          {entry.note}
+        <Descriptions.Item label="Bank Account" span={2}>
+          {entry.bankAccountName || "N/A (Cash Vault)"}
+        </Descriptions.Item>
+        <Descriptions.Item label="Purpose / Note" span={2}>
+          {entry.note || "—"}
         </Descriptions.Item>
 
-        <Descriptions.Item label="Attachment" span={2}>
+        <Descriptions.Item label="Receipt Attachment" span={2}>
           {entry.attachment ? (
-            <Space>
+            <div className="flex items-center gap-2">
               <Button
                 size="small"
                 icon={<IconExternalLink size={14} />}
                 href={entry.attachment}
                 target="_blank"
+                className="rounded-lg font-mono text-[10px]"
               >
-                View
+                View Attachment
               </Button>
               <Button
                 size="small"
                 icon={<IconDownload size={14} />}
                 href={entry.attachment}
                 download
+                className="rounded-lg font-mono text-[10px]"
               >
                 Download
               </Button>
-            </Space>
+            </div>
           ) : (
-            "No Attachment"
+            "No Receipt Attached"
           )}
         </Descriptions.Item>
 
-        <Descriptions.Item label="Created By">
+        <Descriptions.Item label="Requested By">
           {entry.createdBy || "System"}
         </Descriptions.Item>
-        <Descriptions.Item label="Created At">
+        <Descriptions.Item label="Voucher Date">
           {formatDate(entry.createdAt)}
         </Descriptions.Item>
         {entry.reviewedBy && (
           <>
-            <Descriptions.Item label="Reviewed By">
+            <Descriptions.Item label="Reviewed / Approved By">
               {entry.reviewedBy}
             </Descriptions.Item>
             <Descriptions.Item label="Reviewed At">

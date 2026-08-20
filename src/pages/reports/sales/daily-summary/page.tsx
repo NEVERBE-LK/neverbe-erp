@@ -1,15 +1,10 @@
 import api from "@/lib/api";
 import {
-  Card,
   Form,
-  Spin,
   Table,
   DatePicker,
   Select,
   Button,
-  Space,
-  Tag,
-  Tooltip as AntdTooltip,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import React, { useState, useEffect } from "react";
@@ -25,6 +20,7 @@ import {
   IconTruckDelivery,
 } from "@tabler/icons-react";
 import PageContainer from "@/pages/components/container/PageContainer";
+import Spinner from "@/pages/components/shared/Spinner";
 import * as XLSX from "xlsx";
 import toast from "react-hot-toast";
 import dayjs from "dayjs";
@@ -38,7 +34,6 @@ const fmt = (v: number) =>
     maximumFractionDigits: 2,
   });
 
-// Recharts
 import {
   LineChart,
   Line,
@@ -51,14 +46,13 @@ import {
   Bar,
 } from "recharts";
 
-const Page = () => {
+const DailySummaryPage = () => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [summary, setSummary] = useState<any>(null);
 
   const { currentUser } = useAppSelector((state: RootState) => state.authSlice);
 
-  // Initialize with last 30 days
   const [dateRange, setDateRange] = useState<[string, string]>([
     dayjs().subtract(30, "day").format("YYYY-MM-DD"),
     dayjs().format("YYYY-MM-DD"),
@@ -69,7 +63,6 @@ const Page = () => {
     const to = values?.dateRange?.[1]?.format("YYYY-MM-DD") || dateRange[1];
     const status = values?.status || "Paid";
 
-    // --- Date range validation (max 62 days to be safer with months) ---
     const start = new Date(from);
     const end = new Date(to);
     const diffDays = (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24);
@@ -83,7 +76,6 @@ const Page = () => {
       toast.error(`Max allowed range is 62 days for daily summary`);
       return;
     }
-    // ----------------------------------------------------
 
     setDateRange([from, to]);
     setLoading(true);
@@ -109,7 +101,6 @@ const Page = () => {
         status: "Paid",
       });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser]);
 
   const handleExportExcel = () => {
@@ -201,31 +192,31 @@ const Page = () => {
     value,
     sub,
     icon,
-    color,
-    bg,
   }: {
     title: string;
     value: string | number;
     sub?: string;
     icon: React.ReactNode;
-    color: string;
-    bg: string;
   }) => (
-    <div className="bg-white border border-gray-100 p-5 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
-      <div
-        className={`w-9 h-9 rounded-xl flex items-center justify-center mb-3 ${bg}`}
-      >
-        <span className={color}>{icon}</span>
+    <div className="bg-card dark:bg-card-dark border border-card-border dark:border-card-border-dark p-4 rounded-2xl shadow-xs flex flex-col justify-between font-mono">
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-[10px] font-bold uppercase tracking-wider text-text-sub">
+          {title}
+        </span>
+        <div className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-text-sub">
+          {icon}
+        </div>
       </div>
-      <p className="text-[10px] uppercase font-black tracking-[0.1em] text-gray-400 mb-1">
-        {title}
-      </p>
-      <p className={`text-xl font-black tracking-tight ${color} leading-none`}>
-        {value}
-      </p>
-      {sub && (
-        <p className="text-[10px] text-gray-400 mt-1 font-medium">{sub}</p>
-      )}
+      <div>
+        <span className="text-xl font-bold text-text-main dark:text-text-main-dark tracking-tight">
+          {value}
+        </span>
+        {sub && (
+          <span className="text-[10px] text-text-sub dark:text-slate-400 block mt-0.5">
+            {sub}
+          </span>
+        )}
+      </div>
     </div>
   );
 
@@ -235,7 +226,7 @@ const Page = () => {
       dataIndex: "date",
       key: "date",
       render: (text) => (
-        <span className="font-medium text-gray-900 whitespace-nowrap">
+        <span className="font-semibold text-xs text-text-main dark:text-text-main-dark font-mono">
           {text}
         </span>
       ),
@@ -244,22 +235,20 @@ const Page = () => {
       title: "Orders",
       dataIndex: "orders",
       key: "orders",
-      align: "right",
+      align: "center",
       render: (text) => (
-        <Tag className="font-mono text-[10px] font-bold m-0">{text}</Tag>
+        <span className="inline-flex items-center px-2 py-0.5 text-[10px] font-mono font-bold rounded-full bg-slate-100 dark:bg-slate-800 text-text-sub border border-card-border dark:border-card-border-dark">
+          {text}
+        </span>
       ),
     },
     {
-      title: (
-        <AntdTooltip title="Total cash received from orders (including shipping charges)">
-          <span>Total Revenue</span>
-        </AntdTooltip>
-      ),
+      title: "Total Revenue",
       dataIndex: "sales",
       key: "sales",
       align: "right",
       render: (val) => (
-        <span className="font-semibold text-blue-700 font-mono text-xs">
+        <span className="font-bold text-xs text-text-main dark:text-text-main-dark font-mono">
           LKR {fmt(val)}
         </span>
       ),
@@ -270,7 +259,9 @@ const Page = () => {
       key: "netSales",
       align: "right",
       render: (val) => (
-        <span className="text-gray-700 font-mono text-xs">LKR {fmt(val)}</span>
+        <span className="text-xs text-text-sub dark:text-slate-400 font-mono">
+          LKR {fmt(val)}
+        </span>
       ),
     },
     {
@@ -279,7 +270,7 @@ const Page = () => {
       key: "cogs",
       align: "right",
       render: (val) => (
-        <span className="text-red-500 font-mono text-xs">
+        <span className="text-xs text-rose-600 dark:text-rose-400 font-mono">
           (LKR {fmt(val || 0)})
         </span>
       ),
@@ -291,7 +282,11 @@ const Page = () => {
       align: "right",
       render: (val) => (
         <span
-          className={`font-bold px-2 py-0.5 rounded font-mono text-xs ${val >= 0 ? "text-emerald-700 bg-emerald-50" : "text-red-600 bg-red-50"}`}
+          className={`inline-flex items-center px-2 py-0.5 text-[10px] font-bold rounded-full font-mono ${
+            val >= 0
+              ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/40"
+              : "bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 border border-rose-200/60 dark:border-rose-800/40"
+          }`}
         >
           {val < 0 ? "(" : ""}LKR {fmt(Math.abs(val || 0))}
           {val < 0 ? ")" : ""}
@@ -302,8 +297,10 @@ const Page = () => {
       title: "Items",
       dataIndex: "itemsSold",
       key: "itemsSold",
-      align: "right",
-      render: (text) => <span className="text-gray-600">{text}</span>,
+      align: "center",
+      render: (text) => (
+        <span className="text-xs text-text-sub font-mono">{text}</span>
+      ),
     },
     {
       title: "Shipping",
@@ -311,154 +308,138 @@ const Page = () => {
       key: "shipping",
       align: "right",
       render: (val) => (
-        <span className="text-gray-500 font-mono text-xs">LKR {fmt(val)}</span>
+        <span className="text-xs text-text-sub dark:text-slate-400 font-mono">
+          LKR {fmt(val)}
+        </span>
       ),
     },
   ];
 
   return (
-    <PageContainer title="Sales Report" description="Daily Sales Summary">
-      <div className="w-full space-y-8">
-        {/* Header & Controls */}
-        <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <div className="w-1 h-6 rounded-full bg-emerald-600" />
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
-                Sales Analysis
+    <PageContainer title="Daily Sales Summary">
+      <div className="w-full space-y-6">
+        {/* Header */}
+        <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-1 h-8 bg-slate-900 dark:bg-slate-100 rounded-full" />
+            <div>
+              <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-text-sub dark:text-slate-500 leading-none mb-1 font-mono block">
+                Sales Intelligence
               </span>
+              <div className="flex items-center gap-2 font-mono">
+                <h2 className="text-2xl font-bold text-text-main dark:text-text-main-dark tracking-tight leading-none">
+                  Daily Sales Summary
+                </h2>
+                <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-slate-100 dark:bg-slate-800 text-text-sub dark:text-slate-400 border border-card-border dark:border-card-border-dark">
+                  {dateRange[0]} to {dateRange[1]}
+                </span>
+              </div>
             </div>
-            <h2 className="text-3xl font-black tracking-tight text-gray-900 leading-none">
-              Daily Summary
-            </h2>
-            <p className="text-xs text-gray-400 mt-1.5 font-mono">
-              {dateRange[0]} &nbsp;–&nbsp; {dateRange[1]}
-            </p>
           </div>
 
-          <div className="flex flex-col sm:flex-row items-end sm:items-center gap-3 w-full xl:w-auto">
-            <Card size="small" className="shadow-sm w-full xl:w-auto">
+          <div className="flex flex-wrap items-center gap-2 w-full xl:w-auto">
+            <div className="bg-card dark:bg-card-dark border border-card-border dark:border-card-border-dark rounded-xl p-2 flex items-center">
               <Form
                 form={form}
                 layout="inline"
                 onFinish={fetchReport}
                 className="flex flex-wrap items-center gap-2"
               >
-                <Form.Item name="dateRange" className="mb-0!">
-                  <DatePicker.RangePicker allowClear={false} />
+                <Form.Item name="dateRange" className="!mb-0">
+                  <DatePicker.RangePicker allowClear={false} className="h-10 rounded-xl" />
                 </Form.Item>
-                <Form.Item name="status" className="mb-0! w-32">
-                  <Select>
+                <Form.Item name="status" className="!mb-0 w-32">
+                  <Select className="h-10">
                     <Select.Option value="Paid">Paid</Select.Option>
                     <Select.Option value="Pending">Pending</Select.Option>
                     <Select.Option value="Refunded">Refunded</Select.Option>
-                    <Select.Option value="all">All</Select.Option>
+                    <Select.Option value="all">All Status</Select.Option>
                   </Select>
                 </Form.Item>
-                <Form.Item className="mb-0!">
-                  <Space>
-                    <Button
-                      htmlType="submit"
-                      type="primary"
-                      icon={<IconFilter size={15} />}
-                    >
-                      Filter
-                    </Button>
-                  </Space>
+                <Form.Item className="!mb-0">
+                  <Button
+                    htmlType="submit"
+                    type="primary"
+                    icon={<IconFilter size={15} />}
+                    className="bg-slate-900 dark:bg-slate-100 dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-200 border-none h-10 px-4 rounded-xl text-xs font-bold shadow-xs cursor-pointer flex items-center gap-2"
+                  >
+                    Filter
+                  </Button>
                 </Form.Item>
               </Form>
-            </Card>
+            </div>
 
-            <Space>
-              <Button
-                onClick={handleExportExcel}
-                disabled={!summary?.daily?.length}
-                icon={<IconDownload size={16} />}
-              >
-                Excel
-              </Button>
-              <Button
-                onClick={handleExportPDF}
-                disabled={!summary?.daily?.length}
-                icon={<IconFileTypePdf size={16} />}
-                danger
-              >
-                PDF
-              </Button>
-            </Space>
+            <Button
+              onClick={handleExportExcel}
+              disabled={!summary?.daily?.length}
+              icon={<IconDownload size={15} />}
+              className="h-10 px-4 rounded-xl border-card-border dark:border-card-border-dark text-text-sub text-xs font-semibold cursor-pointer flex items-center gap-2"
+            >
+              Excel
+            </Button>
+            <Button
+              onClick={handleExportPDF}
+              disabled={!summary?.daily?.length}
+              icon={<IconFileTypePdf size={15} />}
+              className="h-10 px-4 rounded-xl border-card-border dark:border-card-border-dark text-rose-600 dark:text-rose-400 text-xs font-semibold cursor-pointer flex items-center gap-2"
+            >
+              PDF
+            </Button>
           </div>
         </div>
 
         {/* Loading State */}
         {loading && (
-          <div className="flex justify-center py-20">
-            <div className="flex justify-center py-12">
-              <Spin size="large" />
-            </div>
+          <div className="flex justify-center items-center py-32">
+            <Spinner size="large" tip="Generating Report Summary..." />
           </div>
         )}
 
         {/* Content */}
         {!loading && summary && (
-          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            {/* KPI Cards */}
+          <div className="space-y-6">
+            {/* KPI Grid */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               <SummaryCard
                 title="Total Orders"
                 value={summary.totalOrders.toLocaleString()}
-                icon={<IconShoppingCart size={20} />}
-                color="text-blue-600"
-                bg="bg-blue-50"
+                icon={<IconShoppingCart size={18} />}
               />
               <SummaryCard
                 title="Total Revenue"
                 value={`LKR ${fmt(summary.totalSales)}`}
-                icon={<IconTrendingUp size={20} />}
-                color="text-gray-900"
-                bg="bg-gray-100"
+                icon={<IconTrendingUp size={18} />}
               />
               <SummaryCard
                 title="Net Sales"
                 value={`LKR ${fmt(summary.totalNetSales)}`}
-                icon={<IconTrendingUp size={20} />}
-                color="text-indigo-600"
-                bg="bg-indigo-50"
+                icon={<IconTrendingUp size={18} />}
               />
               <SummaryCard
                 title="Items Sold"
                 value={summary.totalItemsSold.toLocaleString()}
-                icon={<IconPackages size={20} />}
-                color="text-amber-600"
-                bg="bg-amber-50"
+                icon={<IconPackages size={18} />}
               />
               <SummaryCard
                 title="Gross Profit"
                 value={`LKR ${fmt(summary.totalGrossProfit || 0)}`}
-                icon={<IconTrendingUp size={20} />}
-                color="text-emerald-700"
-                bg="bg-emerald-50"
+                icon={<IconTrendingUp size={18} />}
                 sub={`${(summary.totalGrossProfitMargin || 0).toFixed(1)}% margin`}
               />
               <SummaryCard
                 title="Avg Order Value"
                 value={`LKR ${fmt(summary.averageOrderValue || 0)}`}
-                icon={<IconCurrencyDollar size={20} />}
-                color="text-emerald-600"
-                bg="bg-emerald-50"
+                icon={<IconCurrencyDollar size={18} />}
               />
               <SummaryCard
                 title="Shipping Total"
                 value={`LKR ${fmt(summary.totalShipping)}`}
-                icon={<IconTruckDelivery size={20} />}
-                color="text-gray-500"
-                bg="bg-gray-50"
+                icon={<IconTruckDelivery size={18} />}
               />
               <SummaryCard
                 title="Total Discount"
                 value={`LKR ${fmt(summary.totalDiscount)}`}
-                icon={<IconPercentage size={20} />}
-                color="text-red-500"
-                bg="bg-red-50"
+                icon={<IconPercentage size={18} />}
               />
             </div>
 
@@ -467,101 +448,52 @@ const Page = () => {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div
                   id="daily-sales-trend-chart"
-                  className="bg-white border border-gray-100 p-5 rounded-2xl shadow-sm"
+                  className="bg-card dark:bg-card-dark border border-card-border dark:border-card-border-dark p-5 rounded-2xl shadow-xs space-y-4"
                 >
-                  <p className="text-[10px] tracking-widest uppercase font-black text-gray-400 mb-4">
-                    Daily Sales Trend
-                  </p>
-                  <div className="h-[300px] w-full text-xs font-semibold">
+                  <span className="text-[10px] uppercase font-bold tracking-widest text-text-sub font-mono block">
+                    Daily Revenue Trend
+                  </span>
+                  <div className="h-[280px] w-full text-xs font-mono">
                     <ResponsiveContainer width="100%" height="100%">
                       <LineChart data={summary.daily}>
-                        <CartesianGrid
-                          strokeDasharray="3 3"
-                          vertical={false}
-                          stroke="#f3f4f6"
-                        />
-                        <XAxis
-                          dataKey="date"
-                          axisLine={false}
-                          tickLine={false}
-                          tick={{ fill: "#9ca3af", fontSize: 10 }}
-                          tickMargin={10}
-                        />
-                        <YAxis
-                          axisLine={false}
-                          tickLine={false}
-                          tick={{ fill: "#9ca3af", fontSize: 10 }}
-                          width={60}
-                        />
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.3} />
+                        <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: "#94a3b8", fontSize: 10 }} />
+                        <YAxis axisLine={false} tickLine={false} tick={{ fill: "#94a3b8", fontSize: 10 }} width={60} />
                         <Tooltip
                           contentStyle={{
-                            backgroundColor: "#111827",
-                            border: "none",
-                            borderRadius: "8px",
-                            color: "#F9FAFB",
+                            backgroundColor: "#0f172a",
+                            borderColor: "#1e293b",
+                            borderRadius: "12px",
+                            color: "#f8fafc",
                             fontSize: "12px",
-                            boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
                           }}
-                          itemStyle={{ color: "#F9FAFB" }}
-                          cursor={{ stroke: "#f3f4f6", strokeWidth: 1 }}
                         />
-                        <Line
-                          dataKey="sales"
-                          name="Total Revenue"
-                          stroke="#111827"
-                          strokeWidth={2}
-                          dot={{ r: 3, fill: "#111827", strokeWidth: 0 }}
-                          activeDot={{ r: 5, fill: "#111827" }}
-                        />
+                        <Line dataKey="sales" name="Total Revenue" stroke="#0ea5e9" strokeWidth={2} dot={false} />
                       </LineChart>
                     </ResponsiveContainer>
                   </div>
                 </div>
 
-                <div className="bg-white border border-gray-100 p-5 rounded-2xl shadow-sm">
-                  <p className="text-[10px] tracking-widest uppercase font-black text-gray-400 mb-4">
-                    Daily Items Sold
-                  </p>
-                  <div className="h-[300px] w-full text-xs font-semibold">
+                <div className="bg-card dark:bg-card-dark border border-card-border dark:border-card-border-dark p-5 rounded-2xl shadow-xs space-y-4">
+                  <span className="text-[10px] uppercase font-bold tracking-widest text-text-sub font-mono block">
+                    Daily Volume (Items Sold)
+                  </span>
+                  <div className="h-[280px] w-full text-xs font-mono">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={summary.daily}>
-                        <CartesianGrid
-                          strokeDasharray="3 3"
-                          vertical={false}
-                          stroke="#f3f4f6"
-                        />
-                        <XAxis
-                          dataKey="date"
-                          axisLine={false}
-                          tickLine={false}
-                          tick={{ fill: "#9ca3af", fontSize: 10 }}
-                          tickMargin={10}
-                        />
-                        <YAxis
-                          axisLine={false}
-                          tickLine={false}
-                          tick={{ fill: "#9ca3af", fontSize: 10 }}
-                          allowDecimals={false}
-                          width={40}
-                        />
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.3} />
+                        <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: "#94a3b8", fontSize: 10 }} />
+                        <YAxis axisLine={false} tickLine={false} tick={{ fill: "#94a3b8", fontSize: 10 }} width={40} />
                         <Tooltip
                           contentStyle={{
-                            backgroundColor: "#111827",
-                            border: "none",
-                            borderRadius: "8px",
-                            color: "#F9FAFB",
+                            backgroundColor: "#0f172a",
+                            borderColor: "#1e293b",
+                            borderRadius: "12px",
+                            color: "#f8fafc",
                             fontSize: "12px",
                           }}
-                          itemStyle={{ color: "#F9FAFB" }}
-                          cursor={{ fill: "#f3f4f6", opacity: 0.5 }}
                         />
-                        <Bar
-                          dataKey="itemsSold"
-                          name="Items"
-                          fill="#111827"
-                          radius={[2, 2, 0, 0]}
-                          barSize={20}
-                        />
+                        <Bar dataKey="itemsSold" name="Items" fill="#6366f1" radius={[4, 4, 0, 0]} barSize={18} />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
@@ -569,36 +501,21 @@ const Page = () => {
               </div>
             )}
 
-            {/* Detailed Table */}
-            <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm">
-              <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-                <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">
-                    Daily Subtotals
-                  </p>
-                  <p className="text-sm font-semibold text-gray-900 mt-0.5">
-                    {summary.daily?.length} entries
-                  </p>
-                </div>
-                <Tag
-                  color="default"
-                  className="text-[10px] font-bold uppercase"
-                >
-                  LKR
-                </Tag>
+            {/* Table Container */}
+            <div className="bg-card dark:bg-card-dark border border-card-border dark:border-card-border-dark rounded-2xl shadow-xs overflow-hidden">
+              <div className="[&_.ant-table]:!bg-transparent [&_.ant-table-thead>tr>th]:!bg-slate-50/80 [&_.ant-table-thead>tr>th]:dark:!bg-slate-800/60 [&_.ant-table-thead>tr>th]:!text-text-sub [&_.ant-table-thead>tr>th]:!font-bold [&_.ant-table-thead>tr>th]:!text-[11px] [&_.ant-table-thead>tr>th]:!uppercase [&_.ant-table-thead>tr>th]:!tracking-wider [&_.ant-table-thead>tr>th]:!border-b [&_.ant-table-thead>tr>th]:!border-card-border [&_.ant-table-thead>tr>th]:dark:!border-card-border-dark [&_.ant-table-tbody>tr]:hover:!bg-slate-50/60 [&_.ant-table-tbody>tr]:dark:hover:!bg-slate-800/40 [&_.ant-table-tbody>tr>td]:!border-b [&_.ant-table-tbody>tr>td]:!border-card-border [&_.ant-table-tbody>tr>td]:dark:!border-card-border-dark [&_.ant-table-tbody>tr>td]:!py-3.5">
+                <Table
+                  columns={columns}
+                  dataSource={summary.daily || []}
+                  rowKey={(record, index) => index as number}
+                  pagination={{
+                    pageSize: 15,
+                    position: ["bottomRight"],
+                    showSizeChanger: true,
+                  }}
+                  scroll={{ x: 800 }}
+                />
               </div>
-              <Table
-                columns={columns}
-                dataSource={summary.daily || []}
-                rowKey={(record, index) => index as number}
-                pagination={{
-                  pageSize: 15,
-                  position: ["bottomRight"],
-                  showSizeChanger: true,
-                }}
-                size="small"
-                scroll={{ x: "max-content" }}
-              />
             </div>
           </div>
         )}
@@ -607,4 +524,4 @@ const Page = () => {
   );
 };
 
-export default Page;
+export default DailySummaryPage;

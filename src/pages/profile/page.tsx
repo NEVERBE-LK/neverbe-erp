@@ -37,6 +37,7 @@ import {
 const { Title, Text } = Typography;
 
 const ProfilePage = () => {
+  const dispatch = useAppDispatch();
   const { currentUser } = useAppSelector((state) => state.authSlice);
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);

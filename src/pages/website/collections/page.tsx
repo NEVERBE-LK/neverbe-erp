@@ -3,19 +3,14 @@ import {
   Table,
   Button,
   Switch,
-  Space,
-  Typography,
-  Image,
   Upload,
   message,
-  Card,
   Tooltip,
 } from "antd";
 import {
   IconStar,
   IconStarOff,
   IconUpload,
-  IconDeviceFloppy,
   IconRefresh,
 } from "@tabler/icons-react";
 import type { ColumnsType } from "antd/es/table";
@@ -23,8 +18,6 @@ import api from "@/lib/api";
 import PageContainer from "../../components/container/PageContainer";
 import { Category } from "@/model/Category";
 import { useAppSelector } from "@/lib/hooks";
-
-const { Text, Title } = Typography;
 
 const CollectionsPage: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -37,7 +30,7 @@ const CollectionsPage: React.FC = () => {
     try {
       setLoading(true);
       const { data } = await api.get("/api/v1/erp/master/categories", {
-        params: { size: 100, status: "active" }, // Get all active categories
+        params: { size: 100, status: "active" },
       });
       setCategories(data.dataList || []);
     } catch (e) {
@@ -81,7 +74,6 @@ const CollectionsPage: React.FC = () => {
     try {
       setUpdating(category.id!);
       
-      // Basic validation for 4:5 aspect ratio (optional client side check)
       const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png' || file.type === 'image/webp';
       if (!isJpgOrPng) {
         message.error('You can only upload JPG/PNG/WEBP files!');
@@ -89,9 +81,7 @@ const CollectionsPage: React.FC = () => {
       }
 
       const formData = new FormData();
-      // Current category data
       formData.append("data", JSON.stringify(category));
-      // The file
       formData.append("file", file);
 
       const { data: updatedCategory } = await api.put(`/api/v1/erp/master/categories/${category.id}`, formData);
@@ -106,7 +96,7 @@ const CollectionsPage: React.FC = () => {
     } finally {
       setUpdating(null);
     }
-    return false; // Prevent default upload
+    return false;
   };
 
   const columns: ColumnsType<Category> = [
@@ -115,10 +105,10 @@ const CollectionsPage: React.FC = () => {
       dataIndex: "name",
       key: "name",
       render: (text, record) => (
-        <Space direction="vertical" size={0}>
-          <Text strong>{text}</Text>
-          <Text type="secondary" className="text-xs">{record.description || "No description"}</Text>
-        </Space>
+        <div className="flex flex-col">
+          <span className="font-semibold text-xs text-text-main dark:text-text-main-dark">{text}</span>
+          <span className="text-xs text-text-sub dark:text-slate-400">{record.description || "No description"}</span>
+        </div>
       ),
     },
     {
@@ -133,9 +123,8 @@ const CollectionsPage: React.FC = () => {
             checked={isFeatured}
             loading={updating === record.id}
             onChange={() => handleToggleFeatured(record)}
-            checkedChildren={<IconStar size={16} fill="currentColor" />}
-            unCheckedChildren={<IconStarOff size={16} />}
-            className={isFeatured ? "bg-accent!" : ""}
+            checkedChildren={<IconStar size={14} fill="currentColor" />}
+            unCheckedChildren={<IconStarOff size={14} />}
           />
         </Tooltip>
       ),
@@ -146,18 +135,16 @@ const CollectionsPage: React.FC = () => {
       key: "imageUrl",
       width: 250,
       render: (imageUrl, record) => (
-        <Space align="center" size="middle">
-          <div className="w-16 h-20 bg-gray-100 rounded-lg overflow-hidden border border-gray-200 flex items-center justify-center">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-15 bg-slate-50 dark:bg-slate-800 rounded-lg overflow-hidden border border-card-border dark:border-card-border-dark flex items-center justify-center">
             {imageUrl ? (
-              <Image 
+              <img 
                 src={imageUrl} 
                 alt={record.name} 
-                width={64} 
-                height={80} 
-                className="object-cover"
+                className="w-full h-full object-cover"
               />
             ) : (
-              <Text type="secondary" className="text-[10px] text-center px-1">NO IMAGE</Text>
+              <span className="text-[9px] text-text-sub text-center font-mono">NO IMG</span>
             )}
           </div>
           <Upload
@@ -169,61 +156,70 @@ const CollectionsPage: React.FC = () => {
               size="small" 
               icon={<IconUpload size={14} />}
               loading={updating === record.id}
+              className="h-8 px-3 rounded-lg border-card-border dark:border-card-border-dark text-xs font-semibold"
             >
               Change
             </Button>
           </Upload>
-        </Space>
+        </div>
       ),
     },
   ];
 
   return (
-    <PageContainer 
-      title="Featured Collections | Website Manager" 
-      description="Manage which categories appear on your homepage featured section."
-    >
-      <div className="space-y-6">
-        <Card className="shadow-sm border-none bg-white font-sans rounded-2xl">
-          <div className="flex justify-between items-center mb-6">
-            <div className="flex items-center gap-3">
-              <div className="w-2 h-10 bg-accent rounded-full" />
-              <div>
-                <Title level={4} className="m-0! font-black tracking-tight uppercase">Featured Categories</Title>
-                <Text type="secondary">Tick the star to make a category appear as a collection card on the website.</Text>
+    <PageContainer title="Featured Collections">
+      <div className="w-full space-y-6">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-1 h-8 bg-slate-900 dark:bg-slate-100 rounded-full" />
+            <div>
+              <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-text-sub dark:text-slate-500 leading-none mb-1 font-mono block">
+                Storefront CMS
+              </span>
+              <div className="flex items-center gap-2 font-mono">
+                <h2 className="text-2xl font-bold text-text-main dark:text-text-main-dark tracking-tight leading-none">
+                  Featured Collections
+                </h2>
+                <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-slate-100 dark:bg-slate-800 text-text-sub dark:text-slate-400 border border-card-border dark:border-card-border-dark">
+                  {categories.filter(c => c.isFeatured).length} Featured
+                </span>
               </div>
             </div>
-            <Button 
-              icon={<IconRefresh size={18} />} 
-              onClick={fetchCategories} 
-              loading={loading}
-              className="flex items-center gap-2"
-            >
-              Refresh
-            </Button>
           </div>
-
-          <Table
-            columns={columns}
-            dataSource={categories}
+          <Button 
+            icon={<IconRefresh size={16} />} 
+            onClick={fetchCategories} 
             loading={loading}
-            rowKey="id"
-            pagination={false}
-            scroll={{ x: 800 }}
-            bordered
-            className="custom-table"
-          />
-        </Card>
+            className="h-10 px-4 rounded-xl border-card-border dark:border-card-border-dark text-text-sub text-xs font-medium cursor-pointer flex items-center gap-2"
+          >
+            Refresh
+          </Button>
+        </div>
 
-        <div className="bg-blue-50 border border-blue-100 p-4 rounded-xl flex gap-3">
-          <div className="bg-blue-100 p-2 rounded-full h-fit">
-            <IconStar size={20} className="text-blue-600" />
+        {/* Table Container */}
+        <div className="bg-card dark:bg-card-dark border border-card-border dark:border-card-border-dark rounded-2xl shadow-xs overflow-hidden">
+          <div className="[&_.ant-table]:!bg-transparent [&_.ant-table-thead>tr>th]:!bg-slate-50/80 [&_.ant-table-thead>tr>th]:dark:!bg-slate-800/60 [&_.ant-table-thead>tr>th]:!text-text-sub [&_.ant-table-thead>tr>th]:!font-bold [&_.ant-table-thead>tr>th]:!text-[11px] [&_.ant-table-thead>tr>th]:!uppercase [&_.ant-table-thead>tr>th]:!tracking-wider [&_.ant-table-thead>tr>th]:!border-b [&_.ant-table-thead>tr>th]:!border-card-border [&_.ant-table-thead>tr>th]:dark:!border-card-border-dark [&_.ant-table-tbody>tr]:hover:!bg-slate-50/60 [&_.ant-table-tbody>tr]:dark:hover:!bg-slate-800/40 [&_.ant-table-tbody>tr>td]:!border-b [&_.ant-table-tbody>tr>td]:!border-card-border [&_.ant-table-tbody>tr>td]:dark:!border-card-border-dark [&_.ant-table-tbody>tr>td]:!py-3.5">
+            <Table
+              columns={columns}
+              dataSource={categories}
+              loading={loading}
+              rowKey="id"
+              pagination={false}
+              scroll={{ x: 800 }}
+            />
+          </div>
+        </div>
+
+        {/* Pro Tip Box */}
+        <div className="bg-blue-50/60 dark:bg-blue-950/20 border border-blue-200/60 dark:border-blue-800/40 p-4 rounded-2xl flex items-start gap-3">
+          <div className="p-2 bg-blue-100 dark:bg-blue-900/40 rounded-xl text-blue-600 dark:text-blue-400">
+            <IconStar size={18} />
           </div>
           <div>
-            <Text strong className="text-blue-800">Pro Tip:</Text>
-            <p className="text-blue-700 text-sm m-0">
-              For best results, use images with a 4:5 aspect ratio (e.g., 800x1000px). 
-              Featured categories appear in the "Shop by Category" section on your homepage.
+            <span className="font-bold text-xs text-blue-900 dark:text-blue-300 block mb-0.5">Image Formatting Tip:</span>
+            <p className="text-xs text-blue-700 dark:text-blue-400 m-0">
+              Use images with a 4:5 aspect ratio (e.g. 800x1000px) for collection cards on your storefront homepage.
             </p>
           </div>
         </div>

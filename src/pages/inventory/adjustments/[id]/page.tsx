@@ -3,7 +3,7 @@ import { Table } from "antd";
 import api from "@/lib/api";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
 
 import PageContainer from "@/pages/components/container/PageContainer";
@@ -200,8 +200,9 @@ const canApproveAdjustment = (user: any): boolean => {
   return true;
 };
 
-const ViewAdjustmentPage = () => {
+export default function AdjustmentDetailPage() {
   const { id: adjustmentId } = useParams<{ id: string }>();
+  const navigate = useNavigate();
 
   const [loading, setLoading] = useState(true);
   const [adjustment, setAdjustment] = useState<Adjustment | null>(null);
@@ -767,7 +768,5 @@ const ViewAdjustmentPage = () => {
       </div>
     </PageContainer>
   );
-};
-
-export default ViewAdjustmentPage;
+}
 

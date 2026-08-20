@@ -16,6 +16,7 @@ import { Product } from "@/model/Product";
 import ProductFormModal from "./components/ProductFormModal";
 import api from "@/lib/api";
 import { useAppSelector } from "@/lib/hooks";
+import { useSettings } from "@/contexts/SettingsContext";
 import toast from "react-hot-toast";
 import { useConfirmationDialog } from "@/contexts/ConfirmationDialogContext";
 import {
@@ -40,6 +41,7 @@ export interface DropdownOption {
 const { Option } = Select;
 
 const ProductPage = () => {
+  const { formatCurrency, isLowStock } = useSettings();
   const { currentUser, loading: authLoading } = useAppSelector(
     (state) => state.authSlice,
   );
@@ -301,27 +303,27 @@ const ProductPage = () => {
 
         return (
           <div className="flex flex-col items-end gap-1">
-            <div className="text-xs text-text-sub dark:text-slate-500">
-              Cost: <span className="font-semibold text-text-main dark:text-text-main-dark">LKR {costPrice.toLocaleString()}</span>
+            <div className="text-xs text-text-sub dark:text-slate-500 font-mono">
+              Cost: <span className="font-semibold text-text-main dark:text-text-main-dark">{formatCurrency(costPrice)}</span>
             </div>
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1.5 font-mono">
               {hasDiscount && (
                 <span className="text-[10px] line-through text-text-sub dark:text-slate-600">
-                  LKR {record.sellingPrice?.toLocaleString()}
+                  {formatCurrency(record.sellingPrice)}
                 </span>
               )}
               <span className={`font-bold text-sm ${hasDiscount ? "text-emerald-600 dark:text-emerald-400" : "text-text-main dark:text-text-main-dark"}`}>
-                LKR {discountedPrice.toLocaleString()}
+                {formatCurrency(discountedPrice)}
               </span>
             </div>
             {discountedPrice > 0 && (
               <div className="flex items-center gap-1 mt-0.5">
                 {hasDiscount && (
-                  <span className="text-[9px] font-bold px-1 py-0 rounded bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400">
+                  <span className="text-[9px] font-bold px-1 py-0 rounded bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 font-mono">
                     -{record.discount}%
                   </span>
                 )}
-                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${marginColor}`}>
+                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${marginColor} font-mono`}>
                   {margin}% Margin
                 </span>
               </div>
@@ -339,12 +341,15 @@ const ProductPage = () => {
         const count = stock || 0;
         let statusText = "Out of Stock";
         let statusColor = "error";
-        if (count >= 5) {
-          statusText = "In Stock";
-          statusColor = "success";
-        } else if (count > 0) {
+        if (count === 0) {
+          statusText = "Out of Stock";
+          statusColor = "error";
+        } else if (isLowStock(count)) {
           statusText = "Low Stock";
           statusColor = "warning";
+        } else {
+          statusText = "In Stock";
+          statusColor = "success";
         }
 
         return (

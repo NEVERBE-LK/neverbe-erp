@@ -84,18 +84,10 @@ const SalesOverview = () => {
       strokeDashArray: 3,
       xaxis: { lines: { show: false } },
       yaxis: { lines: { show: true } },
-      padding: { top: 20, right: 0, bottom: 0, left: 10 },
+      padding: { top: 10, right: 0, bottom: 0, left: 10 },
     },
     legend: {
-      show: true,
-      position: "top",
-      horizontalAlign: "right",
-      offsetY: -10,
-      fontFamily: "inherit",
-      fontWeight: 500,
-      labels: { colors: isDark ? "#94a3b8" : "#475569", useSeriesColors: false },
-      markers: { width: 8, height: 8, radius: 4 },
-      itemMargin: { horizontal: 10, vertical: 0 },
+      show: false,
     },
     tooltip: {
       theme: isDark ? "dark" : "light",
@@ -164,8 +156,31 @@ const SalesOverview = () => {
     }
   };
 
+  const legendHeader = (
+    <div className="flex items-center gap-4 text-[11px] font-bold tracking-wider font-mono">
+      <div className="flex items-center gap-1.5">
+        <span
+          className="w-2.5 h-2.5 rounded-xs"
+          style={{ backgroundColor: primaryColor }}
+        />
+        <span className="text-slate-600 dark:text-slate-400">WEBSITE</span>
+      </div>
+      <div className="flex items-center gap-1.5">
+        <span
+          className="w-2.5 h-2.5 rounded-xs"
+          style={{ backgroundColor: secondaryColor }}
+        />
+        <span className="text-slate-600 dark:text-slate-400">STORE</span>
+      </div>
+    </div>
+  );
+
   return (
-    <DashboardCard title="Sales Performance" subtitle="Year to Date Comparison">
+    <DashboardCard
+      title="Sales Performance"
+      subtitle="Year to Date Comparison"
+      action={legendHeader}
+    >
       <Spinner spinning={loading}>
         <div className="min-h-[300px]">
           {!loading && (

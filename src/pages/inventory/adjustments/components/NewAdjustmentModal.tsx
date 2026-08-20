@@ -280,6 +280,7 @@ const NewAdjustmentModal: React.FC<NewAdjustmentModalProps> = ({
             currentUser?.username || currentUser?.email || "System User";
           const creatorId = currentUser?.userId || "system";
 
+          const fd = new FormData();
           fd.append(
             "data",
             JSON.stringify({
