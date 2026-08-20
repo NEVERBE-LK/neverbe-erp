@@ -467,7 +467,14 @@ const OrdersPage = () => {
       key: "details",
       render: (_, order) => (
         <div className="flex flex-col gap-1 py-1">
-          <span className="font-mono font-bold text-gray-900 text-xs">#{order.orderId}</span>
+          <div className="flex items-center gap-1.5">
+            <span className="font-mono font-bold text-gray-900 text-xs">#{order.orderId}</span>
+            {order.riskStatus === "HIGH_RISK" && (
+              <span className="inline-flex items-center gap-1 text-[9px] font-black text-rose-700 bg-rose-50 border border-rose-200/80 rounded-full px-2 py-0.5 uppercase tracking-wider">
+                ⚠️ HIGH RISK {order.deliveryFeePrepaid ? "• FEE PAID" : ""}
+              </span>
+            )}
+          </div>
           <span className="text-[10px] text-gray-400 font-bold flex items-center gap-1">
             <IconCalendar size={12} /> {formatDate(order.createdAt)}
           </span>
@@ -568,6 +575,10 @@ const OrdersPage = () => {
       width: 80,
       align: "right",
       render: (_, order) => {
+        const isTerminal = ["completed", "returned", "refused (rto)", "refused", "exchanged", "cancelled"].includes(
+          (order.status || "").toLowerCase()
+        );
+
         const items: MenuProps["items"] = [
           {
             key: "view",
@@ -584,25 +595,28 @@ const OrdersPage = () => {
               setIsInvoiceModalOpen(true);
             },
           },
-          {
-            type: "divider",
-          },
-          {
-            key: "edit-customer",
-            icon: <IconUser size={14} className="text-emerald-600 dark:text-emerald-400" />,
-            label: <span className="font-semibold text-emerald-600 dark:text-emerald-400">Edit Customer Profile</span>,
-            onClick: () => navigate(`/orders/${order.orderId}/customer`),
-          },
-          {
-            key: "edit-items",
-            icon: <IconPackage size={14} className="text-emerald-600 dark:text-emerald-400" />,
-            label: <span className="font-semibold text-emerald-600 dark:text-emerald-400">Edit Order Items</span>,
-            onClick: () => navigate(`/orders/${order.orderId}/items`),
-          },
+          ...(!isTerminal
+            ? [
+                { type: "divider" as const },
+                {
+                  key: "edit-customer",
+                  icon: <IconUser size={14} className="text-emerald-600 dark:text-emerald-400" />,
+                  label: <span className="font-semibold text-emerald-600 dark:text-emerald-400">Edit Customer Profile</span>,
+                  onClick: () => navigate(`/orders/${order.orderId}/customer`),
+                },
+                {
+                  key: "edit-items",
+                  icon: <IconPackage size={14} className="text-emerald-600 dark:text-emerald-400" />,
+                  label: <span className="font-semibold text-emerald-600 dark:text-emerald-400">Edit Order Items</span>,
+                  onClick: () => navigate(`/orders/${order.orderId}/items`),
+                },
+              ]
+            : []),
+          { type: "divider" as const },
           {
             key: "edit-tracking",
             icon: <IconTruck size={14} className="text-emerald-600 dark:text-emerald-400" />,
-            label: <span className="font-semibold text-emerald-600 dark:text-emerald-400">Edit Tracking & Delivery</span>,
+            label: <span className="font-semibold text-emerald-600 dark:text-emerald-400">Status & Tracking</span>,
             onClick: () => navigate(`/orders/${order.orderId}/tracking`),
           },
         ];

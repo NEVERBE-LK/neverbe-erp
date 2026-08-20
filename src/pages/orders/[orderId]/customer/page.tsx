@@ -28,6 +28,15 @@ const OrderCustomerEditPage = () => {
       const data = res.data;
       setOrder(data);
 
+      const isTerminal = ["completed", "returned", "refused (rto)", "refused", "exchanged", "cancelled"].includes(
+        (data.status || "").toLowerCase()
+      );
+      if (isTerminal) {
+        toast.error(`Order #${orderId} is in terminal status (${data.status}) and is frozen from editing.`);
+        navigate(`/orders/${orderId}/view`, { replace: true });
+        return;
+      }
+
       form.setFieldsValue({
         userId: data.userId || "",
         customerName: data.customer?.name || "",

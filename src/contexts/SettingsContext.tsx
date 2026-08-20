@@ -49,6 +49,12 @@ export interface ERPSettings {
   enableAuditLogging: boolean;
   guestCheckoutEnabled: boolean;
 
+  ipqsEnable: boolean;
+  ipqsApiKey: string;
+  ipqsRiskThreshold: number;
+  ipqsHighRiskAction: "PREPAY_DELIVERY_FEE" | "FULL_PREPAYMENT_ONLY" | "FLAG_FOR_MANUAL_REVIEW";
+  ipqsNoticeMessage: string;
+
   ecommerce: {
     enable: boolean;
   };
@@ -100,6 +106,12 @@ const DEFAULT_SETTINGS: ERPSettings = {
   maintenanceMode: false,
   enableAuditLogging: true,
   guestCheckoutEnabled: true,
+
+  ipqsEnable: true,
+  ipqsApiKey: "UXyahAsjd1X9os7l0tzrQbJwrG4RepQb",
+  ipqsRiskThreshold: 60,
+  ipqsHighRiskAction: "PREPAY_DELIVERY_FEE",
+  ipqsNoticeMessage: "Due to high return/spam risk on past network activity, delivery fee prepayment (Rs. 450) is required for COD orders.",
 
   ecommerce: { enable: true },
   pos: { enable: true },

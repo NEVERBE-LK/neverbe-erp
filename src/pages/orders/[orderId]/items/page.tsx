@@ -75,6 +75,16 @@ export const OrderItemsEditPage = () => {
       const res = await api.get(`/api/v1/erp/orders/${orderId}`);
       const data: Order = res.data;
       setOrder(data);
+
+      const isTerminal = ["completed", "returned", "refused (rto)", "refused", "exchanged", "cancelled"].includes(
+        (data.status || "").toLowerCase()
+      );
+      if (isTerminal) {
+        toast.error(`Order #${orderId} is in terminal status (${data.status}) and is frozen from editing.`);
+        navigate(`/orders/${orderId}/view`, { replace: true });
+        return;
+      }
+
       setItems(data.items || []);
       form.setFieldsValue({
         discount: data.discount || 0,

@@ -17,6 +17,8 @@ import {
   IconMapPin,
   IconBuildingStore,
   IconShieldCheck,
+  IconShieldX,
+  IconLock,
   IconUser,
   IconMail,
   IconPhone,
@@ -26,6 +28,7 @@ import { OrderExchangeHistory } from "../../components/OrderExchangeHistory";
 import CommunicationHub from "../../components/CommunicationHub";
 import { InvoicePreviewModal } from "../../components/InvoicePreviewModal";
 import { formatSLDateTime } from "@/utils/dateUtils";
+import { useConfirmationDialog } from "@/contexts/ConfirmationDialogContext";
 
 const OrderView = ({ orderId }: { orderId: string }) => {
   const [order, setOrder] = useState<Order | null>(null);
@@ -35,9 +38,65 @@ const OrderView = ({ orderId }: { orderId: string }) => {
   const [stocks, setStocks] = useState<Record<string, any>[]>([]);
   const [itemImages, setItemImages] = useState<Record<string, string>>({});
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
+  const [isSpammerBlacklisted, setIsSpammerBlacklisted] = useState(false);
 
   const { currentUser } = useAppSelector((state: any) => state.authSlice);
   const navigate = useNavigate();
+  const { showConfirmation } = useConfirmationDialog();
+
+  const checkSpammerStatus = async (phone?: string, email?: string) => {
+    try {
+      const params = new URLSearchParams();
+      if (phone) params.append("phone", phone);
+      if (email) params.append("email", email);
+      const res = await api.get(`/api/v1/erp/spammers/check?${params.toString()}`);
+      if (res.data?.isBlacklisted) {
+        setIsSpammerBlacklisted(true);
+      } else {
+        setIsSpammerBlacklisted(false);
+      }
+    } catch (err) {
+      console.warn("Spammer status check error", err);
+    }
+  };
+
+  const handleFlagAsSpammer = () => {
+    if (!order?.customer?.phone && !order?.customer?.email) {
+      toast.error("Customer contact info missing");
+      return;
+    }
+
+    showConfirmation({
+      title: "Flag Customer as Spammer?",
+      message: `Are you sure you want to add ${order.customer?.name || "this customer"} (${order.customer?.phone || order.customer?.email}) to the internal Spammer Blacklist? Future COD orders from this customer will require prepaid delivery fees.`,
+      confirmText: "Blacklist Customer",
+      cancelText: "Cancel",
+      variant: "danger",
+      onSuccess: async () => {
+        try {
+          await api.post("/api/v1/erp/spammers", {
+            name: order.customer?.name || "",
+            phone: order.customer?.phone || "",
+            email: order.customer?.email || "",
+            address: order.customer?.address || "",
+            city: order.customer?.city || "",
+            reason: "Refused COD Package at Door",
+            severity: "HIGH",
+          });
+          setIsSpammerBlacklisted(true);
+          toast.success("Customer added to Spammer Blacklist!");
+        } catch (err: any) {
+          toast.error(err?.response?.data?.message || "Failed to flag customer as spammer");
+        }
+      },
+    });
+  };
+
+  useEffect(() => {
+    if (order && (order.customer?.phone || order.customer?.email)) {
+      checkSpammerStatus(order.customer?.phone, order.customer?.email);
+    }
+  }, [order]);
 
   useEffect(() => {
     if (order && order.trackingNumber) {
@@ -348,6 +407,38 @@ const OrderView = ({ orderId }: { orderId: string }) => {
       <div className="w-full flex flex-col gap-6">
         {/* CARD 1: Single Order Details & Customer Coordinates Card */}
         <div className="bg-card dark:bg-card-dark border border-card-border dark:border-card-border-dark rounded-2xl p-6 shadow-xs space-y-6">
+          {/* IPQS Anti-Spam Risk Meter Banner */}
+          {(order?.riskStatus === "HIGH_RISK" || order?.ipqsFraudScore !== undefined) && (
+            <div className="bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800/40 rounded-xl p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+              <div className="flex items-start gap-3">
+                <div className="p-2 bg-rose-100 dark:bg-rose-900/50 rounded-lg text-rose-600 dark:text-rose-400 font-bold shrink-0">
+                  ⚠️
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-black uppercase tracking-wider text-rose-700 dark:text-rose-400">
+                      IPQS Phone Fraud Risk: {order.ipqsFraudScore ?? 85} / 100 ({order.ipqsRiskLevel || "HIGH"})
+                    </span>
+                    <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-rose-100 dark:bg-rose-900/50 text-rose-700 dark:text-rose-300">
+                      High Risk Flagged
+                    </span>
+                  </div>
+                  <p className="text-xs text-rose-600 dark:text-rose-400 mt-1 font-medium">
+                    Line Type: <span className="font-bold">{order.ipqsLineType || "Prepaid Mobile"}</span>
+                    {order.ipqsReasons && order.ipqsReasons.length > 0 && (
+                      <span className="ml-2">({order.ipqsReasons.join(" • ")})</span>
+                    )}
+                  </p>
+                </div>
+              </div>
+              {order.deliveryFeePrepaid && (
+                <div className="px-3 py-1.5 rounded-lg bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 text-xs font-bold font-mono shrink-0">
+                  ✓ Delivery Fee Prepaid (Rs. 450)
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Action Header */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-card-border dark:border-card-border-dark">
             <div className="flex items-center gap-2">
@@ -366,14 +457,37 @@ const OrderView = ({ orderId }: { orderId: string }) => {
               >
                 Print PDF
               </AntButton>
-              <AntButton
-                type="primary"
-                icon={<IconEdit size={16} />}
-                onClick={() => navigate(`/orders/${orderId}`)}
-                className="flex-1 sm:flex-initial h-10 rounded-xl bg-slate-900 dark:bg-slate-100 dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-200 border-none font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs cursor-pointer"
-              >
-                Configure / Edit
-              </AntButton>
+              {isSpammerBlacklisted ? (
+                <div className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 text-xs font-bold font-mono border border-rose-200 dark:border-rose-800">
+                  <IconShieldX size={16} className="text-rose-600 dark:text-rose-400" />
+                  ✓ Blacklisted Spammer
+                </div>
+              ) : (
+                <AntButton
+                  type="default"
+                  danger
+                  icon={<IconShieldX size={16} />}
+                  onClick={handleFlagAsSpammer}
+                  className="flex-1 sm:flex-initial h-10 rounded-xl border-rose-200 dark:border-rose-800 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs cursor-pointer"
+                >
+                  Flag Spammer
+                </AntButton>
+              )}
+              {["completed", "returned", "refused (rto)", "refused", "exchanged", "cancelled"].includes((order?.status || "").toLowerCase()) ? (
+                <div className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-xs font-bold font-mono border border-slate-200 dark:border-slate-700">
+                  <IconLock size={15} />
+                  🔒 Order Frozen
+                </div>
+              ) : (
+                <AntButton
+                  type="primary"
+                  icon={<IconEdit size={16} />}
+                  onClick={() => navigate(`/orders/${orderId}`)}
+                  className="flex-1 sm:flex-initial h-10 rounded-xl bg-slate-900 dark:bg-slate-100 dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-200 border-none font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs cursor-pointer"
+                >
+                  Configure / Edit
+                </AntButton>
+              )}
             </div>
           </div>
 

@@ -29,6 +29,7 @@ const Categories = lazy(() => import("@/pages/master/categories/page"));
 const Brands = lazy(() => import("@/pages/master/brands/page"));
 const Sizes = lazy(() => import("@/pages/master/sizes/page"));
 const Stocks = lazy(() => import("@/pages/master/stocks/page"));
+const Spammers = lazy(() => import("@/pages/master/spammers/page"));
 
 // Inventory
 const Inventory = lazy(() => import("@/pages/inventory/page"));
@@ -209,6 +210,7 @@ export default function App() {
           <Route path="master/brands" element={<ProtectedRoute permission="view_master_data"><Brands /></ProtectedRoute>} />
           <Route path="master/sizes" element={<ProtectedRoute permission="view_master_data"><Sizes /></ProtectedRoute>} />
           <Route path="master/stocks" element={<ProtectedRoute permission="view_master_data"><Stocks /></ProtectedRoute>} />
+          <Route path="master/spammers" element={<ProtectedRoute permission="manage_spammers"><Spammers /></ProtectedRoute>} />
 
           {/* Inventory */}
           <Route path="inventory" element={<ProtectedRoute permission="view_inventory"><Inventory /></ProtectedRoute>} />

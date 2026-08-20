@@ -44,6 +44,7 @@ const Menuitems = [
       { id: uniqueId(), title: "Sizes", href: "/master/sizes" },
       { id: uniqueId(), title: "Products", href: "/master/products" },
       { id: uniqueId(), title: "Stock Locations", href: "/master/stocks" },
+      { id: uniqueId(), title: "Spammer Blacklist", href: "/master/spammers", permission: "manage_spammers" },
     ],
   },
   {

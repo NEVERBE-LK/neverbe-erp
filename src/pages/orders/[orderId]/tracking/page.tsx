@@ -121,6 +121,18 @@ export const OrderTrackingEditPage = () => {
 
   const onFinish = async (values: any) => {
     try {
+      // 🛑 Completion Validation Guard
+      if (values.status === "Completed") {
+        if (values.paymentStatus !== "Paid") {
+          toast.error("Cannot mark order as Completed: Payment status must be 'Paid'.");
+          return;
+        }
+        if (!values.trackingNumber?.trim()) {
+          toast.error("Cannot mark order as Completed: Courier Waybill Tracking Number is required.");
+          return;
+        }
+      }
+
       setSaving(true);
       const payload = {
         status: values.status,
@@ -129,11 +141,32 @@ export const OrderTrackingEditPage = () => {
         trackingNumber: values.trackingNumber,
         estimatedDelivery: values.estimatedDelivery ? values.estimatedDelivery.toISOString() : null,
         restocked: values.restocked,
+        returnReason: values.returnReason,
         sendNotification: values.sendNotification,
       };
 
       await api.patch(`/api/v1/erp/orders/${orderId}/tracking`, payload);
-      toast.success("Order status & tracking info updated successfully");
+
+      // Auto-Blacklist Spammer if COD Package Refused
+      if (values.status === "Refused (RTO)" || values.returnReason === "REFUSED_COD_DELIVERY") {
+        try {
+          await api.post("/api/v1/erp/spammers", {
+            name: order?.customer?.name || "",
+            phone: order?.customer?.phone || "",
+            email: order?.customer?.email || "",
+            address: order?.customer?.address || "",
+            city: order?.customer?.city || "",
+            reason: "Refused COD Package at Door (RTO)",
+            severity: "HIGH",
+          });
+          toast.success("Order status updated & Customer added to Spammer Blacklist!");
+        } catch (spamErr) {
+          console.warn("Spammer blacklist auto-sync note", spamErr);
+        }
+      } else {
+        toast.success("Order status & tracking info updated successfully");
+      }
+
       fetchOrder();
     } catch (err: any) {
       toast.error(err?.response?.data?.message || "Failed to update tracking info");
@@ -178,6 +211,9 @@ export const OrderTrackingEditPage = () => {
                           <Option value="Pending">Pending</Option>
                           <Option value="Processing">Processing</Option>
                           <Option value="Completed">Completed</Option>
+                          <Option value="Returned">Returned</Option>
+                          <Option value="Refused (RTO)">Refused (RTO - Uncollected COD)</Option>
+                          <Option value="Exchanged">Exchanged</Option>
                           <Option value="Cancelled">Cancelled</Option>
                         </Select>
                       </Form.Item>
@@ -193,6 +229,26 @@ export const OrderTrackingEditPage = () => {
                       </Form.Item>
                     </Col>
                   </Row>
+
+                  <Form.Item shouldUpdate={(prev, curr) => prev.status !== curr.status}>
+                    {({ getFieldValue }) => {
+                      const st = getFieldValue("status");
+                      const isReturn = st === "Returned" || st === "Refused (RTO)" || st === "Exchanged";
+                      if (!isReturn) return null;
+
+                      return (
+                        <Form.Item label={<span className="text-xs font-semibold text-text-sub">Return / Refusal Reason</span>} name="returnReason">
+                          <Select placeholder="Select primary return reason" className="h-10 rounded-xl overflow-hidden">
+                            <Option value="REFUSED_COD_DELIVERY">Refused COD Delivery / Uncollected at Door (Auto-Blacklist Spammer)</Option>
+                            <Option value="SIZE_EXCHANGE">Size Swap / Fit Issue (Legitimate Exchange - 0 Penalty)</Option>
+                            <Option value="DEFECTIVE_PRODUCT">Defective Product / Manufacturing Issue (0 Penalty)</Option>
+                            <Option value="CUSTOMER_CHANGE_MIND">Customer Changed Mind</Option>
+                            <Option value="OTHER">Other Return Reason</Option>
+                          </Select>
+                        </Form.Item>
+                      );
+                    }}
+                  </Form.Item>
                 </div>
 
                 {/* Shipping & Tracking Card */}
