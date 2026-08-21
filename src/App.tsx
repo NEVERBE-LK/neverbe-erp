@@ -17,7 +17,6 @@ const OrderDetail = lazy(() => import("@/pages/orders/[orderId]/page"));
 const OrderCustomerEdit = lazy(() => import("@/pages/orders/[orderId]/customer/page"));
 const OrderItemsEdit = lazy(() => import("@/pages/orders/[orderId]/items/page"));
 const OrderTrackingEdit = lazy(() => import("@/pages/orders/[orderId]/tracking/page"));
-const OrderView = lazy(() => import("@/pages/orders/[orderId]/view/page"));
 const OrderInvoice = lazy(
   () => import("@/pages/orders/[orderId]/invoice/page"),
 );
@@ -199,7 +198,6 @@ export default function App() {
           <Route path="orders/:orderId/customer" element={<ProtectedRoute permission="view_orders"><OrderCustomerEdit /></ProtectedRoute>} />
           <Route path="orders/:orderId/items" element={<ProtectedRoute permission="view_orders"><OrderItemsEdit /></ProtectedRoute>} />
           <Route path="orders/:orderId/tracking" element={<ProtectedRoute permission="view_orders"><OrderTrackingEdit /></ProtectedRoute>} />
-          <Route path="orders/:orderId/view" element={<ProtectedRoute permission="view_orders"><OrderView /></ProtectedRoute>} />
           <Route path="orders/:orderId/invoice" element={<ProtectedRoute permission="view_orders"><OrderInvoice /></ProtectedRoute>} />
 
           {/* Master Data */}
