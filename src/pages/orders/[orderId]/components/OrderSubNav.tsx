@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { IconUser, IconPackage, IconTruck, IconEye, IconPrinter, IconArrowLeft, IconLock } from "@tabler/icons-react";
+import { IconUser, IconPackage, IconTruck } from "@tabler/icons-react";
 import { Order } from "@/model/Order";
 import { Button } from "antd";
 import { InvoicePreviewModal } from "./InvoicePreviewModal";
@@ -34,7 +34,7 @@ export const OrderSubNav: React.FC<OrderSubNavProps> = ({ orderId, order }) => {
     },
     {
       key: "tracking",
-      label: "Tracking & Delivery",
+      label: "Status & Delivery View",
       icon: IconTruck,
       path: `/orders/${orderId}/tracking`,
     },
@@ -64,15 +64,6 @@ export const OrderSubNav: React.FC<OrderSubNavProps> = ({ orderId, order }) => {
           );
         })}
       </div>
-
-      {isTerminal && (
-        <div className="bg-amber-50 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-800/60 p-3.5 rounded-xl flex items-center justify-between text-xs text-amber-800 dark:text-amber-300 font-mono shadow-2xs">
-          <span className="flex items-center gap-2">
-            <IconLock size={16} className="text-amber-600 dark:text-amber-400 shrink-0" />
-            Order #{orderId} is in terminal status ({order?.status}). Customer profile & order items are frozen.
-          </span>
-        </div>
-      )}
 
       <InvoicePreviewModal
         open={isInvoiceModalOpen}

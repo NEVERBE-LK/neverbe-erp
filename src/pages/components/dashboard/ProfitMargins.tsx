@@ -2,6 +2,7 @@ import DashboardCard from "../shared/DashboardCard";
 import { useEffect, useState } from "react";
 import { useAppSelector } from "@/lib/hooks";
 import { getProfitMarginsAction } from "@/actions/reportsActions";
+import { useDashboardSummary } from "./DashboardContext";
 import toast from "react-hot-toast";
 import { IconPercentage, IconRefresh, IconCoin } from "@tabler/icons-react";
 import { Progress, Statistic, Button, Tag, Card } from "antd";
@@ -15,43 +16,44 @@ interface MarginData {
 }
 
 const ProfitMargins = () => {
+  const { data: summaryData } = useDashboardSummary();
   const [data, setData] = useState<MarginData | null>(null);
   const [loading, setLoading] = useState(true);
   const { currentUser } = useAppSelector((state) => state.authSlice);
   const { theme } = useTheme();
 
   useEffect(() => {
+    if (summaryData?.profitMargins) {
+      setData(summaryData.profitMargins);
+      setLoading(false);
+    }
+  }, [summaryData]);
+
+  useEffect(() => {
     if (!currentUser) return;
 
-    fetchData(true);
+    if (!summaryData?.profitMargins) {
+      fetchData(true);
+    }
 
     const interval = setInterval(() => {
       if (document.visibilityState === "visible") {
         fetchData(false);
       }
-    }, 30000); // 30 seconds
-
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible") {
-        fetchData(false);
-      }
-    };
-    document.addEventListener("visibilitychange", handleVisibilityChange);
+    }, 60000);
 
     return () => {
       clearInterval(interval);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [currentUser]);
+  }, [currentUser, summaryData]);
 
   const fetchData = async (showLoading = true) => {
-    if (showLoading) setLoading(true);
+    if (showLoading && !data) setLoading(true);
     try {
       const result = await getProfitMarginsAction();
       setData(result);
     } catch (error: any) {
       console.error(error);
-      toast.error(error.message);
     } finally {
       if (showLoading) setLoading(false);
     }

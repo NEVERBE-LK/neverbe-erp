@@ -25,6 +25,8 @@ import {
   IconPrinter,
   IconPackage,
   IconTruck,
+  IconRotate,
+  IconCircleX,
 } from "@tabler/icons-react";
 import PageContainer from "../components/container/PageContainer";
 import toast from "react-hot-toast";
@@ -53,6 +55,9 @@ import { formatSLDateTime } from "@/utils/dateUtils";
 import { Html5Qrcode } from "html5-qrcode";
 import Spinner from "@/pages/components/shared/Spinner";
 import { InvoicePreviewModal } from "./[orderId]/components/InvoicePreviewModal";
+import { ProcessOrderModal } from "./components/ProcessOrderModal";
+import { ProcessReturnModal } from "./components/ProcessReturnModal";
+import { ProcessCancelModal } from "./components/ProcessCancelModal";
 
 const { Option } = Select;
 const { RangePicker } = DatePicker;
@@ -100,6 +105,12 @@ const OrdersPage = () => {
   // --- Invoice Preview Modal State ---
   const [previewOrderForInvoice, setPreviewOrderForInvoice] = useState<Order | null>(null);
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
+
+  // --- Workflow Action Modals State ---
+  const [selectedOrderForAction, setSelectedOrderForAction] = useState<Order | null>(null);
+  const [isProcessOrderOpen, setIsProcessOrderOpen] = useState(false);
+  const [isProcessReturnOpen, setIsProcessReturnOpen] = useState(false);
+  const [isProcessCancelOpen, setIsProcessCancelOpen] = useState(false);
 
   const startScanner = (orderId: string) => {
     setScanningOrderId(orderId);
@@ -575,9 +586,9 @@ const OrdersPage = () => {
       width: 80,
       align: "right",
       render: (_, order) => {
-        const isTerminal = ["completed", "returned", "refused (rto)", "refused", "exchanged", "cancelled"].includes(
-          (order.status || "").toLowerCase()
-        );
+        const isWebsiteOrder = (order.from || "").toLowerCase() === "website";
+        const statusLower = (order.status || "").toLowerCase();
+        const isEditable = isWebsiteOrder && ["pending", "processing"].includes(statusLower);
 
         const items: MenuProps["items"] = [
           {
@@ -595,28 +606,79 @@ const OrdersPage = () => {
               setIsInvoiceModalOpen(true);
             },
           },
-          ...(!isTerminal
+          ...(isWebsiteOrder
             ? [
                 { type: "divider" as const },
-                {
-                  key: "edit-customer",
-                  icon: <IconUser size={14} className="text-emerald-600 dark:text-emerald-400" />,
-                  label: <span className="font-semibold text-emerald-600 dark:text-emerald-400">Edit Customer Profile</span>,
-                  onClick: () => navigate(`/orders/${order.orderId}/customer`),
-                },
-                {
-                  key: "edit-items",
-                  icon: <IconPackage size={14} className="text-emerald-600 dark:text-emerald-400" />,
-                  label: <span className="font-semibold text-emerald-600 dark:text-emerald-400">Edit Order Items</span>,
-                  onClick: () => navigate(`/orders/${order.orderId}/items`),
-                },
+                ...(statusLower === "pending" || statusLower === "processing"
+                  ? [
+                      {
+                        key: "process-order",
+                        icon: <IconTruck size={14} className="text-emerald-600 dark:text-emerald-400" />,
+                        label: <span className="font-bold text-emerald-600 dark:text-emerald-400">Process Order</span>,
+                        onClick: () => {
+                          setSelectedOrderForAction(order);
+                          setIsProcessOrderOpen(true);
+                        },
+                      },
+                    ]
+                  : []),
+                ...(statusLower === "completed" || statusLower === "shipped"
+                  ? [
+                      {
+                        key: "process-return",
+                        icon: <IconRotate size={14} className="text-amber-600 dark:text-amber-400" />,
+                        label: <span className="font-bold text-amber-600 dark:text-amber-400">Process Return</span>,
+                        onClick: () => {
+                          setSelectedOrderForAction(order);
+                          setIsProcessReturnOpen(true);
+                        },
+                      },
+                    ]
+                  : []),
+                ...(!["cancelled", "returned", "refused (rto)", "refused"].includes(statusLower)
+                  ? [
+                      {
+                        key: "process-cancel",
+                        icon: <IconCircleX size={14} className="text-rose-600 dark:text-rose-400" />,
+                        label: <span className="font-bold text-rose-600 dark:text-rose-400">Process Cancel</span>,
+                        onClick: () => {
+                          setSelectedOrderForAction(order);
+                          setIsProcessCancelOpen(true);
+                        },
+                      },
+                    ]
+                  : []),
+                ...(isEditable
+                  ? [
+                      { type: "divider" as const },
+                      {
+                        key: "edit-customer",
+                        icon: <IconUser size={14} className="text-slate-600 dark:text-slate-300" />,
+                        label: <span className="font-semibold text-slate-700 dark:text-slate-200">Edit Customer Profile</span>,
+                        onClick: () => navigate(`/orders/${order.orderId}/customer`),
+                      },
+                      {
+                        key: "edit-items",
+                        icon: <IconPackage size={14} className="text-slate-600 dark:text-slate-300" />,
+                        label: <span className="font-semibold text-slate-700 dark:text-slate-200">Edit Order Items</span>,
+                        onClick: () => navigate(`/orders/${order.orderId}/items`),
+                      },
+                    ]
+                  : []),
               ]
-            : []),
+            : [
+                { type: "divider" as const },
+                {
+                  key: "pos-notice",
+                  disabled: true,
+                  label: <span className="text-[11px] font-mono text-slate-400">POS Order (Exchanges via POS)</span>,
+                },
+              ]),
           { type: "divider" as const },
           {
-            key: "edit-tracking",
-            icon: <IconTruck size={14} className="text-emerald-600 dark:text-emerald-400" />,
-            label: <span className="font-semibold text-emerald-600 dark:text-emerald-400">Status & Tracking</span>,
+            key: "view-tracking",
+            icon: <IconTruck size={14} className="text-slate-500" />,
+            label: <span className="font-medium text-slate-600 dark:text-slate-400">View Status & Tracking</span>,
             onClick: () => navigate(`/orders/${order.orderId}/tracking`),
           },
         ];
@@ -637,10 +699,10 @@ const OrdersPage = () => {
     },
   ];
 
-  const viewTitle = isProcessingView ? "Processing Orders" : isPaymentPendingView ? "Pending Payments" : "Orders";
+  const viewTitle = isProcessingView ? "Processing Orders" : isPaymentPendingView ? "Pending Payments" : "Order List";
 
   return (
-    <PageContainer title="Orders" description={`Manage ${viewTitle}`}>
+    <PageContainer title="Order List" description={`Manage ${viewTitle}`}>
       <div className="w-full space-y-6">
         {/* Header Bar */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-6 border-b border-card-border dark:border-card-border-dark">
@@ -850,6 +912,42 @@ const OrdersPage = () => {
         open={isInvoiceModalOpen}
         onClose={() => setIsInvoiceModalOpen(false)}
         order={previewOrderForInvoice}
+      />
+
+      <ProcessOrderModal
+        open={isProcessOrderOpen}
+        order={selectedOrderForAction}
+        onClose={() => {
+          setIsProcessOrderOpen(false);
+          setSelectedOrderForAction(null);
+        }}
+        onSuccess={() => {
+          fetchOrders({ page: pagination.current });
+        }}
+      />
+
+      <ProcessReturnModal
+        open={isProcessReturnOpen}
+        order={selectedOrderForAction}
+        onClose={() => {
+          setIsProcessReturnOpen(false);
+          setSelectedOrderForAction(null);
+        }}
+        onSuccess={() => {
+          fetchOrders({ page: pagination.current });
+        }}
+      />
+
+      <ProcessCancelModal
+        open={isProcessCancelOpen}
+        order={selectedOrderForAction}
+        onClose={() => {
+          setIsProcessCancelOpen(false);
+          setSelectedOrderForAction(null);
+        }}
+        onSuccess={() => {
+          fetchOrders({ page: pagination.current });
+        }}
       />
     </PageContainer>
   );

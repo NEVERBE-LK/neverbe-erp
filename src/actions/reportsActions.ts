@@ -31,6 +31,15 @@ export const getDailyOverviewAction = async () => {
     throw new Error(e.response ? e.response.data.message : e.message);
   }
 };
+
+export const getDashboardSummaryAction = async (refresh = false) => {
+  try {
+    const res = await api.get(`/api/v1/erp/dashboard/summary${refresh ? "?refresh=true" : ""}`);
+    return res.data;
+  } catch (e: any) {
+    throw new Error(e.response ? e.response.data.message : e.message);
+  }
+};
 export const getStocksReportAction = async () => {
   try {
     const res = await api({
@@ -136,59 +145,11 @@ export const getOrderStatusDistributionAction = async () => {
   }
 };
 
-export const getPendingOrdersCountAction = async () => {
-  try {
-    const res = await api({
-      method: "GET",
-      url: "/api/v1/erp/dashboard/pending-orders",
-    });
-    return res.data;
-  } catch (e: any) {
-    throw new Error(e.response ? e.response.data.message : e.message);
-  }
-};
-
-export const getWeeklyTrendsAction = async () => {
-  try {
-    const res = await api({
-      method: "GET",
-      url: "/api/v1/erp/dashboard/weekly-trends",
-    });
-    return res.data;
-  } catch (e: any) {
-    throw new Error(e.response ? e.response.data.message : e.message);
-  }
-};
-
-export const getExpenseSummaryAction = async () => {
-  try {
-    const res = await api({
-      method: "GET",
-      url: "/api/v1/erp/dashboard/expense-summary",
-    });
-    return res.data;
-  } catch (e: any) {
-    throw new Error(e.response ? e.response.data.message : e.message);
-  }
-};
-
 export const getProfitMarginsAction = async () => {
   try {
     const res = await api({
       method: "GET",
       url: "/api/v1/erp/dashboard/profit-margins",
-    });
-    return res.data;
-  } catch (e: any) {
-    throw new Error(e.response ? e.response.data.message : e.message);
-  }
-};
-
-export const getInventoryValueAction = async () => {
-  try {
-    const res = await api({
-      method: "GET",
-      url: "/api/v1/erp/dashboard/inventory-value",
     });
     return res.data;
   } catch (e: any) {

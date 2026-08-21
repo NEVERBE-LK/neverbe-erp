@@ -2,6 +2,7 @@ import DashboardCard from "../shared/DashboardCard";
 import { useEffect, useState } from "react";
 import { useAppSelector } from "@/lib/hooks";
 import { getMonthlyComparisonAction } from "@/actions/reportsActions";
+import { useDashboardSummary } from "./DashboardContext";
 import toast from "react-hot-toast";
 import {
   IconTrendingUp,
@@ -19,42 +20,43 @@ interface MonthlyData {
 }
 
 const MonthlyComparison = () => {
+  const { data: summaryData } = useDashboardSummary();
   const [data, setData] = useState<MonthlyData | null>(null);
   const [loading, setLoading] = useState(true);
   const { currentUser } = useAppSelector((state) => state.authSlice);
 
   useEffect(() => {
+    if (summaryData?.monthlyComparison) {
+      setData(summaryData.monthlyComparison);
+      setLoading(false);
+    }
+  }, [summaryData]);
+
+  useEffect(() => {
     if (!currentUser) return;
 
-    fetchData(true);
+    if (!summaryData?.monthlyComparison) {
+      fetchData(true);
+    }
 
     const interval = setInterval(() => {
       if (document.visibilityState === "visible") {
         fetchData(false);
       }
-    }, 30000); // 30 seconds
-
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible") {
-        fetchData(false);
-      }
-    };
-    document.addEventListener("visibilitychange", handleVisibilityChange);
+    }, 60000); // 60 seconds
 
     return () => {
       clearInterval(interval);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [currentUser]);
+  }, [currentUser, summaryData]);
 
   const fetchData = async (showLoading = true) => {
-    if (showLoading) setLoading(true);
+    if (showLoading && !data) setLoading(true);
     try {
       const result = await getMonthlyComparisonAction();
       setData(result);
     } catch (error: any) {
       console.error(error);
-      toast.error(error.message);
     } finally {
       if (showLoading) setLoading(false);
     }

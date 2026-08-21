@@ -2,6 +2,7 @@ import DashboardCard from "../shared/DashboardCard";
 import { useEffect, useState } from "react";
 import { useAppSelector } from "@/lib/hooks";
 import { getLowStockAlertsAction } from "@/actions/reportsActions";
+import { useDashboardSummary } from "./DashboardContext";
 import toast from "react-hot-toast";
 import { IconAlertTriangle, IconRefresh } from "@tabler/icons-react";
 import { List, Avatar, Tag, Button, Typography } from "antd";
@@ -17,33 +18,35 @@ interface LowStockItem {
 }
 
 const LowStockAlerts = () => {
+  const { data: summaryData } = useDashboardSummary();
   const [items, setItems] = useState<LowStockItem[]>([]);
   const [loading, setLoading] = useState(true);
   const { currentUser } = useAppSelector((state) => state.authSlice);
 
   useEffect(() => {
+    if (summaryData?.lowStock) {
+      setItems(summaryData.lowStock);
+      setLoading(false);
+    }
+  }, [summaryData]);
+
+  useEffect(() => {
     if (!currentUser) return;
 
-    fetchLowStock(true);
+    if (!summaryData?.lowStock) {
+      fetchLowStock(true);
+    }
 
     const interval = setInterval(() => {
       if (document.visibilityState === "visible") {
         fetchLowStock(false);
       }
-    }, 30000); // 30 seconds
-
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible") {
-        fetchLowStock(false);
-      }
-    };
-    document.addEventListener("visibilitychange", handleVisibilityChange);
+    }, 60000);
 
     return () => {
       clearInterval(interval);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [currentUser]);
+  }, [currentUser, summaryData]);
 
   const fetchLowStock = async (showLoading = true) => {
     if (showLoading) setLoading(true);

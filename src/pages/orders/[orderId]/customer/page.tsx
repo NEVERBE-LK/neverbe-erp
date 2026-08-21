@@ -16,6 +16,7 @@ const OrderCustomerEditPage = () => {
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [isReadOnly, setIsReadOnly] = useState(false);
 
   useEffect(() => {
     if (orderId) fetchOrder();
@@ -28,14 +29,9 @@ const OrderCustomerEditPage = () => {
       const data = res.data;
       setOrder(data);
 
-      const isTerminal = ["completed", "returned", "refused (rto)", "refused", "exchanged", "cancelled"].includes(
-        (data.status || "").toLowerCase()
-      );
-      if (isTerminal) {
-        toast.error(`Order #${orderId} is in terminal status (${data.status}) and is frozen from editing.`);
-        navigate(`/orders/${orderId}/view`, { replace: true });
-        return;
-      }
+      const isWebsiteOrder = (data.from || "").toLowerCase() === "website";
+      const isProcessingStatus = ["pending", "processing"].includes((data.status || "").toLowerCase());
+      setIsReadOnly(!isWebsiteOrder || !isProcessingStatus);
 
       form.setFieldsValue({
         userId: data.userId || "",
@@ -103,125 +99,116 @@ const OrderCustomerEditPage = () => {
       <div className="w-full space-y-6">
         <OrderSubNav orderId={orderId!} order={order} />
 
-        <Form form={form} layout="vertical" onFinish={onFinish} requiredMark={false}>
-          <Row gutter={[24, 24]}>
-            {/* Left Column: Customer Coordinates & Billing */}
-            <Col xs={24} lg={12}>
-              <div className="space-y-6">
-                {/* Profile Card */}
-                <div className="bg-card dark:bg-card-dark border border-card-border dark:border-card-border-dark rounded-2xl p-6 shadow-xs space-y-4">
-                  <div className="flex items-center gap-2 pb-3 border-b border-card-border dark:border-card-border-dark">
-                    <IconUser size={18} className="text-brand dark:text-brand-dark" />
-                    <h3 className="text-sm font-bold text-text-main dark:text-text-main-dark uppercase tracking-wider font-mono">
-                      Customer Profile
-                    </h3>
-                  </div>
-
-                  <Form.Item label={<span className="text-xs font-semibold text-text-sub">Customer Full Name</span>} name="customerName" rules={[{ required: true, message: "Customer name is required" }]}>
-                    <Input placeholder="John Doe" className="h-10 rounded-xl" />
-                  </Form.Item>
-
-                  <Row gutter={16}>
-                    <Col xs={24} sm={12}>
-                      <Form.Item label={<span className="text-xs font-semibold text-text-sub">Email Address</span>} name="customerEmail">
-                        <Input prefix={<IconMail size={15} className="text-text-sub" />} placeholder="john@example.com" className="h-10 rounded-xl" />
-                      </Form.Item>
-                    </Col>
-                    <Col xs={24} sm={12}>
-                      <Form.Item label={<span className="text-xs font-semibold text-text-sub">Phone Number</span>} name="customerPhone">
-                        <Input prefix={<IconPhone size={15} className="text-text-sub" />} placeholder="+94 77 123 4567" className="h-10 rounded-xl" />
-                      </Form.Item>
-                    </Col>
-                  </Row>
-
-                  <Form.Item label={<span className="text-xs font-semibold text-text-sub">User ID / Client Reference</span>} name="userId">
-                    <Input placeholder="User ID" className="h-10 rounded-xl font-mono" />
-                  </Form.Item>
-                </div>
-
-                {/* Billing Address Card */}
-                <div className="bg-card dark:bg-card-dark border border-card-border dark:border-card-border-dark rounded-2xl p-6 shadow-xs space-y-4">
-                  <div className="flex items-center gap-2 pb-3 border-b border-card-border dark:border-card-border-dark">
-                    <IconMapPin size={18} className="text-brand dark:text-brand-dark" />
-                    <h3 className="text-sm font-bold text-text-main dark:text-text-main-dark uppercase tracking-wider font-mono">
-                      Billing Address
-                    </h3>
-                  </div>
-
-                  <Form.Item label={<span className="text-xs font-semibold text-text-sub">Street Address</span>} name="customerAddress">
-                    <Input.TextArea rows={2} placeholder="No. 123, Main Street" className="rounded-xl" />
-                  </Form.Item>
-
-                  <Row gutter={16}>
-                    <Col xs={24} sm={14}>
-                      <Form.Item label={<span className="text-xs font-semibold text-text-sub">City</span>} name="customerCity">
-                        <Input placeholder="Colombo" className="h-10 rounded-xl" />
-                      </Form.Item>
-                    </Col>
-                    <Col xs={24} sm={10}>
-                      <Form.Item label={<span className="text-xs font-semibold text-text-sub">Postal / Zip Code</span>} name="customerZip">
-                        <Input placeholder="00100" className="h-10 rounded-xl font-mono" />
-                      </Form.Item>
-                    </Col>
-                  </Row>
-                </div>
+        <Form form={form} layout="vertical" onFinish={onFinish} requiredMark={false} disabled={isReadOnly}>
+          <div className="w-full flex flex-col gap-6">
+            {/* Card 1: Customer Profile */}
+            <div className="bg-card dark:bg-card-dark border border-card-border dark:border-card-border-dark rounded-2xl p-6 shadow-xs space-y-4">
+              <div className="flex items-center gap-2 pb-3 border-b border-card-border dark:border-card-border-dark">
+                <IconUser size={18} className="text-brand dark:text-brand-dark" />
+                <h3 className="text-sm font-bold text-text-main dark:text-text-main-dark uppercase tracking-wider font-mono">
+                  Customer Profile
+                </h3>
               </div>
-            </Col>
 
-            {/* Right Column: Shipping Details & Actions */}
-            <Col xs={24} lg={12}>
-              <div className="space-y-6">
-                {/* Shipping Details Card */}
-                <div className="bg-card dark:bg-card-dark border border-card-border dark:border-card-border-dark rounded-2xl p-6 shadow-xs space-y-4">
-                  <div className="flex items-center gap-2 pb-3 border-b border-card-border dark:border-card-border-dark">
-                    <IconTruck size={18} className="text-brand dark:text-brand-dark" />
-                    <h3 className="text-sm font-bold text-text-main dark:text-text-main-dark uppercase tracking-wider font-mono">
-                      Shipping Destination
-                    </h3>
-                  </div>
+              <Form.Item label={<span className="text-xs font-semibold text-text-sub">Customer Full Name</span>} name="customerName" rules={[{ required: true, message: "Customer name is required" }]}>
+                <Input placeholder="John Doe" className="h-10 rounded-xl" />
+              </Form.Item>
 
-                  <Form.Item label={<span className="text-xs font-semibold text-text-sub">Recipient Name</span>} name="shippingName">
-                    <Input placeholder="Recipient Name" className="h-10 rounded-xl" />
+              <Row gutter={16}>
+                <Col xs={24} sm={12}>
+                  <Form.Item label={<span className="text-xs font-semibold text-text-sub">Email Address</span>} name="customerEmail">
+                    <Input prefix={<IconMail size={15} className="text-text-sub" />} placeholder="john@example.com" className="h-10 rounded-xl" />
                   </Form.Item>
-
-                  <Form.Item label={<span className="text-xs font-semibold text-text-sub">Shipping Street Address</span>} name="shippingAddress">
-                    <Input.TextArea rows={2} placeholder="Delivery address" className="rounded-xl" />
+                </Col>
+                <Col xs={24} sm={12}>
+                  <Form.Item label={<span className="text-xs font-semibold text-text-sub">Phone Number</span>} name="customerPhone">
+                    <Input prefix={<IconPhone size={15} className="text-text-sub" />} placeholder="+94 77 123 4567" className="h-10 rounded-xl" />
                   </Form.Item>
+                </Col>
+              </Row>
 
-                  <Row gutter={16}>
-                    <Col xs={24} sm={14}>
-                      <Form.Item label={<span className="text-xs font-semibold text-text-sub">Shipping City</span>} name="shippingCity">
-                        <Input placeholder="Kandy" className="h-10 rounded-xl" />
-                      </Form.Item>
-                    </Col>
-                    <Col xs={24} sm={10}>
-                      <Form.Item label={<span className="text-xs font-semibold text-text-sub">Shipping Zip</span>} name="shippingZip">
-                        <Input placeholder="20000" className="h-10 rounded-xl font-mono" />
-                      </Form.Item>
-                    </Col>
-                  </Row>
+              <Form.Item label={<span className="text-xs font-semibold text-text-sub">User ID / Client Reference</span>} name="userId">
+                <Input placeholder="User ID" className="h-10 rounded-xl font-mono" />
+              </Form.Item>
+            </div>
 
-                  <Form.Item label={<span className="text-xs font-semibold text-text-sub">Shipping Contact Phone</span>} name="shippingPhone">
-                    <Input prefix={<IconPhone size={15} className="text-text-sub" />} placeholder="+94 77 999 8888" className="h-10 rounded-xl" />
-                  </Form.Item>
-                </div>
-
-                {/* Submit Action Card */}
-                <div className="bg-card dark:bg-card-dark border border-card-border dark:border-card-border-dark rounded-2xl p-6 shadow-xs space-y-4">
-                  <Button
-                    type="primary"
-                    htmlType="submit"
-                    block
-                    loading={saving}
-                    icon={<IconDeviceFloppy size={18} />}
-                    className="h-11 rounded-xl bg-slate-900 dark:bg-slate-100 dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-200 border-none font-bold text-xs cursor-pointer shadow-xs"
-                  >
-                    Save Customer Changes
-                  </Button>
-                </div>
+            {/* Card 2: Billing Address */}
+            <div className="bg-card dark:bg-card-dark border border-card-border dark:border-card-border-dark rounded-2xl p-6 shadow-xs space-y-4">
+              <div className="flex items-center gap-2 pb-3 border-b border-card-border dark:border-card-border-dark">
+                <IconMapPin size={18} className="text-brand dark:text-brand-dark" />
+                <h3 className="text-sm font-bold text-text-main dark:text-text-main-dark uppercase tracking-wider font-mono">
+                  Billing Address
+                </h3>
               </div>
-            </Col>
-          </Row>
+
+              <Form.Item label={<span className="text-xs font-semibold text-text-sub">Street Address</span>} name="customerAddress">
+                <Input.TextArea rows={2} placeholder="No. 123, Main Street" className="rounded-xl" />
+              </Form.Item>
+
+              <Row gutter={16}>
+                <Col xs={24} sm={14}>
+                  <Form.Item label={<span className="text-xs font-semibold text-text-sub">City</span>} name="customerCity">
+                    <Input placeholder="Colombo" className="h-10 rounded-xl" />
+                  </Form.Item>
+                </Col>
+                <Col xs={24} sm={10}>
+                  <Form.Item label={<span className="text-xs font-semibold text-text-sub">Postal / Zip Code</span>} name="customerZip">
+                    <Input placeholder="00100" className="h-10 rounded-xl font-mono" />
+                  </Form.Item>
+                </Col>
+              </Row>
+            </div>
+
+            {/* Card 3: Shipping Destination */}
+            <div className="bg-card dark:bg-card-dark border border-card-border dark:border-card-border-dark rounded-2xl p-6 shadow-xs space-y-4">
+              <div className="flex items-center gap-2 pb-3 border-b border-card-border dark:border-card-border-dark">
+                <IconTruck size={18} className="text-brand dark:text-brand-dark" />
+                <h3 className="text-sm font-bold text-text-main dark:text-text-main-dark uppercase tracking-wider font-mono">
+                  Shipping Destination
+                </h3>
+              </div>
+
+              <Form.Item label={<span className="text-xs font-semibold text-text-sub">Recipient Name</span>} name="shippingName">
+                <Input placeholder="Recipient Name" className="h-10 rounded-xl" />
+              </Form.Item>
+
+              <Form.Item label={<span className="text-xs font-semibold text-text-sub">Shipping Street Address</span>} name="shippingAddress">
+                <Input.TextArea rows={2} placeholder="Delivery address" className="rounded-xl" />
+              </Form.Item>
+
+              <Row gutter={16}>
+                <Col xs={24} sm={14}>
+                  <Form.Item label={<span className="text-xs font-semibold text-text-sub">Shipping City</span>} name="shippingCity">
+                    <Input placeholder="Kandy" className="h-10 rounded-xl" />
+                  </Form.Item>
+                </Col>
+                <Col xs={24} sm={10}>
+                  <Form.Item label={<span className="text-xs font-semibold text-text-sub">Shipping Zip</span>} name="shippingZip">
+                    <Input placeholder="20000" className="h-10 rounded-xl font-mono" />
+                  </Form.Item>
+                </Col>
+              </Row>
+
+              <Form.Item label={<span className="text-xs font-semibold text-text-sub">Shipping Contact Phone</span>} name="shippingPhone">
+                <Input prefix={<IconPhone size={15} className="text-text-sub" />} placeholder="+94 77 999 8888" className="h-10 rounded-xl" />
+              </Form.Item>
+            </div>
+
+            {/* Card 4: Submit Action Card */}
+            {!isReadOnly && (
+              <div className="bg-card dark:bg-card-dark border border-card-border dark:border-card-border-dark rounded-2xl p-6 shadow-xs flex justify-end">
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  loading={saving}
+                  icon={<IconDeviceFloppy size={18} />}
+                  className="h-11 px-8 rounded-xl bg-slate-900 dark:bg-slate-100 dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-200 border-none font-bold text-xs cursor-pointer shadow-xs"
+                >
+                  Save Customer Changes
+                </Button>
+              </div>
+            )}
+          </div>
         </Form>
       </div>
     </PageContainer>

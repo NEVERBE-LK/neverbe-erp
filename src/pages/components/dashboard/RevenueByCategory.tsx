@@ -2,6 +2,7 @@ import DashboardCard from "../shared/DashboardCard";
 import { useEffect, useState } from "react";
 import { useAppSelector } from "@/lib/hooks";
 import { getRevenueByCategoryAction } from "@/actions/reportsActions";
+import { useDashboardSummary } from "./DashboardContext";
 import toast from "react-hot-toast";
 import { IconRefresh, IconCategory2 } from "@tabler/icons-react";
 import { Button, Tag, Tooltip, List, Typography } from "antd";
@@ -15,33 +16,35 @@ interface CategoryData {
 }
 
 const RevenueByCategory = () => {
+  const { data: summaryData } = useDashboardSummary();
   const [data, setData] = useState<CategoryData[]>([]);
   const [loading, setLoading] = useState(true);
   const { currentUser } = useAppSelector((state) => state.authSlice);
 
   useEffect(() => {
+    if (summaryData?.revenueByCategory) {
+      setData(summaryData.revenueByCategory);
+      setLoading(false);
+    }
+  }, [summaryData]);
+
+  useEffect(() => {
     if (!currentUser) return;
 
-    fetchData(true);
+    if (!summaryData?.revenueByCategory) {
+      fetchData(true);
+    }
 
     const interval = setInterval(() => {
       if (document.visibilityState === "visible") {
         fetchData(false);
       }
-    }, 30000); // 30 seconds
-
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible") {
-        fetchData(false);
-      }
-    };
-    document.addEventListener("visibilitychange", handleVisibilityChange);
+    }, 60000);
 
     return () => {
       clearInterval(interval);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [currentUser]);
+  }, [currentUser, summaryData]);
 
   const fetchData = async (showLoading = true) => {
     if (showLoading) setLoading(true);

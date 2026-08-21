@@ -3,6 +3,7 @@ import { useEffect, useState, useRef } from "react";
 import { useAppSelector } from "@/lib/hooks";
 import { getPopularItemsAction } from "@/actions/inventoryActions";
 import PopularItemCard from "@/pages/components/dashboard/PopularItemCard";
+import { useDashboardSummary } from "./DashboardContext";
 import {
   IconChevronLeft,
   IconChevronRight,
@@ -13,6 +14,7 @@ import Spinner from "../shared/Spinner";
 import { dayjs } from "@/utils/dateUtils";
 
 const PopularItems = () => {
+  const { data: summaryData } = useDashboardSummary();
   const [items, setItems] = useState<PopularItem[] | null>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { currentUser } = useAppSelector((state) => state.authSlice);
@@ -22,6 +24,13 @@ const PopularItems = () => {
   const [fetchSize, setFetchSize] = useState(10); // Default to Top 10
 
   const sliderRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (summaryData?.popularItems && selectedMonth === dayjs().month() && fetchSize === 10) {
+      setItems(summaryData.popularItems);
+      setIsLoading(false);
+    }
+  }, [summaryData, selectedMonth, fetchSize]);
 
   const months = [
     { value: 0, label: "JANUARY" },

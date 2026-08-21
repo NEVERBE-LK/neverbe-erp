@@ -22,6 +22,9 @@ import {
   IconUser,
   IconMail,
   IconPhone,
+  IconRotate,
+  IconX,
+  IconCircleX,
 } from "@tabler/icons-react";
 
 import { OrderExchangeHistory } from "../../components/OrderExchangeHistory";
@@ -29,6 +32,9 @@ import CommunicationHub from "../../components/CommunicationHub";
 import { InvoicePreviewModal } from "../../components/InvoicePreviewModal";
 import { formatSLDateTime } from "@/utils/dateUtils";
 import { useConfirmationDialog } from "@/contexts/ConfirmationDialogContext";
+import { ProcessOrderModal } from "@/pages/orders/components/ProcessOrderModal";
+import { ProcessReturnModal } from "@/pages/orders/components/ProcessReturnModal";
+import { ProcessCancelModal } from "@/pages/orders/components/ProcessCancelModal";
 
 const OrderView = ({ orderId }: { orderId: string }) => {
   const [order, setOrder] = useState<Order | null>(null);
@@ -39,6 +45,11 @@ const OrderView = ({ orderId }: { orderId: string }) => {
   const [itemImages, setItemImages] = useState<Record<string, string>>({});
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
   const [isSpammerBlacklisted, setIsSpammerBlacklisted] = useState(false);
+
+  // Workflow Modals State
+  const [isProcessOrderOpen, setIsProcessOrderOpen] = useState(false);
+  const [isProcessReturnOpen, setIsProcessReturnOpen] = useState(false);
+  const [isProcessCancelOpen, setIsProcessCancelOpen] = useState(false);
 
   const { currentUser } = useAppSelector((state: any) => state.authSlice);
   const navigate = useNavigate();
@@ -448,15 +459,79 @@ const OrderView = ({ orderId }: { orderId: string }) => {
               </h3>
             </div>
 
-            <div className="flex items-center gap-2.5 w-full sm:w-auto">
+            <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
+              {(order?.from || "").toLowerCase() === "store" ? (
+                <div className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 text-xs font-bold font-mono border border-blue-200 dark:border-blue-800">
+                  <IconBuildingStore size={16} className="text-blue-600 dark:text-blue-400" />
+                  Store POS Order (Exchanges handled via POS)
+                </div>
+              ) : (
+                <>
+                  {/* Process Order Workflow Button (Website orders in Pending/Processing status) */}
+                  {["pending", "processing"].includes((order?.status || "").toLowerCase()) && (
+                    <AntButton
+                      type="primary"
+                      icon={<IconTruck size={16} />}
+                      onClick={() => setIsProcessOrderOpen(true)}
+                      className="h-10 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm border-none cursor-pointer"
+                    >
+                      Process Order
+                    </AntButton>
+                  )}
+
+                  {/* Process Return Workflow Button (Website orders in Completed/Shipped status) */}
+                  {["completed", "shipped"].includes((order?.status || "").toLowerCase()) && (
+                    <AntButton
+                      type="default"
+                      icon={<IconRotate size={16} />}
+                      onClick={() => setIsProcessReturnOpen(true)}
+                      className="h-10 rounded-xl border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 hover:bg-amber-100 font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs cursor-pointer"
+                    >
+                      Process Return
+                    </AntButton>
+                  )}
+
+                  {/* Process Cancel Workflow Button (Website orders) */}
+                  {!["cancelled", "returned", "refused (rto)", "refused"].includes((order?.status || "").toLowerCase()) && (
+                    <AntButton
+                      type="default"
+                      danger
+                      icon={<IconCircleX size={16} />}
+                      onClick={() => setIsProcessCancelOpen(true)}
+                      className="h-10 rounded-xl border-rose-200 dark:border-rose-800 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs cursor-pointer"
+                    >
+                      Process Cancellation
+                    </AntButton>
+                  )}
+
+                  {/* Configure / Edit button (ONLY for Website orders in Processing/Pending status) */}
+                  {["pending", "processing"].includes((order?.status || "").toLowerCase()) ? (
+                    <AntButton
+                      type="primary"
+                      icon={<IconEdit size={16} />}
+                      onClick={() => navigate(`/orders/${orderId}`)}
+                      className="h-10 rounded-xl bg-slate-900 dark:bg-slate-100 dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-200 border-none font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs cursor-pointer"
+                    >
+                      Configure / Edit
+                    </AntButton>
+                  ) : (
+                    <div className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-xs font-bold font-mono border border-slate-200 dark:border-slate-700">
+                      <IconLock size={15} />
+                      🔒 Order Frozen
+                    </div>
+                  )}
+                </>
+              )}
+
               <AntButton
                 type="default"
                 icon={<IconPrinter size={16} />}
                 onClick={() => setIsInvoiceModalOpen(true)}
-                className="flex-1 sm:flex-initial h-10 rounded-xl border-card-border dark:border-card-border-dark text-text-sub dark:text-slate-300 hover:text-text-main dark:hover:text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs cursor-pointer"
+                className="h-10 rounded-xl border-card-border dark:border-card-border-dark text-text-sub dark:text-slate-300 hover:text-text-main dark:hover:text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs cursor-pointer"
               >
                 Print PDF
               </AntButton>
+
               {isSpammerBlacklisted ? (
                 <div className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 text-xs font-bold font-mono border border-rose-200 dark:border-rose-800">
                   <IconShieldX size={16} className="text-rose-600 dark:text-rose-400" />
@@ -468,24 +543,9 @@ const OrderView = ({ orderId }: { orderId: string }) => {
                   danger
                   icon={<IconShieldX size={16} />}
                   onClick={handleFlagAsSpammer}
-                  className="flex-1 sm:flex-initial h-10 rounded-xl border-rose-200 dark:border-rose-800 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs cursor-pointer"
+                  className="h-10 rounded-xl border-rose-200 dark:border-rose-800 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs cursor-pointer"
                 >
                   Flag Spammer
-                </AntButton>
-              )}
-              {["completed", "returned", "refused (rto)", "refused", "exchanged", "cancelled"].includes((order?.status || "").toLowerCase()) ? (
-                <div className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-xs font-bold font-mono border border-slate-200 dark:border-slate-700">
-                  <IconLock size={15} />
-                  🔒 Order Frozen
-                </div>
-              ) : (
-                <AntButton
-                  type="primary"
-                  icon={<IconEdit size={16} />}
-                  onClick={() => navigate(`/orders/${orderId}`)}
-                  className="flex-1 sm:flex-initial h-10 rounded-xl bg-slate-900 dark:bg-slate-100 dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-200 border-none font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs cursor-pointer"
-                >
-                  Configure / Edit
                 </AntButton>
               )}
             </div>
@@ -800,6 +860,33 @@ const OrderView = ({ orderId }: { orderId: string }) => {
         open={isInvoiceModalOpen}
         onClose={() => setIsInvoiceModalOpen(false)}
         order={order}
+      />
+
+      <ProcessOrderModal
+        open={isProcessOrderOpen}
+        order={order}
+        onClose={() => setIsProcessOrderOpen(false)}
+        onSuccess={() => {
+          window.location.reload();
+        }}
+      />
+
+      <ProcessReturnModal
+        open={isProcessReturnOpen}
+        order={order}
+        onClose={() => setIsProcessReturnOpen(false)}
+        onSuccess={() => {
+          window.location.reload();
+        }}
+      />
+
+      <ProcessCancelModal
+        open={isProcessCancelOpen}
+        order={order}
+        onClose={() => setIsProcessCancelOpen(false)}
+        onSuccess={() => {
+          window.location.reload();
+        }}
       />
     </div>
   );

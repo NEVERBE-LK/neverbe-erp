@@ -2,6 +2,7 @@ import DashboardCard from "../shared/DashboardCard";
 import { useEffect, useState } from "react";
 import { useAppSelector } from "@/lib/hooks";
 import { getDailyOverviewAction } from "@/actions/reportsActions";
+import { useDashboardSummary } from "./DashboardContext";
 import toast from "react-hot-toast";
 import {
   IconCurrencyDollar,
@@ -15,6 +16,7 @@ import { db } from "@/firebase/firebaseClient";
 import { dayjs, SL_TIMEZONE } from "@/utils/dateUtils";
 
 const DailyEarnings = () => {
+  const { data: summaryData, loading: summaryLoading } = useDashboardSummary();
   const [totalGrossSales, setTotalGrossSales] = useState(0);
   const [totalNetSales, setTotalNetSales] = useState(0);
   const [totalProfit, setTotalProfit] = useState(0);
@@ -24,8 +26,19 @@ const DailyEarnings = () => {
   const [loading, setLoading] = useState(true);
   const { currentUser } = useAppSelector((state) => state.authSlice);
 
+  useEffect(() => {
+    if (summaryData?.daily) {
+      setTotalGrossSales(summaryData.daily.totalGrossSales || 0);
+      setTotalNetSales(summaryData.daily.totalNetSales || 0);
+      setTotalProfit(summaryData.daily.totalProfit || 0);
+      setInvoiceCount(summaryData.daily.totalOrders || 0);
+      setTotalDiscount(summaryData.daily.totalDiscount || 0);
+      setLoading(false);
+    }
+  }, [summaryData]);
+
   const fetchDailyEarnings = async (showLoading = true) => {
-    if (showLoading) setLoading(true);
+    if (showLoading && !summaryData?.daily) setLoading(true);
     try {
       const overview = await getDailyOverviewAction();
       setTotalGrossSales(overview.totalGrossSales);
@@ -35,7 +48,6 @@ const DailyEarnings = () => {
       setTotalDiscount(overview.totalDiscount);
     } catch (error: any) {
       console.error(error);
-      toast.error(error.message);
     } finally {
       setLoading(false);
     }
@@ -43,6 +55,8 @@ const DailyEarnings = () => {
 
   useEffect(() => {
     if (!currentUser) return;
+
+    fetchDailyEarnings(true);
 
     let isFirst = true;
     const now = dayjs().tz(SL_TIMEZONE);
@@ -58,13 +72,13 @@ const DailyEarnings = () => {
     const unsubscribe = onSnapshot(
       q,
       () => {
-        fetchDailyEarnings(isFirst);
+        if (!isFirst) {
+          fetchDailyEarnings(false);
+        }
         isFirst = false;
       },
       (error) => {
-        console.error("[DailyEarnings] Firestore live snapshot failed, falling back to fetch:", error);
-        fetchDailyEarnings(isFirst);
-        isFirst = false;
+        console.error("[DailyEarnings] Firestore live snapshot failed:", error);
       }
     );
 

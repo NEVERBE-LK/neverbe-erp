@@ -4,17 +4,30 @@ import { lazy } from "react";
 import { useAppSelector } from "@/lib/hooks";
 import toast from "react-hot-toast";
 import { getYearlySalesAction } from "@/actions/reportsActions";
+import { useDashboardSummary } from "./DashboardContext";
 import Spinner from "../shared/Spinner";
 import { useTheme } from "@/contexts/ThemeContext";
 
 const Chart = lazy(() => import("react-apexcharts"));
 
 const SalesOverview = () => {
+  const { data: summaryData } = useDashboardSummary();
   const [loading, setLoading] = useState(true);
   const [salesData, setSalesData] = useState({
     website: Array(12).fill(0),
     store: Array(12).fill(0),
   });
+
+  useEffect(() => {
+    if (summaryData?.yearlyPerformance) {
+      setSalesData({
+        website: summaryData.yearlyPerformance.website || [],
+        store: summaryData.yearlyPerformance.store || [],
+      });
+      setLoading(false);
+    }
+  }, [summaryData]);
+
   const [months] = useState<string[]>(
     Array.from({ length: 12 }, (_, i) =>
       new Date(0, i)
@@ -48,35 +61,27 @@ const SalesOverview = () => {
     dataLabels: { enabled: false },
     stroke: { show: true, width: 2, colors: ["transparent"] },
     xaxis: {
-      categories: months.length ? months : Array(12).fill("N/A"),
-      axisBorder: {
-        show: true,
-        color: isDark ? "#334155" : "#e2e8f0",
-        height: 1,
-        width: "100%",
-        offsetX: 0,
-        offsetY: 0,
-      },
-      axisTicks: { show: false },
+      categories: months,
       labels: {
         style: {
-          colors: "#94a3b8",
-          fontSize: "10px",
+          colors: isDark ? "#64748b" : "#94a3b8",
+          fontSize: "11px",
           fontFamily: "inherit",
-          fontWeight: 500,
-          cssClass: " ",
+          fontWeight: 600,
         },
       },
+      axisBorder: { show: false },
+      axisTicks: { show: false },
     },
     yaxis: {
-      tickAmount: 3,
       labels: {
         style: {
-          colors: "#94a3b8",
-          fontSize: "10px",
+          colors: isDark ? "#64748b" : "#94a3b8",
+          fontSize: "11px",
           fontFamily: "inherit",
-          fontWeight: 500,
+          fontWeight: 600,
         },
+        formatter: (val: number) => `${val}`,
       },
     },
     grid: {
@@ -119,26 +124,20 @@ const SalesOverview = () => {
   useEffect(() => {
     if (!currentUser) return;
 
-    fetchSalesData(true);
+    if (!summaryData?.yearlyPerformance) {
+      fetchSalesData(true);
+    }
 
     const interval = setInterval(() => {
       if (document.visibilityState === "visible") {
         fetchSalesData(false);
       }
-    }, 30000); // 30 seconds
-
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible") {
-        fetchSalesData(false);
-      }
-    };
-    document.addEventListener("visibilitychange", handleVisibilityChange);
+    }, 60000);
 
     return () => {
       clearInterval(interval);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [currentUser]);
+  }, [currentUser, summaryData]);
 
   const fetchSalesData = async (showLoading = true) => {
     try {

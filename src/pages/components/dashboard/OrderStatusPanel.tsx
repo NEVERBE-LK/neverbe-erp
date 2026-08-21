@@ -1,10 +1,8 @@
 import DashboardCard from "../shared/DashboardCard";
 import { useEffect, useState, lazy } from "react";
 import { useAppSelector } from "@/lib/hooks";
-import {
-  getOrderStatusDistributionAction,
-  getPendingOrdersCountAction,
-} from "@/actions/reportsActions";
+import { getOrderStatusDistributionAction } from "@/actions/reportsActions";
+import { useDashboardSummary } from "./DashboardContext";
 import toast from "react-hot-toast";
 import {
   IconChartPie,
@@ -26,15 +24,9 @@ interface StatusData {
   cancelled: number;
 }
 
-interface PendingData {
-  pendingPayment: number;
-  pendingFulfillment: number;
-  total: number;
-}
-
 const OrderStatusPanel = () => {
+  const { data: summaryData } = useDashboardSummary();
   const [statusData, setStatusData] = useState<StatusData | null>(null);
-  const [pendingData, setPendingData] = useState<PendingData | null>(null);
   const [loading, setLoading] = useState(true);
   const { currentUser } = useAppSelector((state) => state.authSlice);
   const { theme } = useTheme();
@@ -42,38 +34,35 @@ const OrderStatusPanel = () => {
   const isDark = theme === "dark";
 
   useEffect(() => {
+    if (summaryData?.orderStatusDistribution) {
+      setStatusData(summaryData.orderStatusDistribution);
+      setLoading(false);
+    }
+  }, [summaryData]);
+
+  useEffect(() => {
     if (!currentUser) return;
 
-    fetchAll(true);
+    if (!summaryData?.orderStatusDistribution) {
+      fetchAll(true);
+    }
 
     const interval = setInterval(() => {
       if (document.visibilityState === "visible") {
         fetchAll(false);
       }
-    }, 30000); // 30 seconds
-
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible") {
-        fetchAll(false);
-      }
-    };
-    document.addEventListener("visibilitychange", handleVisibilityChange);
+    }, 60000);
 
     return () => {
       clearInterval(interval);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [currentUser]);
+  }, [currentUser, summaryData]);
 
   const fetchAll = async (showLoading = true) => {
     if (showLoading) setLoading(true);
     try {
-      const [status, pending] = await Promise.all([
-        getOrderStatusDistributionAction(),
-        getPendingOrdersCountAction(),
-      ]);
+      const status = await getOrderStatusDistributionAction();
       setStatusData(status);
-      setPendingData(pending);
     } catch (error: unknown) {
       const err = error as Error;
       toast.error(err.message || "Failed to load order status");
@@ -187,7 +176,7 @@ const OrderStatusPanel = () => {
             </div>
 
             {/* Needs Attention Section */}
-            {pendingData && (
+            {statusData && (
               <div className="border-t border-card-border dark:border-card-border-dark pt-4 mt-5">
                 <div className="flex items-center gap-1.5 mb-2.5">
                   <IconAlertTriangle size={14} className="text-amber-500 animate-pulse" />
@@ -201,7 +190,7 @@ const OrderStatusPanel = () => {
                       Awaiting Pay
                     </span>
                     <span className="text-base font-bold text-text-main dark:text-text-main-dark block mt-0.5">
-                      {pendingData.pendingPayment}
+                      {statusData.pending}
                     </span>
                   </div>
                   <div className="p-2.5 border border-card-border dark:border-card-border-dark bg-panel dark:bg-slate-900/50 rounded-lg">
@@ -209,7 +198,7 @@ const OrderStatusPanel = () => {
                       To Fulfill
                     </span>
                     <span className="text-base font-bold text-text-main dark:text-text-main-dark block mt-0.5">
-                      {pendingData.pendingFulfillment}
+                      {statusData.processing}
                     </span>
                   </div>
                 </div>

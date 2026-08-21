@@ -22,6 +22,7 @@ export const OrderItemsEditPage = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [itemImages, setItemImages] = useState<Record<string, string>>({});
+  const [isReadOnly, setIsReadOnly] = useState(false);
 
   // Product Selection state for adding new item
   const [products, setProducts] = useState<any[]>([]);
@@ -64,7 +65,7 @@ export const OrderItemsEditPage = () => {
       const list = Array.isArray(res.data) ? res.data : [];
       setAvailableVariants(list);
     } catch (err) {
-      console.warn(`Failed to fetch variants for product ${productId}`, err);
+      console.error("Failed to fetch variants for dropdown", err);
       setAvailableVariants([]);
     }
   };
@@ -76,14 +77,9 @@ export const OrderItemsEditPage = () => {
       const data: Order = res.data;
       setOrder(data);
 
-      const isTerminal = ["completed", "returned", "refused (rto)", "refused", "exchanged", "cancelled"].includes(
-        (data.status || "").toLowerCase()
-      );
-      if (isTerminal) {
-        toast.error(`Order #${orderId} is in terminal status (${data.status}) and is frozen from editing.`);
-        navigate(`/orders/${orderId}/view`, { replace: true });
-        return;
-      }
+      const isWebsiteOrder = (data.from || "").toLowerCase() === "website";
+      const isProcessingStatus = ["pending", "processing"].includes((data.status || "").toLowerCase());
+      setIsReadOnly(!isWebsiteOrder || !isProcessingStatus);
 
       setItems(data.items || []);
       form.setFieldsValue({
@@ -256,27 +252,37 @@ export const OrderItemsEditPage = () => {
       title: "Unit Price (Rs)",
       key: "price",
       width: 140,
-      render: (_, record, idx) => (
-        <InputNumber
-          min={0}
-          value={record.price}
-          onChange={(val) => handlePriceChange(idx, val)}
-          className="w-full rounded-xl font-mono"
-        />
-      ),
+      render: (_, record, idx) =>
+        isReadOnly ? (
+          <span className="font-mono text-xs font-semibold text-text-main dark:text-text-main-dark">
+            Rs {record.price?.toLocaleString()}
+          </span>
+        ) : (
+          <InputNumber
+            min={0}
+            value={record.price}
+            onChange={(val) => handlePriceChange(idx, val)}
+            className="w-full rounded-xl font-mono"
+          />
+        ),
     },
     {
       title: "Qty",
       key: "quantity",
       width: 100,
-      render: (_, record, idx) => (
-        <InputNumber
-          min={1}
-          value={record.quantity}
-          onChange={(val) => handleQtyChange(idx, val)}
-          className="w-full rounded-xl font-mono"
-        />
-      ),
+      render: (_, record, idx) =>
+        isReadOnly ? (
+          <span className="font-mono text-xs font-semibold text-text-main dark:text-text-main-dark">
+            {record.quantity}
+          </span>
+        ) : (
+          <InputNumber
+            min={1}
+            value={record.quantity}
+            onChange={(val) => handleQtyChange(idx, val)}
+            className="w-full rounded-xl font-mono"
+          />
+        ),
     },
     {
       title: "Subtotal",
@@ -289,21 +295,25 @@ export const OrderItemsEditPage = () => {
         </span>
       ),
     },
-    {
-      title: "",
-      key: "action",
-      width: 50,
-      align: "center",
-      render: (_, record, idx) => (
-        <button
-          type="button"
-          onClick={() => handleRemoveItem(idx)}
-          className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer border-none bg-transparent"
-        >
-          <IconTrash size={16} />
-        </button>
-      ),
-    },
+    ...(!isReadOnly
+      ? [
+          {
+            title: "",
+            key: "action",
+            width: 50,
+            align: "center" as const,
+            render: (_: any, record: any, idx: number) => (
+              <button
+                type="button"
+                onClick={() => handleRemoveItem(idx)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer border-none bg-transparent"
+              >
+                <IconTrash size={16} />
+              </button>
+            ),
+          },
+        ]
+      : []),
   ];
 
   if (loading) {
@@ -322,161 +332,189 @@ export const OrderItemsEditPage = () => {
     <PageContainer title={`Order Items | Order #${orderId}`}>
       <div className="w-full space-y-6">
         <OrderSubNav orderId={orderId!} order={order} />
-
-        <Row gutter={[24, 24]}>
-          {/* Left Column: Items Table & Add Item Panel */}
-          <Col xs={24} lg={16}>
-            <div className="space-y-6">
-              {/* Add New Line Item Card */}
+        <Form form={form} layout="vertical" disabled={isReadOnly}>
+          <div className="w-full flex flex-col gap-6">
+            {/* Card 1: Add New Item Bar (Only in Edit Mode) */}
+            {!isReadOnly && (
               <div className="bg-card dark:bg-card-dark border border-card-border dark:border-card-border-dark rounded-2xl p-5 shadow-xs space-y-4">
-                <div className="flex items-center gap-2 pb-3 border-b border-card-border dark:border-card-border-dark">
-                  <IconPlus size={18} className="text-brand dark:text-brand-dark" />
-                  <h3 className="text-sm font-bold text-text-main dark:text-text-main-dark uppercase tracking-wider font-mono">
-                    Add Product Item
-                  </h3>
+                <div className="flex items-center justify-between pb-3 border-b border-card-border dark:border-card-border-dark">
+                  <div className="flex items-center gap-2">
+                    <IconPlus size={18} className="text-brand dark:text-brand-dark" />
+                    <h3 className="text-sm font-bold text-text-main dark:text-text-main-dark uppercase tracking-wider font-mono">
+                      Add Product to Order
+                    </h3>
+                  </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <Select
                     showSearch
-                    placeholder="Select Product"
-                    value={selectedProduct || undefined}
+                    placeholder="Search product by name or SKU..."
+                    value={selectedProduct}
                     onChange={(val) => {
                       setSelectedProduct(val);
                       setSelectedVariant("");
                       setSelectedSize("");
-                      const p = safeProductsList.find((x) => x.id === val || x.productId === val);
-                      if (p) setAddPrice(p.sellingPrice || 0);
                     }}
-                    className="w-full h-10"
-                    filterOption={(input, option) => (option?.label as string)?.toLowerCase().includes(input.toLowerCase())}
-                    options={safeProductsList.map((p) => ({
-                      value: p.id || p.productId,
-                      label: p.label || `${p.title || p.name} (Rs ${p.sellingPrice})`,
+                    className="h-10 w-full"
+                    options={products.map((p) => ({
+                      value: p.id,
+                      label: `${p.name} (Rs. ${p.price || 0})`,
                     }))}
                   />
 
-                  {availableVariants && availableVariants.length > 0 && (
+                  {availableVariants.length > 0 ? (
                     <Select
-                      placeholder="Select Variant"
-                      value={selectedVariant || undefined}
-                      onChange={(val) => setSelectedVariant(val)}
-                      className="w-full h-10"
-                      options={availableVariants.map((v: any) => ({
-                        value: v.id || v.variantId,
-                        label: v.label || v.variantName || v.color,
+                      placeholder="Select Variant..."
+                      value={selectedVariant}
+                      onChange={(val) => {
+                        setSelectedVariant(val);
+                        setSelectedSize("");
+                      }}
+                      className="h-10 w-full"
+                      options={availableVariants.map((v) => ({
+                        value: v.variantId,
+                        label: v.name,
                       }))}
                     />
+                  ) : (
+                    <div className="h-10 flex items-center px-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs text-text-sub font-mono">
+                      Standard Variant
+                    </div>
                   )}
 
                   <Select
-                    placeholder="Size"
+                    placeholder="Select Size..."
                     value={selectedSize || undefined}
                     onChange={(val) => setSelectedSize(val)}
-                    className="w-full h-10"
+                    className="h-10 w-full"
                     options={["S", "M", "L", "XL", "XXL", "STD"].map((s) => ({ value: s, label: s }))}
                   />
                 </div>
 
                 <div className="flex items-center justify-between gap-3 pt-2">
                   <div className="flex items-center gap-3">
-                    <InputNumber min={1} value={addQty} onChange={(v) => setAddQty(v || 1)} className="w-24 h-10 rounded-xl font-mono" addonBefore="Qty" />
-                    <InputNumber min={0} value={addPrice} onChange={(v) => setAddPrice(v || 0)} className="w-36 h-10 rounded-xl font-mono" addonBefore="Rs" />
+                    <InputNumber min={1} value={addQty} onChange={(v) => setAddQty(v || 1)} className="w-28 h-10 rounded-xl font-mono" addonBefore="Qty" />
+                    <InputNumber min={0} value={addPrice} onChange={(v) => setAddPrice(v || 0)} className="w-40 h-10 rounded-xl font-mono" addonBefore="Rs" />
                   </div>
                   <Button
                     type="primary"
                     icon={<IconPlus size={16} />}
                     onClick={handleAddItem}
-                    className="h-10 px-5 rounded-xl bg-slate-900 dark:bg-slate-100 dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-200 border-none font-bold text-xs cursor-pointer shadow-xs"
+                    className="h-10 px-6 rounded-xl bg-slate-900 dark:bg-slate-100 dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-200 border-none font-bold text-xs cursor-pointer shadow-xs"
                   >
                     Add Item
                   </Button>
                 </div>
               </div>
+            )}
 
-              {/* Items Table Card */}
-              <div className="bg-card dark:bg-card-dark border border-card-border dark:border-card-border-dark rounded-2xl shadow-xs overflow-hidden p-5">
-                <div className="flex items-center gap-2 pb-4 mb-4 border-b border-card-border dark:border-card-border-dark">
-                  <IconPackage size={18} className="text-brand dark:text-brand-dark" />
-                  <h3 className="text-sm font-bold text-text-main dark:text-text-main-dark uppercase tracking-wider font-mono">
-                    Order Items ({items.length})
-                  </h3>
-                </div>
+            {/* Card 2: Items Table Card (Full Width) */}
+            <div className="bg-card dark:bg-card-dark border border-card-border dark:border-card-border-dark rounded-2xl shadow-xs overflow-hidden p-6 space-y-4">
+              <div className="flex items-center gap-2 pb-4 border-b border-card-border dark:border-card-border-dark">
+                <IconPackage size={18} className="text-brand dark:text-brand-dark" />
+                <h3 className="text-sm font-bold text-text-main dark:text-text-main-dark uppercase tracking-wider font-mono">
+                  Order Items ({items.length})
+                </h3>
+              </div>
 
-                <div className="[&_.ant-table]:!bg-transparent [&_.ant-table-thead>tr>th]:!bg-slate-50/80 [&_.ant-table-thead>tr>th]:dark:!bg-slate-800/60 [&_.ant-table-thead>tr>th]:!text-text-sub [&_.ant-table-thead>tr>th]:!font-bold [&_.ant-table-thead>tr>th]:!text-[11px] [&_.ant-table-thead>tr>th]:!uppercase [&_.ant-table-thead>tr>th]:!tracking-wider [&_.ant-table-thead>tr>th]:!border-b [&_.ant-table-thead>tr>th]:!border-card-border [&_.ant-table-thead>tr>th]:dark:!border-card-border-dark [&_.ant-table-tbody>tr]:hover:!bg-slate-50/60 [&_.ant-table-tbody>tr]:dark:hover:!bg-slate-800/40 [&_.ant-table-tbody>tr>td]:!border-b [&_.ant-table-tbody>tr>td]:!border-card-border [&_.ant-table-tbody>tr>td]:dark:!border-card-border-dark [&_.ant-table-tbody>tr>td]:!py-3.5">
-                  <Table
-                    columns={columns}
-                    dataSource={items}
-                    rowKey={(rec, idx) => `${rec.productId}_${idx}`}
-                    pagination={false}
-                    scroll={{ x: 600 }}
-                  />
-                </div>
+              <div className="[&_.ant-table]:!bg-transparent [&_.ant-table-thead>tr>th]:!bg-slate-50/80 [&_.ant-table-thead>tr>th]:dark:!bg-slate-800/60 [&_.ant-table-thead>tr>th]:!text-text-sub [&_.ant-table-thead>tr>th]:!font-bold [&_.ant-table-thead>tr>th]:!text-[11px] [&_.ant-table-thead>tr>th]:!uppercase [&_.ant-table-thead>tr>th]:!tracking-wider [&_.ant-table-thead>tr>th]:!border-b [&_.ant-table-thead>tr>th]:!border-card-border [&_.ant-table-thead>tr>th]:dark:!border-card-border-dark [&_.ant-table-tbody>tr]:hover:!bg-slate-50/60 [&_.ant-table-tbody>tr]:dark:hover:!bg-slate-800/40 [&_.ant-table-tbody>tr>td]:!border-b [&_.ant-table-tbody>tr>td]:!border-card-border [&_.ant-table-tbody>tr>td]:dark:!border-card-border-dark [&_.ant-table-tbody>tr>td]:!py-3.5">
+                <Table
+                  columns={columns}
+                  dataSource={items}
+                  rowKey={(rec, idx) => `${rec.productId}_${idx}`}
+                  pagination={false}
+                  scroll={{ x: 600 }}
+                />
               </div>
             </div>
-          </Col>
 
-          {/* Right Column: Financial Summary & Actions */}
-          <Col xs={24} lg={8}>
-            <Form form={form} layout="vertical">
-              <div className="bg-card dark:bg-card-dark border border-card-border dark:border-card-border-dark rounded-2xl p-6 shadow-xs space-y-4 sticky top-6">
-                <div className="flex items-center gap-2 pb-3 border-b border-card-border dark:border-card-border-dark">
-                  <IconCoin size={18} className="text-brand dark:text-brand-dark" />
-                  <h3 className="text-sm font-bold text-text-main dark:text-text-main-dark uppercase tracking-wider font-mono">
-                    Financial Summary
-                  </h3>
-                </div>
-
-                <div className="space-y-3 font-mono text-xs">
-                  <div className="flex justify-between items-center">
-                    <span className="text-text-sub font-semibold uppercase">Subtotal</span>
-                    <span className="font-bold text-text-main dark:text-text-main-dark">Rs {subtotal.toLocaleString()}</span>
-                  </div>
-
-                  <Form.Item label={<span className="text-xs font-semibold text-text-sub font-sans">Discount (Rs)</span>} name="discount" className="!mb-2">
-                    <InputNumber min={0} className="w-full h-10 rounded-xl font-mono" />
-                  </Form.Item>
-
-                  <Form.Item label={<span className="text-xs font-semibold text-text-sub font-sans">Shipping Fee (Rs)</span>} name="shippingFee" className="!mb-2">
-                    <InputNumber min={0} className="w-full h-10 rounded-xl font-mono" />
-                  </Form.Item>
-
-                  <Form.Item label={<span className="text-xs font-semibold text-text-sub font-sans">Handling Fee (Rs)</span>} name="fee" className="!mb-2">
-                    <InputNumber min={0} className="w-full h-10 rounded-xl font-mono" />
-                  </Form.Item>
-
-                  <Divider className="my-3 border-card-border dark:border-card-border-dark" />
-
-                  <Form.Item noStyle shouldUpdate>
-                    {() => {
-                      const discount = form.getFieldValue("discount") || 0;
-                      const shippingFee = form.getFieldValue("shippingFee") || 0;
-                      const fee = form.getFieldValue("fee") || 0;
-                      const grandTotal = Math.max(0, subtotal + Number(shippingFee) + Number(fee) - Number(discount));
-                      return (
-                        <div className="bg-slate-100 dark:bg-slate-800 p-4 rounded-xl flex justify-between items-center">
-                          <span className="text-xs font-bold uppercase text-text-main dark:text-text-main-dark">Grand Total</span>
-                          <span className="text-base font-bold text-emerald-600 dark:text-emerald-400">Rs {grandTotal.toLocaleString()}</span>
-                        </div>
-                      );
-                    }}
-                  </Form.Item>
-                </div>
-
-                <Button
-                  type="primary"
-                  block
-                  loading={saving}
-                  icon={<IconDeviceFloppy size={18} />}
-                  onClick={onSave}
-                  className="h-11 rounded-xl bg-slate-900 dark:bg-slate-100 dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-200 border-none font-bold text-xs cursor-pointer shadow-xs mt-2"
-                >
-                  Save Items & Financials
-                </Button>
+            {/* Card 3: Financial Summary Card (Full Width) */}
+            <div className="bg-card dark:bg-card-dark border border-card-border dark:border-card-border-dark rounded-2xl p-6 shadow-xs space-y-4">
+              <div className="flex items-center gap-2 pb-3 border-b border-card-border dark:border-card-border-dark">
+                <IconCoin size={18} className="text-brand dark:text-brand-dark" />
+                <h3 className="text-sm font-bold text-text-main dark:text-text-main-dark uppercase tracking-wider font-mono">
+                  Financial Summary
+                </h3>
               </div>
-            </Form>
-          </Col>
-        </Row>
+
+              <div className="space-y-3 font-mono text-xs w-full">
+                <div className="flex justify-between items-center">
+                  <span className="text-text-sub font-semibold uppercase">Subtotal</span>
+                  <span className="font-bold text-text-main dark:text-text-main-dark">Rs {subtotal.toLocaleString()}</span>
+                </div>
+
+                {isReadOnly ? (
+                  <>
+                    <div className="flex justify-between items-center py-0.5">
+                      <span className="text-text-sub font-semibold uppercase font-sans">Discount</span>
+                      <span className="font-semibold text-rose-600 dark:text-rose-400">
+                        - Rs {(order?.discount || 0).toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center py-0.5">
+                      <span className="text-text-sub font-semibold uppercase font-sans">Shipping Fee</span>
+                      <span className="font-semibold text-text-main dark:text-text-main-dark">
+                        Rs {(order?.shippingFee || 0).toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center py-0.5">
+                      <span className="text-text-sub font-semibold uppercase font-sans">Handling Fee</span>
+                      <span className="font-semibold text-text-main dark:text-text-main-dark">
+                        Rs {(order?.fee || 0).toLocaleString()}
+                      </span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <Form.Item label={<span className="text-xs font-semibold text-text-sub font-sans">Discount (Rs)</span>} name="discount" className="!mb-2">
+                      <InputNumber min={0} className="w-full h-10 rounded-xl font-mono" />
+                    </Form.Item>
+
+                    <Form.Item label={<span className="text-xs font-semibold text-text-sub font-sans">Shipping Fee (Rs)</span>} name="shippingFee" className="!mb-2">
+                      <InputNumber min={0} className="w-full h-10 rounded-xl font-mono" />
+                    </Form.Item>
+
+                    <Form.Item label={<span className="text-xs font-semibold text-text-sub font-sans">Handling Fee (Rs)</span>} name="fee" className="!mb-2">
+                      <InputNumber min={0} className="w-full h-10 rounded-xl font-mono" />
+                    </Form.Item>
+                  </>
+                )}
+
+                <Divider className="my-3 border-card-border dark:border-card-border-dark" />
+
+                <Form.Item noStyle shouldUpdate>
+                  {() => {
+                    const discount = isReadOnly ? (order?.discount || 0) : (form.getFieldValue("discount") || 0);
+                    const shippingFee = isReadOnly ? (order?.shippingFee || 0) : (form.getFieldValue("shippingFee") || 0);
+                    const fee = isReadOnly ? (order?.fee || 0) : (form.getFieldValue("fee") || 0);
+                    const grandTotal = Math.max(0, subtotal + Number(shippingFee) + Number(fee) - Number(discount));
+                    return (
+                      <div className="bg-slate-100 dark:bg-slate-800 p-4 rounded-xl flex justify-between items-center">
+                        <span className="text-xs font-bold uppercase text-text-main dark:text-text-main-dark">Grand Total</span>
+                        <span className="text-base font-bold text-emerald-600 dark:text-emerald-400">Rs {grandTotal.toLocaleString()}</span>
+                      </div>
+                    );
+                  }}
+                </Form.Item>
+              </div>
+
+              {!isReadOnly && (
+                <div className="flex justify-end pt-2">
+                  <Button
+                    type="primary"
+                    loading={saving}
+                    icon={<IconDeviceFloppy size={18} />}
+                    onClick={onSave}
+                    className="h-11 px-8 rounded-xl bg-slate-900 dark:bg-slate-100 dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-200 border-none font-bold text-xs cursor-pointer shadow-xs"
+                  >
+                    Save Items & Financials
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
+        </Form>
       </div>
     </PageContainer>
   );

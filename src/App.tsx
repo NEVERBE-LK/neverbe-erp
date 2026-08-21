@@ -11,6 +11,8 @@ const ResetPassword = lazy(() => import("@/pages/auth/reset-password/page"));
 const Unauthorized = lazy(() => import("@/pages/unauthorized/page"));
 const Dashboard = lazy(() => import("@/pages/dashboard/page"));
 const Orders = lazy(() => import("@/pages/orders/page"));
+const ProcessOrders = lazy(() => import("@/pages/orders/processing/page"));
+const ProcessPayments = lazy(() => import("@/pages/orders/payment-pending/page"));
 const OrderDetail = lazy(() => import("@/pages/orders/[orderId]/page"));
 const OrderCustomerEdit = lazy(() => import("@/pages/orders/[orderId]/customer/page"));
 const OrderItemsEdit = lazy(() => import("@/pages/orders/[orderId]/items/page"));
@@ -191,8 +193,8 @@ export default function App() {
           {/* Orders */}
           <Route path="orders" element={<ProtectedRoute permission="view_orders"><Orders /></ProtectedRoute>} />
           <Route path="orders/all" element={<ProtectedRoute permission="view_orders"><Orders /></ProtectedRoute>} />
-          <Route path="orders/processing" element={<ProtectedRoute permission="view_orders"><Orders /></ProtectedRoute>} />
-          <Route path="orders/payment-pending" element={<ProtectedRoute permission="view_orders"><Orders /></ProtectedRoute>} />
+          <Route path="orders/processing" element={<ProtectedRoute permission="view_orders"><ProcessOrders /></ProtectedRoute>} />
+          <Route path="orders/payment-pending" element={<ProtectedRoute permission="view_orders"><ProcessPayments /></ProtectedRoute>} />
           <Route path="orders/:orderId" element={<ProtectedRoute permission="view_orders"><OrderDetail /></ProtectedRoute>} />
           <Route path="orders/:orderId/customer" element={<ProtectedRoute permission="view_orders"><OrderCustomerEdit /></ProtectedRoute>} />
           <Route path="orders/:orderId/items" element={<ProtectedRoute permission="view_orders"><OrderItemsEdit /></ProtectedRoute>} />

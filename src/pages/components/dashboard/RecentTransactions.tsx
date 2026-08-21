@@ -3,6 +3,7 @@ import DashboardCard from "../shared/DashboardCard";
 import toast from "react-hot-toast";
 import { IconReceipt, IconRefresh } from "@tabler/icons-react";
 import { getRecentOrdersAction } from "@/actions/reportsActions";
+import { useDashboardSummary } from "./DashboardContext";
 import { useAppSelector } from "@/lib/hooks";
 import { Timeline, Tag, Button, Typography, Card } from "antd";
 import Spinner from "../shared/Spinner";
@@ -18,33 +19,35 @@ interface RecentOrder {
 }
 
 const RecentTransactions = () => {
+  const { data: summaryData } = useDashboardSummary();
   const [orders, setOrders] = useState<RecentOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const { currentUser } = useAppSelector((state) => state.authSlice);
 
   useEffect(() => {
+    if (summaryData?.recentOrders) {
+      setOrders(summaryData.recentOrders);
+      setLoading(false);
+    }
+  }, [summaryData]);
+
+  useEffect(() => {
     if (!currentUser) return;
 
-    fetchRecentOrders(true);
+    if (!summaryData?.recentOrders) {
+      fetchRecentOrders(true);
+    }
 
     const interval = setInterval(() => {
       if (document.visibilityState === "visible") {
         fetchRecentOrders(false);
       }
-    }, 30000); // 30 seconds
-
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible") {
-        fetchRecentOrders(false);
-      }
-    };
-    document.addEventListener("visibilitychange", handleVisibilityChange);
+    }, 60000);
 
     return () => {
       clearInterval(interval);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [currentUser]);
+  }, [currentUser, summaryData]);
 
   const fetchRecentOrders = async (showLoading = true) => {
     try {
