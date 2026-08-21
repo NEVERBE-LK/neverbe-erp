@@ -206,6 +206,26 @@ export default function AppBreadcrumb() {
     if (segment === "all" && rawPathnames[0] === "orders") {
       continue;
     }
+
+    if (segment === "orders" && i === 0) {
+      items.push({
+        to: "/orders",
+        label: "Orders",
+        isLinkable: false,
+      });
+
+      currentPath = "/orders";
+
+      if (rawPathnames.length === 1) {
+        items.push({
+          to: "/orders",
+          label: "Order List",
+          isLinkable: false,
+        });
+        break;
+      }
+      continue;
+    }
     const isKnownRoute = KNOWN_ROUTE_SEGMENTS.has(segment);
     const isId =
       !isKnownRoute &&

@@ -666,14 +666,7 @@ const OrdersPage = () => {
                     ]
                   : []),
               ]
-            : [
-                { type: "divider" as const },
-                {
-                  key: "pos-notice",
-                  disabled: true,
-                  label: <span className="text-[11px] font-mono text-slate-400">POS Order (Exchanges via POS)</span>,
-                },
-              ]),
+            : []),
           { type: "divider" as const },
           {
             key: "view-tracking",
@@ -710,7 +703,7 @@ const OrdersPage = () => {
             <div className="w-1 h-8 bg-brand dark:bg-brand-dark rounded-full" />
             <div className="flex flex-col">
               <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-text-sub dark:text-slate-500 leading-none mb-1 font-mono">
-                Dashboard / Orders
+                Dashboard / Orders / {viewTitle}
               </span>
               <div className="flex items-center gap-2.5">
                 <h2 className="text-2xl font-bold text-text-main dark:text-text-main-dark tracking-tight leading-none font-mono">
