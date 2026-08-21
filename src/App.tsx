@@ -190,8 +190,9 @@ export default function App() {
           <Route path="dashboard" element={<ProtectedRoute permission="view_dashboard"><Dashboard /></ProtectedRoute>} />
 
           {/* Orders */}
-          <Route path="orders" element={<ProtectedRoute permission="view_orders"><Orders /></ProtectedRoute>} />
-          <Route path="orders/all" element={<ProtectedRoute permission="view_orders"><Orders /></ProtectedRoute>} />
+          <Route path="orders" element={<Navigate to="/orders/order-list" replace />} />
+          <Route path="orders/all" element={<Navigate to="/orders/order-list" replace />} />
+          <Route path="orders/order-list" element={<ProtectedRoute permission="view_orders"><Orders /></ProtectedRoute>} />
           <Route path="orders/processing" element={<ProtectedRoute permission="view_orders"><ProcessOrders /></ProtectedRoute>} />
           <Route path="orders/payment-pending" element={<ProtectedRoute permission="view_orders"><ProcessPayments /></ProtectedRoute>} />
           <Route path="orders/:orderId" element={<ProtectedRoute permission="view_orders"><OrderDetail /></ProtectedRoute>} />

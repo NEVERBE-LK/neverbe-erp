@@ -31,6 +31,7 @@ import toast from "react-hot-toast";
 import { useConfirmationDialog } from "@/contexts/ConfirmationDialogContext";
 import PettyCashFormModal from "./components/PettyCashFormModal";
 import PettyCashViewModal from "./components/PettyCashViewModal";
+import ERPCredentialVerifyAndRequestAuthorizeForm from "@/components/ERPCredentialVerifyAndRequestAuthorizeForm";
 import PageContainer from "../../components/container/PageContainer";
 import Spinner from "@/pages/components/shared/Spinner";
 
@@ -48,7 +49,9 @@ export default function PettyCashList() {
 
   const [formModalOpen, setFormModalOpen] = useState(false);
   const [viewModalOpen, setViewModalOpen] = useState(false);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
   const [selectedEntry, setSelectedEntry] = useState<PettyCash | null>(null);
+  const [targetDeleteEntry, setTargetDeleteEntry] = useState<PettyCash | null>(null);
 
   const [form] = Form.useForm();
 
@@ -151,15 +154,24 @@ export default function PettyCashList() {
     }
   };
 
-  const handleDelete = async (id: string) => {
+  const handleInitiateDelete = (entry: PettyCash) => {
+    setTargetDeleteEntry(entry);
+    setAuthModalOpen(true);
+  };
+
+  const handleAuthSuccessAndDelete = async () => {
+    setAuthModalOpen(false);
+    if (!targetDeleteEntry?.id) return;
+
+    const entryId = targetDeleteEntry.id;
     showConfirmation({
       title: "DELETE PETTY CASH VOUCHER?",
-      message: "This action cannot be undone.",
+      message: `Are you sure you want to delete voucher ${targetDeleteEntry.voucherNo || entryId}? This action cannot be undone.`,
       variant: "danger",
       onSuccess: async () => {
         try {
-          setDeletingId(id);
-          await api.delete(`/api/v1/erp/finance/petty-cash/${id}`);
+          setDeletingId(entryId);
+          await api.delete(`/api/v1/erp/finance/petty-cash/${entryId}`);
           toast.success("VOUCHER DELETED");
           fetchPettyCash();
         } catch (error) {
@@ -167,6 +179,7 @@ export default function PettyCashList() {
           toast.error("Failed to delete entry");
         } finally {
           setDeletingId(null);
+          setTargetDeleteEntry(null);
         }
       },
     });
@@ -319,20 +332,10 @@ export default function PettyCashList() {
                   icon: <IconCheck size={14} className="text-emerald-600 dark:text-emerald-400" />,
                   label: (
                     <span className="font-semibold text-emerald-600 dark:text-emerald-400">
-                      Approve Voucher
+                      Review & Approve
                     </span>
                   ),
-                  onClick: () => handleQuickStatusUpdate(entry.id!, "APPROVED"),
-                },
-                {
-                  key: "reject",
-                  icon: <IconBan size={14} className="text-rose-600 dark:text-rose-400" />,
-                  label: (
-                    <span className="font-semibold text-rose-600 dark:text-rose-400">
-                      Reject Voucher
-                    </span>
-                  ),
-                  onClick: () => handleQuickStatusUpdate(entry.id!, "REJECTED"),
+                  onClick: () => handleOpenView(entry),
                 },
               ]
             : []),
@@ -347,8 +350,8 @@ export default function PettyCashList() {
                 Delete Voucher
               </span>
             ),
-            disabled: entry.status === "APPROVED" || deletingId === entry.id,
-            onClick: () => handleDelete(entry.id!),
+            disabled: deletingId === entry.id,
+            onClick: () => handleInitiateDelete(entry),
           },
         ];
 
@@ -503,6 +506,18 @@ export default function PettyCashList() {
         onClose={handleModalClose}
         onStatusChange={fetchPettyCash}
         entry={selectedEntry}
+      />
+
+      <ERPCredentialVerifyAndRequestAuthorizeForm
+        open={authModalOpen}
+        onCancel={() => {
+          setAuthModalOpen(false);
+          setTargetDeleteEntry(null);
+        }}
+        onSuccess={handleAuthSuccessAndDelete}
+        title="Authorize Voucher Deletion"
+        description="User authentication credentials with delete permissions are required to authorize deleting petty cash vouchers."
+        requiredPermission="delete_petty_cash"
       />
     </PageContainer>
   );

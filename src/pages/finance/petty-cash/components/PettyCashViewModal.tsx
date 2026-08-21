@@ -48,15 +48,34 @@ const PettyCashViewModal: React.FC<PettyCashViewModalProps> = ({
     }
   };
 
-  const formatDate = (date: string | any) => {
-    if (!date) return "—";
-    return new Date(date).toLocaleString("en-US", {
-      month: "short",
-      day: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+  const formatDate = (dateVal: any) => {
+    if (!dateVal) return "—";
+    if (typeof dateVal === "object") {
+      if (typeof dateVal.toDate === "function") {
+        return dateVal.toDate().toLocaleDateString("en-US", {
+          month: "short",
+          day: "2-digit",
+          year: "numeric",
+        });
+      }
+      if (dateVal.seconds || dateVal._seconds) {
+        const secs = dateVal.seconds || dateVal._seconds;
+        return new Date(secs * 1000).toLocaleDateString("en-US", {
+          month: "short",
+          day: "2-digit",
+          year: "numeric",
+        });
+      }
+    }
+    const d = new Date(dateVal);
+    if (!isNaN(d.getTime())) {
+      return d.toLocaleDateString("en-US", {
+        month: "short",
+        day: "2-digit",
+        year: "numeric",
+      });
+    }
+    return String(dateVal);
   };
 
   const renderStatus = (status: string) => {
@@ -197,7 +216,7 @@ const PettyCashViewModal: React.FC<PettyCashViewModalProps> = ({
           {entry.createdBy || "System"}
         </Descriptions.Item>
         <Descriptions.Item label="Voucher Date">
-          {formatDate(entry.createdAt)}
+          {formatDate(entry.date || entry.createdAt)}
         </Descriptions.Item>
         {entry.reviewedBy && (
           <>

@@ -8,7 +8,7 @@ import { RootState } from "@/lib/store";
 const { Text } = Typography;
 
 // Parent route prefixes that don't have an explicit page component
-const UNLINKABLE_PARENTS = new Set(["/master", "/campaign"]);
+const UNLINKABLE_PARENTS = new Set(["/master", "/campaign", "/orders"]);
 
 export default function AppBreadcrumb() {
   const location = useLocation();
@@ -99,6 +99,7 @@ export default function AppBreadcrumb() {
   };
 
   const KNOWN_ROUTE_SEGMENTS = new Set([
+    "order-list",
     "purchase-orders",
     "petty-cash",
     "expense-categories",
@@ -201,29 +202,6 @@ export default function AppBreadcrumb() {
   for (let i = 0; i < rawPathnames.length; i++) {
     const segment = rawPathnames[i];
     if (segment === "dashboard") {
-      continue;
-    }
-    if (segment === "all" && rawPathnames[0] === "orders") {
-      continue;
-    }
-
-    if (segment === "orders" && i === 0) {
-      items.push({
-        to: "/orders",
-        label: "Orders",
-        isLinkable: false,
-      });
-
-      currentPath = "/orders";
-
-      if (rawPathnames.length === 1) {
-        items.push({
-          to: "/orders",
-          label: "Order List",
-          isLinkable: false,
-        });
-        break;
-      }
       continue;
     }
     const isKnownRoute = KNOWN_ROUTE_SEGMENTS.has(segment);

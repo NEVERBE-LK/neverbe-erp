@@ -57,7 +57,7 @@ const Menuitems = [
     icon: IconShoppingCart,
     permission: "view_orders",
     children: [
-      { id: uniqueId(), title: "Order List", href: "/orders" },
+      { id: uniqueId(), title: "Order List", href: "/orders/order-list" },
       { id: uniqueId(), title: "Process Orders", href: "/orders/processing" },
       { id: uniqueId(), title: "Process Payments", href: "/orders/payment-pending" },
     ],
