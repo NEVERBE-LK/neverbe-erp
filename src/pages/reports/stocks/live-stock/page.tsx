@@ -2,13 +2,7 @@ import { Card, Form, Spin, Table, Select, Button, Space, Tag } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import api from "@/lib/api";
 import React, { useEffect, useState } from "react";
-import {
-  IconFilter,
-  IconDownload,
-  IconFileTypePdf,
-  IconPackages,
-  IconBox,
-} from "@tabler/icons-react";
+import { IconFilter, IconFileTypePdf, IconPackages, IconBox, IconFileSpreadsheet } from "@tabler/icons-react";
 import * as XLSX from "xlsx";
 import PageContainer from "@/pages/components/container/PageContainer";
 import { useAppSelector } from "@/lib/hooks";
@@ -78,7 +72,6 @@ const LiveStockPage = () => {
     if (currentUser) {
       fetchStocksDropdown();
       form.setFieldsValue({ stockId: "all" });
-      fetchStock(form.getFieldsValue());
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser]);
@@ -201,20 +194,20 @@ const LiveStockPage = () => {
     <PageContainer title="Live Stock Report">
       <div className="w-full space-y-6">
         {/* Header */}
-        <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <div className="w-1 h-6 rounded-full bg-teal-600" />
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-card-border dark:border-card-border-dark mb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-1 h-8 bg-brand dark:bg-brand-dark rounded-full" />
+            <div>
+              <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-text-sub dark:text-slate-500 leading-none mb-1 font-mono block">
                 Inventory Reports
               </span>
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="text-2xl font-bold text-text-main dark:text-text-main-dark tracking-tight leading-none font-mono">
+                  Live Stock
+                </h2>
+                
+              </div>
             </div>
-            <h2 className="text-3xl font-black tracking-tight text-gray-900 leading-none">
-              Live Stock
-            </h2>
-            <p className="text-xs text-gray-400 mt-1.5">
-              Current inventory levels across all locations in real-time.
-            </p>
           </div>
 
           <div className="flex flex-col sm:flex-row items-end sm:items-center gap-3 w-full xl:w-auto">
@@ -223,7 +216,7 @@ const LiveStockPage = () => {
                 form={form}
                 layout="inline"
                 onFinish={fetchStock}
-                className="flex flex-wrap items-center gap-2"
+                className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2 w-full sm:w-auto"
               >
                 <Form.Item name="stockId" className="mb-0! min-w-[200px]">
                   <Select
@@ -246,21 +239,20 @@ const LiveStockPage = () => {
               </Form>
             </Card>
             <Space>
-              <Button
-                onClick={exportExcel}
-                disabled={!stock.length}
-                icon={<IconDownload size={16} />}
-              >
-                Excel
-              </Button>
-              <Button
-                onClick={exportPDF}
-                disabled={!stock.length}
-                icon={<IconFileTypePdf size={16} />}
-                danger
-              >
-                PDF
-              </Button>
+              <button
+              onClick={exportExcel} disabled={!stock.length}
+              className="flex-1 sm:flex-none justify-center bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl px-3.5 py-2 flex items-center gap-1.5 shadow-xs transition-colors disabled:opacity-50 cursor-pointer"
+            >
+              <IconFileSpreadsheet size={15} />
+              <span>Excel</span>
+            </button>
+              <button
+              onClick={exportPDF} disabled={!stock.length}
+              className="flex-1 sm:flex-none justify-center bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl px-3.5 py-2 flex items-center gap-1.5 shadow-xs transition-colors disabled:opacity-50 cursor-pointer"
+            >
+              <IconFileTypePdf size={15} />
+              <span>PDF</span>
+            </button>
             </Space>
           </div>
         </div>
@@ -306,7 +298,7 @@ const LiveStockPage = () => {
 
             {/* Table */}
             {stock.length > 0 && (
-              <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm">
+              <div className="bg-card dark:bg-card-dark border border-card-border dark:border-card-border-dark rounded-xl shadow-xs overflow-hidden">
                 <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
                   <div>
                     <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">
@@ -317,17 +309,12 @@ const LiveStockPage = () => {
                     </p>
                   </div>
                 </div>
-                <Table
+                <Table pagination={false}
                   columns={columns}
                   dataSource={stock}
                   rowKey={(r) =>
                     r.productId + r.variantId + r.stockId + Math.random()
                   }
-                  pagination={{
-                    pageSize: 15,
-                    position: ["bottomRight"],
-                    showSizeChanger: true,
-                  }}
                   size="small"
                   scroll={{ x: "max-content" }}
                 />

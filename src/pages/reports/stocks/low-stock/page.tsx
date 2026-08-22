@@ -13,14 +13,7 @@ import {
 import type { ColumnsType } from "antd/es/table";
 import api from "@/lib/api";
 import React, { useEffect, useState } from "react";
-import {
-  IconFilter,
-  IconDownload,
-  IconFileTypePdf,
-  IconAlertTriangle,
-  IconPackages,
-  IconCoin,
-} from "@tabler/icons-react";
+import { IconFilter, IconFileTypePdf, IconAlertTriangle, IconPackages, IconCoin, IconFileSpreadsheet } from "@tabler/icons-react";
 import * as XLSX from "xlsx";
 import PageContainer from "@/pages/components/container/PageContainer";
 import { useAppSelector } from "@/lib/hooks";
@@ -91,7 +84,6 @@ const LowStockPage = () => {
     if (currentUser) {
       fetchStocksDropdown();
       form.setFieldsValue({ threshold: 10, stockId: "all" });
-      fetchStock(form.getFieldsValue());
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser]);
@@ -240,20 +232,20 @@ const LowStockPage = () => {
     <PageContainer title="Low Stock Alerts">
       <div className="w-full space-y-6">
         {/* Header */}
-        <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <div className="w-1 h-6 rounded-full bg-red-600" />
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-card-border dark:border-card-border-dark mb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-1 h-8 bg-brand dark:bg-brand-dark rounded-full" />
+            <div>
+              <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-text-sub dark:text-slate-500 leading-none mb-1 font-mono block">
                 Inventory Reports
               </span>
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="text-2xl font-bold text-text-main dark:text-text-main-dark tracking-tight leading-none font-mono">
+                  Low Stock Alerts
+                </h2>
+                
+              </div>
             </div>
-            <h2 className="text-3xl font-black tracking-tight text-gray-900 leading-none">
-              Low Stock Alerts
-            </h2>
-            <p className="text-xs text-gray-400 mt-1.5">
-              Products and variants falling below critical limits.
-            </p>
           </div>
 
           <div className="flex flex-col sm:flex-row items-end sm:items-center gap-3 w-full xl:w-auto">
@@ -265,7 +257,7 @@ const LowStockPage = () => {
                 form={form}
                 layout="inline"
                 onFinish={fetchStock}
-                className="flex flex-wrap items-center gap-2"
+                className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2 w-full sm:w-auto"
               >
                 <Form.Item name="threshold" className="mb-0!">
                   <InputNumber
@@ -296,21 +288,20 @@ const LowStockPage = () => {
               </Form>
             </Card>
             <Space>
-              <Button
-                onClick={exportExcel}
-                disabled={!stock.length}
-                icon={<IconDownload size={16} />}
-              >
-                Excel
-              </Button>
-              <Button
-                onClick={exportPDF}
-                disabled={!stock.length}
-                icon={<IconFileTypePdf size={16} />}
-                danger
-              >
-                PDF
-              </Button>
+              <button
+              onClick={exportExcel} disabled={!stock.length}
+              className="flex-1 sm:flex-none justify-center bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl px-3.5 py-2 flex items-center gap-1.5 shadow-xs transition-colors disabled:opacity-50 cursor-pointer"
+            >
+              <IconFileSpreadsheet size={15} />
+              <span>Excel</span>
+            </button>
+              <button
+              onClick={exportPDF} disabled={!stock.length}
+              className="flex-1 sm:flex-none justify-center bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl px-3.5 py-2 flex items-center gap-1.5 shadow-xs transition-colors disabled:opacity-50 cursor-pointer"
+            >
+              <IconFileTypePdf size={15} />
+              <span>PDF</span>
+            </button>
             </Space>
           </div>
         </div>
@@ -384,17 +375,12 @@ const LowStockPage = () => {
                     </p>
                   </div>
                 </div>
-                <Table
+                <Table pagination={false}
                   columns={columns}
                   dataSource={stock}
                   rowKey={(r) =>
                     r.productId + r.variantId + r.stockId + Math.random()
                   }
-                  pagination={{
-                    pageSize: 15,
-                    position: ["bottomRight"],
-                    showSizeChanger: true,
-                  }}
                   size="small"
                   scroll={{ x: "max-content" }}
                 />

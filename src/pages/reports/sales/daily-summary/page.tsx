@@ -8,17 +8,7 @@ import {
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import React, { useState, useEffect } from "react";
-import {
-  IconFilter,
-  IconDownload,
-  IconFileTypePdf,
-  IconShoppingCart,
-  IconTrendingUp,
-  IconPackages,
-  IconPercentage,
-  IconCurrencyDollar,
-  IconTruckDelivery,
-} from "@tabler/icons-react";
+import { IconFilter, IconFileTypePdf, IconShoppingCart, IconTrendingUp, IconPackages, IconPercentage, IconCurrencyDollar, IconTruckDelivery, IconFileSpreadsheet } from "@tabler/icons-react";
 import PageContainer from "@/pages/components/container/PageContainer";
 import Spinner from "@/pages/components/shared/Spinner";
 import * as XLSX from "xlsx";
@@ -198,7 +188,7 @@ const DailySummaryPage = () => {
     sub?: string;
     icon: React.ReactNode;
   }) => (
-    <div className="bg-card dark:bg-card-dark border border-card-border dark:border-card-border-dark p-4 rounded-2xl shadow-xs flex flex-col justify-between font-mono">
+    <div className="bg-card dark:bg-card-dark border border-card-border dark:border-card-border-dark p-4 rounded-xl shadow-xs flex flex-col justify-between font-mono">
       <div className="flex items-center justify-between mb-2">
         <span className="text-[10px] font-bold uppercase tracking-wider text-text-sub">
           {title}
@@ -330,20 +320,20 @@ const DailySummaryPage = () => {
                 <h2 className="text-2xl font-bold text-text-main dark:text-text-main-dark tracking-tight leading-none">
                   Daily Sales Summary
                 </h2>
-                <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-slate-100 dark:bg-slate-800 text-text-sub dark:text-slate-400 border border-card-border dark:border-card-border-dark">
+                <span className="whitespace-nowrap flex-shrink-0 px-2 py-0.5 text-[10px] font-bold rounded-full bg-slate-100 dark:bg-slate-800 text-text-sub dark:text-slate-400 border border-card-border dark:border-card-border-dark">
                   {dateRange[0]} to {dateRange[1]}
                 </span>
               </div>
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 w-full xl:w-auto">
+          <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2 w-full sm:w-auto w-full xl:w-auto">
             <div className="bg-card dark:bg-card-dark border border-card-border dark:border-card-border-dark rounded-xl p-2 flex items-center">
               <Form
                 form={form}
                 layout="inline"
                 onFinish={fetchReport}
-                className="flex flex-wrap items-center gap-2"
+                className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2 w-full sm:w-auto"
               >
                 <Form.Item name="dateRange" className="!mb-0">
                   <DatePicker.RangePicker allowClear={false} className="h-10 rounded-xl" />
@@ -369,34 +359,26 @@ const DailySummaryPage = () => {
               </Form>
             </div>
 
-            <Button
-              onClick={handleExportExcel}
-              disabled={!summary?.daily?.length}
-              icon={<IconDownload size={15} />}
-              className="h-10 px-4 rounded-xl border-card-border dark:border-card-border-dark text-text-sub text-xs font-semibold cursor-pointer flex items-center gap-2"
+            <button
+              onClick={handleExportExcel} disabled={!summary?.daily?.length}
+              className="flex-1 sm:flex-none justify-center bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl px-3.5 py-2 flex items-center gap-1.5 shadow-xs transition-colors disabled:opacity-50 cursor-pointer"
             >
-              Excel
-            </Button>
-            <Button
-              onClick={handleExportPDF}
-              disabled={!summary?.daily?.length}
-              icon={<IconFileTypePdf size={15} />}
-              className="h-10 px-4 rounded-xl border-card-border dark:border-card-border-dark text-rose-600 dark:text-rose-400 text-xs font-semibold cursor-pointer flex items-center gap-2"
+              <IconFileSpreadsheet size={15} />
+              <span>Excel</span>
+            </button>
+            <button
+              onClick={handleExportPDF} disabled={!summary?.daily?.length}
+              className="flex-1 sm:flex-none justify-center bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl px-3.5 py-2 flex items-center gap-1.5 shadow-xs transition-colors disabled:opacity-50 cursor-pointer"
             >
-              PDF
-            </Button>
+              <IconFileTypePdf size={15} />
+              <span>PDF</span>
+            </button>
           </div>
         </div>
 
         {/* Loading State */}
-        {loading && (
-          <div className="flex justify-center items-center py-32">
-            <Spinner size="large" tip="Generating Report Summary..." />
-          </div>
-        )}
-
         {/* Content */}
-        {!loading && summary && (
+        {summary && (
           <div className="space-y-6">
             {/* KPI Grid */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -448,7 +430,7 @@ const DailySummaryPage = () => {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div
                   id="daily-sales-trend-chart"
-                  className="bg-card dark:bg-card-dark border border-card-border dark:border-card-border-dark p-5 rounded-2xl shadow-xs space-y-4"
+                  className="bg-card dark:bg-card-dark border border-card-border dark:border-card-border-dark p-5 rounded-xl shadow-xs space-y-4"
                 >
                   <span className="text-[10px] uppercase font-bold tracking-widest text-text-sub font-mono block">
                     Daily Revenue Trend
@@ -474,7 +456,7 @@ const DailySummaryPage = () => {
                   </div>
                 </div>
 
-                <div className="bg-card dark:bg-card-dark border border-card-border dark:border-card-border-dark p-5 rounded-2xl shadow-xs space-y-4">
+                <div className="bg-card dark:bg-card-dark border border-card-border dark:border-card-border-dark p-5 rounded-xl shadow-xs space-y-4">
                   <span className="text-[10px] uppercase font-bold tracking-widest text-text-sub font-mono block">
                     Daily Volume (Items Sold)
                   </span>
@@ -502,17 +484,12 @@ const DailySummaryPage = () => {
             )}
 
             {/* Table Container */}
-            <div className="bg-card dark:bg-card-dark border border-card-border dark:border-card-border-dark rounded-2xl shadow-xs overflow-hidden">
+            <div className="bg-card dark:bg-card-dark border border-card-border dark:border-card-border-dark rounded-xl shadow-xs overflow-hidden">
               <div className="[&_.ant-table]:!bg-transparent [&_.ant-table-thead>tr>th]:!bg-slate-50/80 [&_.ant-table-thead>tr>th]:dark:!bg-slate-800/60 [&_.ant-table-thead>tr>th]:!text-text-sub [&_.ant-table-thead>tr>th]:!font-bold [&_.ant-table-thead>tr>th]:!text-[11px] [&_.ant-table-thead>tr>th]:!uppercase [&_.ant-table-thead>tr>th]:!tracking-wider [&_.ant-table-thead>tr>th]:!border-b [&_.ant-table-thead>tr>th]:!border-card-border [&_.ant-table-thead>tr>th]:dark:!border-card-border-dark [&_.ant-table-tbody>tr]:hover:!bg-slate-50/60 [&_.ant-table-tbody>tr]:dark:hover:!bg-slate-800/40 [&_.ant-table-tbody>tr>td]:!border-b [&_.ant-table-tbody>tr>td]:!border-card-border [&_.ant-table-tbody>tr>td]:dark:!border-card-border-dark [&_.ant-table-tbody>tr>td]:!py-3.5">
-                <Table
+                <Table loading={loading} pagination={false} className="pnl-table"
                   columns={columns}
                   dataSource={summary.daily || []}
                   rowKey={(record, index) => index as number}
-                  pagination={{
-                    pageSize: 15,
-                    position: ["bottomRight"],
-                    showSizeChanger: true,
-                  }}
                   scroll={{ x: 800 }}
                 />
               </div>

@@ -15,15 +15,7 @@ import {
 import React, { useState, useEffect } from "react";
 import * as XLSX from "xlsx";
 import dayjs from "dayjs";
-import {
-  IconFilter,
-  IconDownload,
-  IconFileTypePdf,
-  IconMinus,
-  IconTrendingUp,
-  IconTrendingDown,
-  IconShoppingCart,
-} from "@tabler/icons-react";
+import { IconFilter, IconFileTypePdf, IconMinus, IconTrendingUp, IconTrendingDown, IconShoppingCart, IconFileSpreadsheet } from "@tabler/icons-react";
 import { exportReportPDF } from "@/lib/pdf/exportReportPDF";
 import PageContainer from "@/pages/components/container/PageContainer";
 import {
@@ -329,25 +321,24 @@ const DailyRevenuePage = () => {
     <PageContainer title="Daily Revenue Report">
       <div className="w-full space-y-6">
         {/* Header */}
-        <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <div className="w-1 h-6 rounded-full bg-blue-600" />
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-card-border dark:border-card-border-dark mb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-1 h-8 bg-brand dark:bg-brand-dark rounded-full" />
+            <div>
+              <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-text-sub dark:text-slate-500 leading-none mb-1 font-mono block">
                 Revenue Reports
               </span>
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="text-2xl font-bold text-text-main dark:text-text-main-dark tracking-tight leading-none font-mono">
+                  Daily Revenue
+                </h2>
+                {typeof from !== 'undefined' && typeof to !== 'undefined' && from && to && (
+                  <span className="whitespace-nowrap flex-shrink-0 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-card-border dark:border-card-border-dark font-mono">
+                    {from} to {to}
+                  </span>
+                )}
+              </div>
             </div>
-            <h2 className="text-3xl font-black tracking-tight text-gray-900 leading-none">
-              Daily Revenue
-            </h2>
-            <p className="text-xs text-gray-400 mt-1.5">
-              Max {MAX_RANGE_DAYS} days
-              {from && to && (
-                <span className="font-mono ml-2">
-                  {from} – {to}
-                </span>
-              )}
-            </p>
           </div>
 
           <div className="flex flex-col sm:flex-row items-end sm:items-center gap-3 w-full xl:w-auto">
@@ -356,7 +347,7 @@ const DailyRevenuePage = () => {
                 form={form}
                 layout="inline"
                 onFinish={fetchReport}
-                className="flex flex-wrap items-center gap-2"
+                className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2 w-full sm:w-auto"
               >
                 <Form.Item name="dateRange" className="mb-0!">
                   <DatePicker.RangePicker size="middle" />
@@ -373,21 +364,20 @@ const DailyRevenuePage = () => {
               </Form>
             </Card>
             <Space>
-              <Button
-                onClick={handleExportExcel}
-                disabled={!report.length}
-                icon={<IconDownload size={16} />}
-              >
-                Excel
-              </Button>
-              <Button
-                onClick={handleExportPDF}
-                disabled={!report.length}
-                icon={<IconFileTypePdf size={16} />}
-                danger
-              >
-                PDF
-              </Button>
+              <button
+              onClick={handleExportExcel} disabled={!report.length}
+              className="flex-1 sm:flex-none justify-center bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl px-3.5 py-2 flex items-center gap-1.5 shadow-xs transition-colors disabled:opacity-50 cursor-pointer"
+            >
+              <IconFileSpreadsheet size={15} />
+              <span>Excel</span>
+            </button>
+              <button
+              onClick={handleExportPDF} disabled={!report.length}
+              className="flex-1 sm:flex-none justify-center bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl px-3.5 py-2 flex items-center gap-1.5 shadow-xs transition-colors disabled:opacity-50 cursor-pointer"
+            >
+              <IconFileTypePdf size={15} />
+              <span>PDF</span>
+            </button>
             </Space>
           </div>
         </div>
@@ -438,7 +428,7 @@ const DailyRevenuePage = () => {
               ].map((c) => (
                 <div
                   key={c.label}
-                  className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm"
+                  className="bg-card dark:bg-card-dark border border-card-border dark:border-card-border-dark rounded-xl p-4 shadow-xs"
                 >
                   <div
                     className={`w-9 h-9 rounded-xl flex items-center justify-center mb-3 ${c.bg}`}
@@ -519,7 +509,7 @@ const DailyRevenuePage = () => {
               ].map((c) => (
                 <div
                   key={c.label}
-                  className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm"
+                  className="bg-card dark:bg-card-dark border border-card-border dark:border-card-border-dark rounded-xl p-4 shadow-xs"
                 >
                   <div
                     className={`w-9 h-9 rounded-xl flex items-center justify-center mb-3 ${c.bg}`}
@@ -563,7 +553,7 @@ const DailyRevenuePage = () => {
               <div className="space-y-6">
                 <div
                   id="daily-revenue-chart-1"
-                  className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm"
+                  className="bg-card dark:bg-card-dark border border-card-border dark:border-card-border-dark rounded-xl p-4 shadow-xs"
                 >
                   <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-4">
                     Revenue vs Profit
@@ -626,7 +616,7 @@ const DailyRevenuePage = () => {
 
                 <div
                   id="daily-revenue-chart-2"
-                  className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm"
+                  className="bg-card dark:bg-card-dark border border-card-border dark:border-card-border-dark rounded-xl p-4 shadow-xs"
                 >
                   <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-4">
                     Cost Breakdown
@@ -687,7 +677,7 @@ const DailyRevenuePage = () => {
 
             {/* Table */}
             {report.length > 0 && (
-              <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm">
+              <div className="bg-card dark:bg-card-dark border border-card-border dark:border-card-border-dark rounded-xl shadow-xs overflow-hidden">
                 <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
                   <div>
                     <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">
@@ -704,15 +694,10 @@ const DailyRevenuePage = () => {
                     LKR
                   </Tag>
                 </div>
-                <Table
+                <Table pagination={false}
                   columns={columns}
                   dataSource={report}
                   rowKey={(r) => r.date || Math.random().toString()}
-                  pagination={{
-                    pageSize: 15,
-                    position: ["bottomRight"],
-                    showSizeChanger: true,
-                  }}
                   size="small"
                   scroll={{ x: "max-content" }}
                 />

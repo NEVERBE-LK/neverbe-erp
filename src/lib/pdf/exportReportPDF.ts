@@ -105,17 +105,53 @@ export async function exportReportPDF(
     }),
   ).toBlob();
 
-  // 4. Trigger download
+  // 4. Create object URL
   const url = URL.createObjectURL(blob);
-  const anchor = document.createElement("a");
   const safeName = (filename ?? docProps.title)
     .replace(/[^a-zA-Z0-9_\-\s]/g, "")
     .trim()
     .replace(/\s+/g, "_");
-  anchor.href = url;
-  anchor.download = `${safeName}_${new Date().toISOString().slice(0, 10)}.pdf`;
-  document.body.appendChild(anchor);
-  anchor.click();
-  document.body.removeChild(anchor);
-  URL.revokeObjectURL(url);
+  const downloadName = `${safeName}_${new Date().toISOString().slice(0, 10)}.pdf`;
+
+  // 5. Display Preview Dialog
+  const { Modal, Button } = await import("antd");
+  
+  const modal = Modal.info({
+    title: "PDF Report Preview",
+    width: "80vw",
+    icon: null,
+    closable: true,
+    maskClosable: true,
+    content: React.createElement(
+      "div",
+      { className: "mt-4 w-full h-[70vh] rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800" },
+      React.createElement("iframe", {
+        src: url,
+        className: "w-full h-full border-none",
+        title: "PDF Preview"
+      })
+    ),
+    footer: React.createElement(
+      "div",
+      { className: "flex items-center justify-end gap-3 mt-6" },
+      React.createElement(Button, { onClick: () => modal.destroy() }, "Close"),
+      React.createElement(
+        Button,
+        {
+          type: "primary",
+          className: "bg-rose-600 hover:bg-rose-700",
+          onClick: () => {
+            const anchor = document.createElement("a");
+            anchor.href = url;
+            anchor.download = downloadName;
+            document.body.appendChild(anchor);
+            anchor.click();
+            document.body.removeChild(anchor);
+          },
+        },
+        "Download"
+      )
+    ),
+    afterClose: () => URL.revokeObjectURL(url),
+  });
 }

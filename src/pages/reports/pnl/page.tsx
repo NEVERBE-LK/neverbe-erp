@@ -3,16 +3,7 @@ import { DatePicker, Form, Progress } from "antd";
 import React, { useState, useEffect } from "react";
 import * as XLSX from "xlsx";
 import dayjs from "dayjs";
-import {
-  IconFilter,
-  IconDownload,
-  IconFileTypePdf,
-  IconTrendingUp,
-  IconTrendingDown,
-  IconMinus,
-  IconReceipt,
-  IconCoin,
-} from "@tabler/icons-react";
+import { IconFilter, IconFileTypePdf, IconTrendingUp, IconTrendingDown, IconMinus, IconReceipt, IconCoin, IconFileSpreadsheet } from "@tabler/icons-react";
 import PageContainer from "@/pages/components/container/PageContainer";
 import toast from "react-hot-toast";
 import { useAppSelector } from "@/lib/hooks";
@@ -101,7 +92,6 @@ const ProfitLossPage = () => {
     if (currentUser) {
       const defaultRange = [dayjs().startOf("year"), dayjs()];
       form.setFieldsValue({ dateRange: defaultRange });
-      fetchReport({ dateRange: defaultRange });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser]);
@@ -249,7 +239,7 @@ const ProfitLossPage = () => {
                   Profit & Loss Statement
                 </h2>
                 {report && (
-                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-card-border dark:border-card-border-dark font-mono">
+                  <span className="whitespace-nowrap flex-shrink-0 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-card-border dark:border-card-border-dark font-mono">
                     {getPeriodLabel()}
                   </span>
                 )}
@@ -258,13 +248,13 @@ const ProfitLossPage = () => {
           </div>
 
           {/* Month/Year Picker & Actions */}
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2 w-full sm:w-auto">
             <div className="bg-card dark:bg-card-dark border border-card-border dark:border-card-border-dark p-1.5 rounded-xl shadow-xs">
               <Form
                 form={form}
                 layout="inline"
                 onFinish={fetchReport}
-                className="flex items-center gap-2"
+                className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto"
               >
                 <Form.Item name="dateRange" className="mb-0!">
                   <DatePicker.RangePicker
@@ -285,21 +275,19 @@ const ProfitLossPage = () => {
             </div>
 
             <button
-              onClick={handleExportExcel}
-              disabled={!report}
-              className="bg-card dark:bg-card-dark border border-card-border dark:border-card-border-dark text-text-main dark:text-text-main-dark hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-bold rounded-xl px-3 py-2 flex items-center gap-1.5 transition-colors disabled:opacity-50 cursor-pointer"
+              onClick={handleExportExcel} disabled={!report}
+              className="flex-1 sm:flex-none justify-center bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl px-3.5 py-2 flex items-center gap-1.5 shadow-xs transition-colors disabled:opacity-50 cursor-pointer"
             >
-              <IconDownload size={15} />
+              <IconFileSpreadsheet size={15} />
               <span>Excel</span>
             </button>
 
             <button
-              onClick={handleExportPDF}
-              disabled={!report}
-              className="bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl px-3.5 py-2 flex items-center gap-1.5 shadow-xs transition-colors disabled:opacity-50 cursor-pointer"
+              onClick={handleExportPDF} disabled={!report}
+              className="flex-1 sm:flex-none justify-center bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl px-3.5 py-2 flex items-center gap-1.5 shadow-xs transition-colors disabled:opacity-50 cursor-pointer"
             >
               <IconFileTypePdf size={15} />
-              <span>PDF Report</span>
+              <span>PDF</span>
             </button>
           </div>
         </div>

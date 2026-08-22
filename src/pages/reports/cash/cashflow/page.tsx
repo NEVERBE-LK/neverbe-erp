@@ -1,6 +1,7 @@
 import type { ColumnsType } from "antd/es/table";
 import api from "@/lib/api";
-import { Button, Card, DatePicker, Form, Space, Spin, Table, Tag } from "antd";
+import { Button, Card, DatePicker, Form, Space, Table, Tag } from "antd";
+import Spinner from "@/pages/components/shared/Spinner";
 import React, { useState } from "react";
 import dayjs from "dayjs";
 import {
@@ -12,7 +13,7 @@ import {
   IconArrowDownRight,
   IconArrowUpRight,
   IconTrendingUp,
-} from "@tabler/icons-react";
+IconFileSpreadsheet } from "@tabler/icons-react";
 import * as XLSX from "xlsx";
 import PageContainer from "@/pages/components/container/PageContainer";
 import {
@@ -49,7 +50,6 @@ interface CashFlowSummary {
   daily: DailyCashFlow[];
 }
 
-const MAX_RANGE_DAYS = 31;
 const fmt = (v: number) =>
   new Intl.NumberFormat("en-LK", {
     minimumFractionDigits: 2,
@@ -79,12 +79,6 @@ const CashFlowPage = () => {
     const fromDate = values?.dateRange?.[0]?.format("YYYY-MM-DD");
     const toDate = values?.dateRange?.[1]?.format("YYYY-MM-DD");
     if (!fromDate || !toDate) return;
-    const diffDays = dayjs(toDate).diff(dayjs(fromDate), "day") + 1;
-    if (diffDays > MAX_RANGE_DAYS) {
-      const { message } = await import("antd");
-      message.error(`Date range cannot exceed ${MAX_RANGE_DAYS} days.`);
-      return;
-    }
     setFrom(fromDate);
     setTo(toDate);
     setLoading(true);
@@ -151,6 +145,7 @@ const CashFlowPage = () => {
             value: `LKR ${fmt(summary?.totalNetCashFlow ?? 0)}`,
           },
         ],
+        chartSpecs: [{ title: "Cash Flow Trend", elementId: "cashflow-chart-1" }],
         tables: [
           {
             title: "Daily Cashflow Summary",
@@ -262,29 +257,29 @@ const CashFlowPage = () => {
     <PageContainer title="Cashflow Report">
       <div className="w-full space-y-6">
         {/* Header */}
-        <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <div className="w-1 h-6 rounded-full bg-blue-600" />
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-card-border dark:border-card-border-dark mb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-1 h-8 bg-brand dark:bg-brand-dark rounded-full" />
+            <div>
+              <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-text-sub dark:text-slate-500 leading-none mb-1 font-mono block">
                 Financial Reports
               </span>
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="text-2xl font-bold text-text-main dark:text-text-main-dark tracking-tight leading-none font-mono">
+                  Cashflow
+                </h2>
+                {summary && (
+                  <span className="whitespace-nowrap flex-shrink-0 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-card-border dark:border-card-border-dark font-mono">
+                    {from} to {to}
+                  </span>
+                )}
+              </div>
             </div>
-            <h2 className="text-3xl font-black tracking-tight text-gray-900 leading-none">
-              Cashflow
-            </h2>
-            <p className="text-xs text-gray-400 mt-1.5">
-              Daily breakdown · max {MAX_RANGE_DAYS} days
-              {from && to && (
-                <span className="font-mono ml-2">
-                  {from} – {to}
-                </span>
-              )}
-            </p>
           </div>
 
           <div className="flex flex-col sm:flex-row items-end sm:items-center gap-3 w-full xl:w-auto">
-            <Card size="small" className="shadow-sm w-full xl:w-auto">
+            <Card size="small"
+                  className="shadow-sm w-full xl:w-auto">
               <Form
                 form={form}
                 layout="inline"
@@ -295,39 +290,38 @@ const CashFlowPage = () => {
                   <DatePicker.RangePicker size="middle" />
                 </Form.Item>
                 <Form.Item className="mb-0!">
-                  <Button
-                    htmlType="submit"
-                    type="primary"
-                    icon={<IconFilter size={15} />}
+                  <button
+                    type="submit"
+                    className="h-[38px] bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-white text-white dark:text-slate-900 text-xs font-bold rounded-lg px-4 flex items-center justify-center gap-2 transition-colors cursor-pointer"
                   >
-                    Filter
-                  </Button>
+                    <IconFilter size={15} />
+                    <span>Filter</span>
+                  </button>
                 </Form.Item>
               </Form>
             </Card>
             <Space>
-              <Button
-                onClick={handleExportExcel}
-                disabled={!report.length}
-                icon={<IconDownload size={16} />}
+              <button
+                onClick={handleExportExcel} disabled={!report.length}
+                className="flex-1 sm:flex-none justify-center bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl px-3.5 py-2 flex items-center gap-1.5 shadow-xs transition-colors disabled:opacity-50 cursor-pointer"
               >
-                Excel
-              </Button>
-              <Button
-                onClick={handleExportPDF}
-                disabled={!report.length}
-                icon={<IconFileTypePdf size={16} />}
-                danger
+                <IconFileSpreadsheet size={15} />
+                <span>Excel</span>
+              </button>
+              <button
+                onClick={handleExportPDF} disabled={!report.length}
+                className="flex-1 sm:flex-none justify-center bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl px-3.5 py-2 flex items-center gap-1.5 shadow-xs transition-colors disabled:opacity-50 cursor-pointer"
               >
-                PDF
-              </Button>
+                <IconFileTypePdf size={15} />
+                <span>PDF</span>
+              </button>
             </Space>
           </div>
         </div>
 
         {loading && (
           <div className="flex justify-center py-24">
-            <Spin size="large" />
+            <Spinner />
           </div>
         )}
 
@@ -379,7 +373,7 @@ const CashFlowPage = () => {
               ].map((c) => (
                 <div
                   key={c.label}
-                  className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow"
+                  className="bg-card dark:bg-card-dark border border-card-border dark:border-card-border-dark rounded-xl p-5 shadow-sm hover:shadow-md transition-shadow"
                 >
                   <div
                     className={`w-9 h-9 rounded-xl flex items-center justify-center mb-3 ${c.bg}`}
@@ -403,7 +397,7 @@ const CashFlowPage = () => {
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div
                   id="cashflow-chart-1"
-                  className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm"
+                  className="bg-card dark:bg-card-dark border border-card-border dark:border-card-border-dark rounded-xl p-5 shadow-sm"
                 >
                   <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-4">
                     Cash Flow Trend
@@ -420,13 +414,11 @@ const CashFlowPage = () => {
                           dataKey="date"
                           axisLine={false}
                           tickLine={false}
-                          tick={{ fill: "#9CA3AF", fontSize: 10 }}
                           tickMargin={10}
                         />
                         <YAxis
                           axisLine={false}
                           tickLine={false}
-                          tick={{ fill: "#9CA3AF", fontSize: 10 }}
                           width={70}
                           tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`}
                         />
@@ -458,7 +450,7 @@ const CashFlowPage = () => {
 
                 <div
                   id="cashflow-chart-2"
-                  className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm"
+                  className="bg-card dark:bg-card-dark border border-card-border dark:border-card-border-dark rounded-xl p-5 shadow-sm"
                 >
                   <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-4">
                     Fees & Expenses Breakdown
@@ -475,20 +467,17 @@ const CashFlowPage = () => {
                           dataKey="date"
                           axisLine={false}
                           tickLine={false}
-                          tick={{ fill: "#9CA3AF", fontSize: 10 }}
                           tickMargin={10}
                         />
                         <YAxis
                           axisLine={false}
                           tickLine={false}
-                          tick={{ fill: "#9CA3AF", fontSize: 10 }}
                           width={70}
                           tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`}
                         />
                         <RechartTooltip
                           {...TOOLTIP_STYLE}
                           formatter={(v: number) => `LKR ${fmt(v)}`}
-                          cursor={{ fill: "#F9FAFB" }}
                         />
                         <Legend />
                         <Bar
@@ -510,7 +499,7 @@ const CashFlowPage = () => {
 
                 <div
                   id="cashflow-chart-3"
-                  className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm"
+                  className="bg-card dark:bg-card-dark border border-card-border dark:border-card-border-dark rounded-xl p-5 shadow-sm"
                 >
                   <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-4">
                     Payment Method Breakdown
@@ -520,7 +509,6 @@ const CashFlowPage = () => {
                       <BarChart
                         layout="vertical"
                         data={summary.byMethod}
-                        margin={{ left: 40 }}
                       >
                         <CartesianGrid
                           strokeDasharray="3 3"
@@ -532,7 +520,6 @@ const CashFlowPage = () => {
                           type="number"
                           axisLine={false}
                           tickLine={false}
-                          tick={{ fill: "#9CA3AF", fontSize: 10 }}
                           tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`}
                         />
                         <YAxis
@@ -540,7 +527,6 @@ const CashFlowPage = () => {
                           dataKey="method"
                           axisLine={false}
                           tickLine={false}
-                          tick={{ fill: "#4B5563", fontSize: 10, fontWeight: 600 }}
                           width={100}
                         />
                         <RechartTooltip
@@ -563,7 +549,7 @@ const CashFlowPage = () => {
 
             {/* Table */}
             {report.length > 0 && (
-              <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm">
+              <div className="bg-card dark:bg-card-dark border border-card-border dark:border-card-border-dark rounded-xl overflow-hidden shadow-sm">
                 <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
                   <div>
                     <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">
@@ -581,16 +567,13 @@ const CashFlowPage = () => {
                   </Tag>
                 </div>
                 <Table
+                  pagination={false}
                   columns={columns}
                   dataSource={report}
                   rowKey={(r) => r.date || Math.random().toString()}
-                  pagination={{
-                    pageSize: 15,
-                    position: ["bottomRight"],
-                    showSizeChanger: true,
-                  }}
                   size="small"
                   scroll={{ x: "max-content" }}
+                  className="pnl-table"
                 />
               </div>
             )}
@@ -601,7 +584,7 @@ const CashFlowPage = () => {
           <div className="flex flex-col items-center justify-center py-24 text-gray-400">
             <IconMinus size={40} stroke={1} />
             <p className="mt-4 text-sm font-medium">
-              Select a date range (max {MAX_RANGE_DAYS} days) and click Filter.
+              Select a date range and click Filter.
             </p>
           </div>
         )}

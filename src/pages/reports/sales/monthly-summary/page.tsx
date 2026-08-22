@@ -13,17 +13,7 @@ import {
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import React, { useState, useEffect } from "react";
-import {
-  IconFilter,
-  IconDownload,
-  IconFileTypePdf,
-  IconShoppingCart,
-  IconTrendingUp,
-  IconPackages,
-  IconPercentage,
-  IconCurrencyDollar,
-  IconTruckDelivery,
-} from "@tabler/icons-react";
+import { IconFilter, IconFileTypePdf, IconShoppingCart, IconTrendingUp, IconPackages, IconPercentage, IconCurrencyDollar, IconTruckDelivery, IconFileSpreadsheet } from "@tabler/icons-react";
 import PageContainer from "@/pages/components/container/PageContainer";
 import * as XLSX from "xlsx";
 import toast from "react-hot-toast";
@@ -227,20 +217,20 @@ const MonthlySummaryPage = () => {
     color: string;
     bg: string;
   }) => (
-    <div className="bg-white border border-gray-100 p-5 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
-      <div
-        className={`w-9 h-9 rounded-xl flex items-center justify-center mb-3 ${bg}`}
-      >
-        <span className={color}>{icon}</span>
+    <div className="bg-card dark:bg-card-dark border border-card-border dark:border-card-border-dark rounded-xl p-4 shadow-xs">
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-text-sub dark:text-slate-400">
+          {title}
+        </span>
+        <span className={`p-1.5 rounded-lg ${bg || "bg-gray-100"} ${color}`}>
+          {icon}
+        </span>
       </div>
-      <p className="text-[10px] uppercase font-black tracking-[0.1em] text-gray-400 mb-1">
-        {title}
-      </p>
-      <p className={`text-xl font-black tracking-tight ${color} leading-none`}>
+      <p className={`text-lg font-mono font-bold ${color} leading-none mb-1`}>
         {value}
       </p>
       {sub && (
-        <p className="text-[10px] text-gray-400 mt-1 font-medium">{sub}</p>
+        <p className="text-[10px] text-text-sub dark:text-slate-500 mt-1 font-mono">{sub}</p>
       )}
     </div>
   );
@@ -336,20 +326,24 @@ const MonthlySummaryPage = () => {
     <PageContainer title="Monthly Sales Summary">
       <div className="w-full space-y-8">
         {/* Header & Controls */}
-        <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <div className="w-1 h-6 rounded-full bg-blue-600" />
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-card-border dark:border-card-border-dark mb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-1 h-8 bg-brand dark:bg-brand-dark rounded-full" />
+            <div>
+              <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-text-sub dark:text-slate-500 leading-none mb-1 font-mono block">
                 Sales Analysis
               </span>
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="text-2xl font-bold text-text-main dark:text-text-main-dark tracking-tight leading-none font-mono">
+                  Monthly Summary
+                </h2>
+                {dateRange?.[0] && dateRange?.[1] && (
+                  <span className="whitespace-nowrap flex-shrink-0 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-card-border dark:border-card-border-dark font-mono">
+                    {dateRange[0]} to {dateRange[1]}
+                  </span>
+                )}
+              </div>
             </div>
-            <h2 className="text-3xl font-black tracking-tight text-gray-900 leading-none">
-              Monthly Summary
-            </h2>
-            <p className="text-xs text-gray-400 mt-1.5 font-mono">
-              {dateRange[0]} &nbsp;–&nbsp; {dateRange[1]}
-            </p>
           </div>
 
           <div className="flex flex-col sm:flex-row items-end sm:items-center gap-4 w-full xl:w-auto">
@@ -358,7 +352,7 @@ const MonthlySummaryPage = () => {
                 form={form}
                 layout="inline"
                 onFinish={fetchReport}
-                className="flex flex-wrap items-center gap-2"
+                className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2 w-full sm:w-auto"
               >
                 <Form.Item name="dateRange" className="mb-0!">
                   <DatePicker.RangePicker allowClear={false} picker="month" />
@@ -386,21 +380,20 @@ const MonthlySummaryPage = () => {
             </Card>
 
             <Space>
-              <Button
-                onClick={handleExportExcel}
-                disabled={!summary?.monthly?.length}
-                icon={<IconDownload size={16} />}
-              >
-                Excel
-              </Button>
-              <Button
-                onClick={handleExportPDF}
-                disabled={!summary?.monthly?.length}
-                icon={<IconFileTypePdf size={16} />}
-                danger
-              >
-                PDF
-              </Button>
+              <button
+              onClick={handleExportExcel} disabled={!summary?.monthly?.length}
+              className="flex-1 sm:flex-none justify-center bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl px-3.5 py-2 flex items-center gap-1.5 shadow-xs transition-colors disabled:opacity-50 cursor-pointer"
+            >
+              <IconFileSpreadsheet size={15} />
+              <span>Excel</span>
+            </button>
+              <button
+              onClick={handleExportPDF} disabled={!summary?.monthly?.length}
+              className="flex-1 sm:flex-none justify-center bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl px-3.5 py-2 flex items-center gap-1.5 shadow-xs transition-colors disabled:opacity-50 cursor-pointer"
+            >
+              <IconFileTypePdf size={15} />
+              <span>PDF</span>
+            </button>
             </Space>
           </div>
         </div>
@@ -483,7 +476,7 @@ const MonthlySummaryPage = () => {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div
                   id="monthly-sales-trend-chart"
-                  className="bg-white border border-gray-100 p-5 rounded-2xl shadow-sm"
+                  className="bg-card dark:bg-card-dark border border-card-border dark:border-card-border-dark p-5 rounded-xl shadow-sm"
                 >
                   <p className="text-[10px] uppercase font-black tracking-widest text-gray-400 mb-4">
                     Monthly Sales Trend
@@ -536,7 +529,7 @@ const MonthlySummaryPage = () => {
                   </div>
                 </div>
 
-                <div className="bg-white border border-gray-100 p-5 rounded-2xl shadow-sm">
+                <div className="bg-card dark:bg-card-dark border border-card-border dark:border-card-border-dark p-5 rounded-xl shadow-sm">
                   <p className="text-[10px] uppercase font-black tracking-widest text-gray-400 mb-4">
                     Monthly Items Sold
                   </p>
@@ -589,7 +582,7 @@ const MonthlySummaryPage = () => {
             )}
 
             {/* Detailed Table */}
-            <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm">
+            <div className="bg-card dark:bg-card-dark border border-card-border dark:border-card-border-dark rounded-xl shadow-xs overflow-hidden">
               <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
                 <div>
                   <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">
@@ -606,15 +599,10 @@ const MonthlySummaryPage = () => {
                   LKR
                 </Tag>
               </div>
-              <Table
+              <Table pagination={false} className="pnl-table"
                 columns={columns}
                 dataSource={summary.monthly || []}
                 rowKey={(record, index) => index as number}
-                pagination={{
-                  pageSize: 15,
-                  position: ["bottomRight"],
-                  showSizeChanger: true,
-                }}
                 size="small"
                 scroll={{ x: "max-content" }}
               />
