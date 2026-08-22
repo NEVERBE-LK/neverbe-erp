@@ -62,7 +62,6 @@ export const ProcessOrdersPage = () => {
         page,
         limit: pagination.pageSize,
         status: "Processing",
-        from: "website",
       };
       if (searchQuery.trim()) params.search = searchQuery.trim();
 

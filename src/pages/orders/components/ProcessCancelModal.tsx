@@ -72,7 +72,7 @@ export const ProcessCancelModal: React.FC<ProcessCancelModalProps> = ({
       confirmLoading={submitting}
       okText="Confirm & Cancel Order"
       cancelText="Close"
-      width={640}
+      width={600}
       title={
         <div className="flex items-center gap-2.5 text-base font-bold text-slate-900 dark:text-white pb-2 border-b border-slate-100 dark:border-slate-800">
           <div className="p-2 rounded-xl bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400">
@@ -92,7 +92,7 @@ export const ProcessCancelModal: React.FC<ProcessCancelModalProps> = ({
       }}
       destroyOnClose
     >
-      <div className="py-2 space-y-4">
+      <div className="py-1">
         <Alert
           type="error"
           showIcon
@@ -102,15 +102,16 @@ export const ProcessCancelModal: React.FC<ProcessCancelModalProps> = ({
           className="rounded-2xl text-xs font-medium border-rose-200 dark:border-rose-900/50 bg-rose-50/60 dark:bg-rose-950/30 mb-6"
         />
 
-        <Form form={form} layout="vertical" className="space-y-4 pt-2">
-          <Row gutter={16}>
+        <Form form={form} layout="vertical" className="mt-6 space-y-3">
+          <Row gutter={12}>
             <Col xs={24} sm={12}>
               <Form.Item
                 name="cancellationReason"
+                className="!mb-3"
                 label={<span className="text-xs font-bold text-slate-700 dark:text-slate-300">Reason for Cancellation</span>}
                 rules={[{ required: true, message: "Please select cancellation reason" }]}
               >
-                <Select className="h-10">
+                <Select className="h-9 text-xs">
                   <Select.Option value="CUSTOMER_REQUEST">Customer Requested Cancellation</Select.Option>
                   <Select.Option value="OUT_OF_STOCK">Item Out of Stock / Damaged</Select.Option>
                   <Select.Option value="UNPAID_EXPIRED">Unpaid Order Timeout / Expired</Select.Option>
@@ -123,10 +124,11 @@ export const ProcessCancelModal: React.FC<ProcessCancelModalProps> = ({
             <Col xs={24} sm={12}>
               <Form.Item
                 name="paymentStatus"
+                className="!mb-3"
                 label={<span className="text-xs font-bold text-slate-700 dark:text-slate-300">Updated Payment Status</span>}
                 rules={[{ required: true, message: "Please select payment status" }]}
               >
-                <Select className="h-10">
+                <Select className="h-9 text-xs">
                   <Select.Option value="Cancelled">Cancelled (Order Payment Cancelled)</Select.Option>
                   <Select.Option value="Failed">Failed (Payment Uncollected)</Select.Option>
                   <Select.Option value="Refunded">Refunded (Paid Amount Returned)</Select.Option>
@@ -135,33 +137,31 @@ export const ProcessCancelModal: React.FC<ProcessCancelModalProps> = ({
             </Col>
           </Row>
 
-          <Row gutter={16}>
-            <Col xs={24} sm={12}>
-              <Form.Item name="restocked" valuePropName="checked" className="mb-0">
-                <Checkbox className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                  Restore Item Stock Back to Inventory
-                </Checkbox>
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={12}>
-              <Form.Item name="sendNotification" valuePropName="checked" className="mb-0">
-                <Checkbox className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                  Send Cancellation SMS & Email Notification
-                </Checkbox>
-              </Form.Item>
-            </Col>
-          </Row>
-
           <Form.Item
             name="cancelNotes"
+            className="!mb-3"
             label={<span className="text-xs font-bold text-slate-700 dark:text-slate-300">Cancellation Notes / Staff Comments</span>}
           >
             <Input.TextArea
-              rows={3}
+              rows={2}
               placeholder="Enter optional comments or cancellation rationale..."
               className="rounded-xl text-xs"
             />
           </Form.Item>
+
+          <div className="bg-slate-50 dark:bg-slate-800/40 p-3 rounded-xl border border-slate-200/70 dark:border-slate-800 space-y-2">
+            <Form.Item name="restocked" valuePropName="checked" className="!mb-0">
+              <Checkbox className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                Restock items back to inventory
+              </Checkbox>
+            </Form.Item>
+
+            <Form.Item name="sendNotification" valuePropName="checked" className="!mb-0">
+              <Checkbox className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                Send cancellation notification to customer
+              </Checkbox>
+            </Form.Item>
+          </div>
         </Form>
       </div>
     </Modal>

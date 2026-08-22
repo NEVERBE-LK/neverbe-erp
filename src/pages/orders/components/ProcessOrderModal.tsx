@@ -199,7 +199,7 @@ export const ProcessOrderModal: React.FC<ProcessOrderModalProps> = ({
             <Col xs={24} sm={12} className="flex items-center">
               <Form.Item name="sendNotification" valuePropName="checked" className="mb-0 mt-4">
                 <Checkbox className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                  Send SMS & Email Confirmation Notice to Customer
+                  Send order notification to customer
                 </Checkbox>
               </Form.Item>
             </Col>

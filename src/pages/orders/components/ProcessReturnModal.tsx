@@ -72,7 +72,7 @@ export const ProcessReturnModal: React.FC<ProcessReturnModalProps> = ({
       confirmLoading={submitting}
       okText="Confirm & Process Return"
       cancelText="Cancel"
-      width={640}
+      width={600}
       title={
         <div className="flex items-center gap-2.5 text-base font-bold text-slate-900 dark:text-white pb-2 border-b border-slate-100 dark:border-slate-800">
           <div className="p-2 rounded-xl bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400">
@@ -92,7 +92,7 @@ export const ProcessReturnModal: React.FC<ProcessReturnModalProps> = ({
       }}
       destroyOnClose
     >
-      <div className="py-2 space-y-4">
+      <div className="py-1">
         <Alert
           type="warning"
           showIcon
@@ -102,15 +102,16 @@ export const ProcessReturnModal: React.FC<ProcessReturnModalProps> = ({
           className="rounded-2xl text-xs font-medium border-amber-200 dark:border-amber-900/50 bg-amber-50/60 dark:bg-amber-950/30 mb-6"
         />
 
-        <Form form={form} layout="vertical" className="space-y-4 pt-2">
-          <Row gutter={16}>
+        <Form form={form} layout="vertical" className="mt-6 space-y-3">
+          <Row gutter={12}>
             <Col xs={24} sm={12}>
               <Form.Item
                 name="status"
+                className="!mb-3"
                 label={<span className="text-xs font-bold text-slate-700 dark:text-slate-300">Return Action Status</span>}
                 rules={[{ required: true, message: "Please select return status" }]}
               >
-                <Select className="h-10">
+                <Select className="h-9 text-xs">
                   <Select.Option value="Returned">Returned (Customer Return / Refund)</Select.Option>
                   <Select.Option value="Refused (RTO)">Refused (RTO - Delivery Door Refusal)</Select.Option>
                   <Select.Option value="Exchanged">Exchanged (Size / Fit Exchange)</Select.Option>
@@ -120,10 +121,11 @@ export const ProcessReturnModal: React.FC<ProcessReturnModalProps> = ({
             <Col xs={24} sm={12}>
               <Form.Item
                 name="returnReason"
+                className="!mb-3"
                 label={<span className="text-xs font-bold text-slate-700 dark:text-slate-300">Return Reason Category</span>}
                 rules={[{ required: true, message: "Please select return reason" }]}
               >
-                <Select className="h-10">
+                <Select className="h-9 text-xs">
                   <Select.Option value="CUSTOMER_REFUSED">Refused COD Delivery at Door</Select.Option>
                   <Select.Option value="DEFECTIVE">Defective / Damaged Item</Select.Option>
                   <Select.Option value="WRONG_SIZE_FIT">Wrong Size / Fit Issue</Select.Option>
@@ -135,45 +137,48 @@ export const ProcessReturnModal: React.FC<ProcessReturnModalProps> = ({
             </Col>
           </Row>
 
-          <Row gutter={16}>
+          <Row gutter={12}>
             <Col xs={24} sm={12}>
               <Form.Item
                 name="paymentStatus"
+                className="!mb-3"
                 label={<span className="text-xs font-bold text-slate-700 dark:text-slate-300">Updated Payment Status</span>}
                 rules={[{ required: true, message: "Please select payment status" }]}
               >
-                <Select className="h-10">
+                <Select className="h-9 text-xs">
                   <Select.Option value="Failed">Failed (COD Uncollected)</Select.Option>
                   <Select.Option value="Refunded">Refunded (Paid Amount Refunded)</Select.Option>
                   <Select.Option value="Paid">Keep as Paid (Store Credit / Exchange)</Select.Option>
                 </Select>
               </Form.Item>
             </Col>
-            <Col xs={24} sm={12} className="flex items-center">
-              <Form.Item name="restocked" valuePropName="checked" className="mb-0 mt-4">
-                <Checkbox className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                  Automatically Restock Items Back to Inventory
-                </Checkbox>
-              </Form.Item>
-            </Col>
           </Row>
 
           <Form.Item
             name="returnNotes"
+            className="!mb-3"
             label={<span className="text-xs font-bold text-slate-700 dark:text-slate-300">Return Notes / Comments</span>}
           >
             <Input.TextArea
-              rows={3}
+              rows={2}
               placeholder="Enter inspection details or reason notes..."
               className="rounded-xl text-xs"
             />
           </Form.Item>
 
-          <Form.Item name="sendNotification" valuePropName="checked" className="mb-0">
-            <Checkbox className="text-xs font-bold text-slate-700 dark:text-slate-300">
-              Dispatch Return Confirmation Notification to Customer
-            </Checkbox>
-          </Form.Item>
+          <div className="bg-slate-50 dark:bg-slate-800/40 p-3 rounded-xl border border-slate-200/70 dark:border-slate-800 space-y-2">
+            <Form.Item name="restocked" valuePropName="checked" className="!mb-0">
+              <Checkbox className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                Restock items back to inventory
+              </Checkbox>
+            </Form.Item>
+
+            <Form.Item name="sendNotification" valuePropName="checked" className="!mb-0">
+              <Checkbox className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                Send return notification to customer
+              </Checkbox>
+            </Form.Item>
+          </div>
         </Form>
       </div>
     </Modal>

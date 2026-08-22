@@ -606,65 +606,60 @@ const OrdersPage = () => {
               setIsInvoiceModalOpen(true);
             },
           },
-          ...(isWebsiteOrder
+          ...(statusLower === "pending" || statusLower === "processing"
+            ? [
+                {
+                  key: "process-order",
+                  icon: <IconTruck size={14} className="text-emerald-600 dark:text-emerald-400" />,
+                  label: <span className="font-bold text-emerald-600 dark:text-emerald-400">Process Order</span>,
+                  onClick: () => {
+                    setSelectedOrderForAction(order);
+                    setIsProcessOrderOpen(true);
+                  },
+                },
+              ]
+            : []),
+          ...(statusLower === "completed" || statusLower === "shipped"
+            ? [
+                {
+                  key: "process-return",
+                  icon: <IconRotate size={14} className="text-amber-600 dark:text-amber-400" />,
+                  label: <span className="font-bold text-amber-600 dark:text-amber-400">Process Return</span>,
+                  onClick: () => {
+                    setSelectedOrderForAction(order);
+                    setIsProcessReturnOpen(true);
+                  },
+                },
+              ]
+            : []),
+          ...(!["cancelled", "returned", "refused (rto)", "refused"].includes(statusLower)
+            ? [
+                {
+                  key: "process-cancel",
+                  icon: <IconCircleX size={14} className="text-rose-600 dark:text-rose-400" />,
+                  label: <span className="font-bold text-rose-600 dark:text-rose-400">Process Cancel</span>,
+                  onClick: () => {
+                    setSelectedOrderForAction(order);
+                    setIsProcessCancelOpen(true);
+                  },
+                },
+              ]
+            : []),
+          ...(isEditable
             ? [
                 { type: "divider" as const },
-                ...(statusLower === "pending" || statusLower === "processing"
-                  ? [
-                      {
-                        key: "process-order",
-                        icon: <IconTruck size={14} className="text-emerald-600 dark:text-emerald-400" />,
-                        label: <span className="font-bold text-emerald-600 dark:text-emerald-400">Process Order</span>,
-                        onClick: () => {
-                          setSelectedOrderForAction(order);
-                          setIsProcessOrderOpen(true);
-                        },
-                      },
-                    ]
-                  : []),
-                ...(statusLower === "completed" || statusLower === "shipped"
-                  ? [
-                      {
-                        key: "process-return",
-                        icon: <IconRotate size={14} className="text-amber-600 dark:text-amber-400" />,
-                        label: <span className="font-bold text-amber-600 dark:text-amber-400">Process Return</span>,
-                        onClick: () => {
-                          setSelectedOrderForAction(order);
-                          setIsProcessReturnOpen(true);
-                        },
-                      },
-                    ]
-                  : []),
-                ...(!["cancelled", "returned", "refused (rto)", "refused"].includes(statusLower)
-                  ? [
-                      {
-                        key: "process-cancel",
-                        icon: <IconCircleX size={14} className="text-rose-600 dark:text-rose-400" />,
-                        label: <span className="font-bold text-rose-600 dark:text-rose-400">Process Cancel</span>,
-                        onClick: () => {
-                          setSelectedOrderForAction(order);
-                          setIsProcessCancelOpen(true);
-                        },
-                      },
-                    ]
-                  : []),
-                ...(isEditable
-                  ? [
-                      { type: "divider" as const },
-                      {
-                        key: "edit-customer",
-                        icon: <IconUser size={14} className="text-slate-600 dark:text-slate-300" />,
-                        label: <span className="font-semibold text-slate-700 dark:text-slate-200">Edit Customer Profile</span>,
-                        onClick: () => navigate(`/orders/${order.orderId}/customer`),
-                      },
-                      {
-                        key: "edit-items",
-                        icon: <IconPackage size={14} className="text-slate-600 dark:text-slate-300" />,
-                        label: <span className="font-semibold text-slate-700 dark:text-slate-200">Edit Order Items</span>,
-                        onClick: () => navigate(`/orders/${order.orderId}/items`),
-                      },
-                    ]
-                  : []),
+                {
+                  key: "edit-customer",
+                  icon: <IconUser size={14} className="text-slate-600 dark:text-slate-300" />,
+                  label: <span className="font-semibold text-slate-700 dark:text-slate-200">Edit Customer Profile</span>,
+                  onClick: () => navigate(`/orders/${order.orderId}/customer`),
+                },
+                {
+                  key: "edit-items",
+                  icon: <IconPackage size={14} className="text-slate-600 dark:text-slate-300" />,
+                  label: <span className="font-semibold text-slate-700 dark:text-slate-200">Edit Order Items</span>,
+                  onClick: () => navigate(`/orders/${order.orderId}/items`),
+                },
               ]
             : []),
           { type: "divider" as const },

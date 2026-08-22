@@ -173,29 +173,25 @@ export const ProcessPaymentsPage = () => {
               setIsInvoiceModalOpen(true);
             },
           },
-          ...(isWebsiteOrder
-            ? [
-                { type: "divider" as const },
-                {
-                  key: "process-order",
-                  icon: <IconTruck size={14} className="text-emerald-600 dark:text-emerald-400" />,
-                  label: <span className="font-bold text-emerald-600 dark:text-emerald-400">Process Order</span>,
-                  onClick: () => {
-                    setSelectedOrderForAction(order);
-                    setIsProcessOrderOpen(true);
-                  },
-                },
-                {
-                  key: "process-cancel",
-                  icon: <IconCircleX size={14} className="text-rose-600 dark:text-rose-400" />,
-                  label: <span className="font-bold text-rose-600 dark:text-rose-400">Process Cancel</span>,
-                  onClick: () => {
-                    setSelectedOrderForAction(order);
-                    setIsProcessCancelOpen(true);
-                  },
-                },
-              ]
-            : []),
+          { type: "divider" as const },
+          {
+            key: "process-order",
+            icon: <IconTruck size={14} className="text-emerald-600 dark:text-emerald-400" />,
+            label: <span className="font-bold text-emerald-600 dark:text-emerald-400">Process Order</span>,
+            onClick: () => {
+              setSelectedOrderForAction(order);
+              setIsProcessOrderOpen(true);
+            },
+          },
+          {
+            key: "process-cancel",
+            icon: <IconCircleX size={14} className="text-rose-600 dark:text-rose-400" />,
+            label: <span className="font-bold text-rose-600 dark:text-rose-400">Process Cancel</span>,
+            onClick: () => {
+              setSelectedOrderForAction(order);
+              setIsProcessCancelOpen(true);
+            },
+          },
         ];
 
         return (

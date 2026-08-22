@@ -197,38 +197,46 @@ export const OrderExchangeHistory: React.FC<OrderExchangeHistoryProps> = ({
                 </div>
 
                 <div className="space-y-4">
-                  {exchange.replacementItems.map((item, idx) => (
-                    <div
-                      key={idx}
-                      className="flex justify-between items-start gap-4"
-                    >
-                      <div className="space-y-0.5">
-                        <Text className="font-bold text-sm block leading-tight">
-                          {item.name}
-                        </Text>
-                        <Text
-                          type="secondary"
-                          className="text-[11px] font-medium italic"
-                        >
-                          {item.size}{" "}
-                          {item.variantName ? `• ${item.variantName}` : ""}
-                        </Text>
-                      </div>
-                      <div className="text-right">
-                        <Text className="font-bold text-sm block">
-                          x{item.quantity}
-                        </Text>
-                        <Text type="secondary" className="text-[11px] block">
-                          Rs. {item.price.toLocaleString()}
-                        </Text>
-                        {item.discount > 0 && (
-                          <Text className="text-[10px] text-green-600 font-bold block">
-                            - Rs. {item.discount.toLocaleString()}
+                  {exchange.replacementItems && exchange.replacementItems.length > 0 ? (
+                    exchange.replacementItems.map((item, idx) => (
+                      <div
+                        key={idx}
+                        className="flex justify-between items-start gap-4"
+                      >
+                        <div className="space-y-0.5">
+                          <Text className="font-bold text-sm block leading-tight">
+                            {item.name}
                           </Text>
-                        )}
+                          <Text
+                            type="secondary"
+                            className="text-[11px] font-medium italic"
+                          >
+                            {item.size}{" "}
+                            {item.variantName ? `• ${item.variantName}` : ""}
+                          </Text>
+                        </div>
+                        <div className="text-right">
+                          <Text className="font-bold text-sm block">
+                            x{item.quantity}
+                          </Text>
+                          <Text type="secondary" className="text-[11px] block">
+                            Rs. {item.price.toLocaleString()}
+                          </Text>
+                          {item.discount > 0 && (
+                            <Text className="text-[10px] text-green-600 font-bold block">
+                              - Rs. {item.discount.toLocaleString()}
+                            </Text>
+                          )}
+                        </div>
                       </div>
+                    ))
+                  ) : (
+                    <div className="py-4 text-center border border-dashed border-gray-200 rounded-xl">
+                      <Text type="secondary" className="text-xs font-medium italic">
+                        No replacement items (Store Credit issued for balance)
+                      </Text>
                     </div>
-                  ))}
+                  )}
                 </div>
 
                 <Divider className="my-4" />
