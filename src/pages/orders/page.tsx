@@ -20,6 +20,7 @@ import {
   IconWorld,
   IconUser,
   IconShield,
+  IconShieldCheck,
   IconCamera,
   IconDotsVertical,
   IconPrinter,
