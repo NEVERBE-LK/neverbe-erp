@@ -611,7 +611,7 @@ const OrdersPage = () => {
               setIsInvoiceModalOpen(true);
             },
           },
-          ...(order.riskStatus === "HIGH_RISK" && !order.deliveryFeePrepaid
+          ...(order.riskStatus === "HIGH_RISK" && !order.deliveryFeePrepaid && order.paymentMethod?.toLowerCase() === "cod"
             ? [
                 {
                   key: "mark-fee-paid",
