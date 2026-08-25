@@ -195,8 +195,8 @@ export default function App() {
           <Route path="orders/order-list" element={<ProtectedRoute permission="view_orders"><Orders /></ProtectedRoute>} />
           <Route path="orders/processing" element={<ProtectedRoute permission="view_orders"><ProcessOrders /></ProtectedRoute>} />
           <Route path="orders/payment-pending" element={<ProtectedRoute permission="view_orders"><ProcessPayments /></ProtectedRoute>} />
-          <Route path="orders/:orderId" element={<ProtectedRoute permission="view_orders"><OrderTrackingEdit /></ProtectedRoute>} />
-          <Route path="orders/:orderId/view" element={<ProtectedRoute permission="view_orders"><OrderTrackingEdit /></ProtectedRoute>} />
+          <Route path="orders/:orderId" element={<ProtectedRoute permission="view_orders"><OrderDetail /></ProtectedRoute>} />
+          <Route path="orders/:orderId/view" element={<ProtectedRoute permission="view_orders"><OrderDetail /></ProtectedRoute>} />
           <Route path="orders/:orderId/customer" element={<ProtectedRoute permission="view_orders"><OrderCustomerEdit /></ProtectedRoute>} />
           <Route path="orders/:orderId/items" element={<ProtectedRoute permission="view_orders"><OrderItemsEdit /></ProtectedRoute>} />
           <Route path="orders/:orderId/tracking" element={<ProtectedRoute permission="view_orders"><OrderTrackingEdit /></ProtectedRoute>} />
