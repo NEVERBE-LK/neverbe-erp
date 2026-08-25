@@ -481,8 +481,12 @@ const OrdersPage = () => {
           <div className="flex items-center gap-1.5">
             <span className="font-mono font-bold text-gray-900 text-xs">#{order.orderId}</span>
             {order.riskStatus === "HIGH_RISK" && (
-              <span className="inline-flex items-center gap-1 text-[9px] font-black text-rose-700 bg-rose-50 border border-rose-200/80 rounded-full px-2 py-0.5 uppercase tracking-wider">
-                ⚠️ HIGH RISK {order.deliveryFeePrepaid ? "• FEE PAID" : ""}
+              <span className={`inline-flex items-center gap-1 text-[9px] font-black rounded-full px-2 py-0.5 uppercase tracking-wider border ${
+                order.deliveryFeePrepaid 
+                  ? "text-emerald-700 bg-emerald-50 border-emerald-200" 
+                  : "text-rose-700 bg-rose-50 border-rose-200/80"
+              }`}>
+                ⚠️ HIGH RISK {order.deliveryFeePrepaid ? "• PREPAID FEE PAID (LKR 450)" : "• PREPAID FEE PENDING (LKR 450)"}
               </span>
             )}
           </div>
@@ -606,6 +610,27 @@ const OrdersPage = () => {
               setIsInvoiceModalOpen(true);
             },
           },
+          ...(order.riskStatus === "HIGH_RISK" && !order.deliveryFeePrepaid
+            ? [
+                {
+                  key: "mark-fee-paid",
+                  icon: <IconShieldCheck size={14} className="text-blue-600 dark:text-blue-400" />,
+                  label: <span className="font-bold text-blue-600 dark:text-blue-400">Mark Prepaid Fee Paid</span>,
+                  onClick: async () => {
+                    try {
+                      await api.put(`/api/v1/erp/orders/${order.orderId}`, {
+                        deliveryFeePrepaid: true,
+                        prepaidDeliveryFeeStatus: "PAID",
+                      });
+                      toast.success(`Prepaid Delivery Fee marked as PAID for #${order.orderId}`);
+                      fetchOrders();
+                    } catch (e: any) {
+                      toast.error(e?.response?.data?.message || "Failed to mark prepaid fee as paid");
+                    }
+                  },
+                },
+              ]
+            : []),
           ...(statusLower === "pending" || statusLower === "processing"
             ? [
                 {
