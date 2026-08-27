@@ -9,7 +9,6 @@ import MonthlyComparison from "../components/dashboard/MonthlyComparison";
 import OrderStatusPanel from "../components/dashboard/OrderStatusPanel";
 import ProfitMargins from "../components/dashboard/ProfitMargins";
 import RevenueByCategory from "../components/dashboard/RevenueByCategory";
-import AIOperationalInsights from "../components/dashboard/AIOperationalInsights";
 import DashboardCard from "../components/shared/DashboardCard";
 import Spinner from "../components/shared/Spinner";
 import { DashboardProvider } from "../components/dashboard/DashboardContext";
@@ -27,9 +26,6 @@ const Dashboard = () => {
           </div>
         }>
           <div className="flex flex-col gap-4">
-            {/* Row 0: AI Operational Insights */}
-            <AIOperationalInsights />
-
             {/* Row 1: High Level Performance (Hero Section) */}
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 items-stretch">
               <div className="xl:col-span-2">
