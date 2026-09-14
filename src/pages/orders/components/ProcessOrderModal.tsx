@@ -26,7 +26,6 @@ export const ProcessOrderModal: React.FC<ProcessOrderModalProps> = ({
     if (order && open) {
       form.setFieldsValue({
         status: (order.status?.toLowerCase() === "pending" || order.status?.toLowerCase() === "processing") ? "Completed" : (order.status || "Completed"),
-        paymentStatus: order.paymentStatus || "Paid",
         courier: order.courier || "Domex",
         trackingNumber: order.trackingNumber || "",
         estimatedDelivery: order.estimatedDelivery ? dayjs(order.estimatedDelivery as any) : dayjs().add(3, "day"),
@@ -44,7 +43,6 @@ export const ProcessOrderModal: React.FC<ProcessOrderModalProps> = ({
 
       const payload = {
         status: values.status,
-        paymentStatus: values.paymentStatus,
         courier: values.courier,
         trackingNumber: values.trackingNumber?.trim(),
         estimatedDelivery: values.estimatedDelivery ? values.estimatedDelivery.format("YYYY-MM-DD") : null,
@@ -123,6 +121,9 @@ export const ProcessOrderModal: React.FC<ProcessOrderModalProps> = ({
               </div>
               <div className="text-[11px] text-slate-500">
                 Payment: <span className="font-semibold text-slate-700 dark:text-slate-300">{order.paymentMethod || "COD"} ({order.paymentStatus || "Pending"})</span>
+                <span className="block text-[9px] text-slate-400 mt-0.5 font-normal">
+                  Fulfillment & courier tracking updates here. Payment status is verified separately via Process Payments.
+                </span>
               </div>
             </Col>
           </Row>
@@ -137,28 +138,12 @@ export const ProcessOrderModal: React.FC<ProcessOrderModalProps> = ({
                 rules={[{ required: true, message: "Please select target status" }]}
               >
                 <Select className="h-10">
-                  <Select.Option value="Completed">Completed (Fulfilled & Verified)</Select.Option>
+                  <Select.Option value="Completed">Completed (Fulfilled & Dispatched)</Select.Option>
                   <Select.Option value="Shipped">Shipped (In Transit)</Select.Option>
                   <Select.Option value="Processing">Processing (Dispatched to Warehouse)</Select.Option>
                 </Select>
               </Form.Item>
             </Col>
-            <Col xs={24} sm={12}>
-              <Form.Item
-                name="paymentStatus"
-                label={<span className="text-xs font-bold text-slate-700 dark:text-slate-300">Payment Status</span>}
-                rules={[{ required: true, message: "Please select payment status" }]}
-              >
-                <Select className="h-10">
-                  <Select.Option value="Paid">Paid (Verified Payment / COD Received)</Select.Option>
-                  <Select.Option value="Pending">Pending Payment</Select.Option>
-                  <Select.Option value="Failed">Failed / Unpaid</Select.Option>
-                </Select>
-              </Form.Item>
-            </Col>
-          </Row>
-
-          <Row gutter={16}>
             <Col xs={24} sm={12}>
               <Form.Item
                 name="courier"
@@ -176,6 +161,9 @@ export const ProcessOrderModal: React.FC<ProcessOrderModalProps> = ({
                 </Select>
               </Form.Item>
             </Col>
+          </Row>
+
+          <Row gutter={16}>
             <Col xs={24} sm={12}>
               <Form.Item
                 name="trackingNumber"
@@ -185,9 +173,6 @@ export const ProcessOrderModal: React.FC<ProcessOrderModalProps> = ({
                 <Input placeholder="e.g. DX-948201948" className="h-10 font-mono text-xs rounded-xl" />
               </Form.Item>
             </Col>
-          </Row>
-
-          <Row gutter={16}>
             <Col xs={24} sm={12}>
               <Form.Item
                 name="estimatedDelivery"
@@ -196,14 +181,13 @@ export const ProcessOrderModal: React.FC<ProcessOrderModalProps> = ({
                 <DatePicker className="w-full h-10 rounded-xl" format="YYYY-MM-DD" />
               </Form.Item>
             </Col>
-            <Col xs={24} sm={12} className="flex items-center">
-              <Form.Item name="sendNotification" valuePropName="checked" className="mb-0 mt-4">
-                <Checkbox className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                  Send order notification to customer
-                </Checkbox>
-              </Form.Item>
-            </Col>
           </Row>
+
+          <Form.Item name="sendNotification" valuePropName="checked" className="mb-0">
+            <Checkbox className="text-xs font-bold text-slate-700 dark:text-slate-300">
+              Send order dispatch notification to customer
+            </Checkbox>
+          </Form.Item>
         </Form>
       </div>
     </Modal>

@@ -33,6 +33,7 @@ import { InvoicePreviewModal } from "../../components/InvoicePreviewModal";
 import { formatSLDateTime } from "@/utils/dateUtils";
 import { useConfirmationDialog } from "@/contexts/ConfirmationDialogContext";
 import { ProcessOrderModal } from "@/pages/orders/components/ProcessOrderModal";
+import { ProcessPaymentModal } from "@/pages/orders/components/ProcessPaymentModal";
 import { ProcessReturnModal } from "@/pages/orders/components/ProcessReturnModal";
 import { ProcessCancelModal } from "@/pages/orders/components/ProcessCancelModal";
 
@@ -47,6 +48,7 @@ const OrderView = ({ orderId }: { orderId: string }) => {
   const [isSpammerBlacklisted, setIsSpammerBlacklisted] = useState(false);
 
   // Workflow Modals State
+  const [isProcessPaymentOpen, setIsProcessPaymentOpen] = useState(false);
   const [isProcessOrderOpen, setIsProcessOrderOpen] = useState(false);
   const [isProcessReturnOpen, setIsProcessReturnOpen] = useState(false);
   const [isProcessCancelOpen, setIsProcessCancelOpen] = useState(false);
@@ -491,6 +493,19 @@ const OrderView = ({ orderId }: { orderId: string }) => {
                     </AntButton>
                   )}
 
+                  {/* Process Payment Workflow Button (When payment is not yet Paid) */}
+                  {(order?.paymentStatus || "").toLowerCase() !== "paid" &&
+                    !["cancelled", "returned", "refused (rto)", "refused"].includes((order?.status || "").toLowerCase()) && (
+                    <AntButton
+                      type="default"
+                      icon={<IconCreditCard size={16} className="text-blue-600 dark:text-blue-400" />}
+                      onClick={() => setIsProcessPaymentOpen(true)}
+                      className="h-10 rounded-xl border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 hover:bg-blue-100 font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs cursor-pointer"
+                    >
+                      Process Payment
+                    </AntButton>
+                  )}
+
                   {/* Process Return Workflow Button (Website orders in Completed/Shipped status) */}
                   {["completed", "shipped"].includes((order?.status || "").toLowerCase()) && (
                     <AntButton
@@ -894,6 +909,15 @@ const OrderView = ({ orderId }: { orderId: string }) => {
         open={isProcessOrderOpen}
         order={order}
         onClose={() => setIsProcessOrderOpen(false)}
+        onSuccess={() => {
+          window.location.reload();
+        }}
+      />
+
+      <ProcessPaymentModal
+        open={isProcessPaymentOpen}
+        order={order}
+        onClose={() => setIsProcessPaymentOpen(false)}
         onSuccess={() => {
           window.location.reload();
         }}

@@ -57,6 +57,7 @@ import { Html5Qrcode } from "html5-qrcode";
 import Spinner from "@/pages/components/shared/Spinner";
 import { InvoicePreviewModal } from "./[orderId]/components/InvoicePreviewModal";
 import { ProcessOrderModal } from "./components/ProcessOrderModal";
+import { ProcessPaymentModal } from "./components/ProcessPaymentModal";
 import { ProcessReturnModal } from "./components/ProcessReturnModal";
 import { ProcessCancelModal } from "./components/ProcessCancelModal";
 
@@ -109,6 +110,8 @@ const OrdersPage = () => {
 
   // --- Workflow Action Modals State ---
   const [selectedOrderForAction, setSelectedOrderForAction] = useState<Order | null>(null);
+  const [selectedOrderForPayment, setSelectedOrderForPayment] = useState<Order | null>(null);
+  const [isProcessPaymentOpen, setIsProcessPaymentOpen] = useState(false);
   const [isProcessOrderOpen, setIsProcessOrderOpen] = useState(false);
   const [isProcessReturnOpen, setIsProcessReturnOpen] = useState(false);
   const [isProcessCancelOpen, setIsProcessCancelOpen] = useState(false);
@@ -645,6 +648,20 @@ const OrdersPage = () => {
                 },
               ]
             : []),
+          ...((order.paymentStatus || "").toLowerCase() !== "paid" &&
+            !["cancelled", "returned", "refused (rto)", "refused"].includes(statusLower)
+            ? [
+                {
+                  key: "process-payment",
+                  icon: <IconCreditCard size={14} className="text-blue-600 dark:text-blue-400" />,
+                  label: <span className="font-bold text-blue-600 dark:text-blue-400">Process Payment</span>,
+                  onClick: () => {
+                    setSelectedOrderForPayment(order);
+                    setIsProcessPaymentOpen(true);
+                  },
+                },
+              ]
+            : []),
           ...(statusLower === "completed" || statusLower === "shipped"
             ? [
                 {
@@ -934,6 +951,18 @@ const OrdersPage = () => {
         onClose={() => {
           setIsProcessOrderOpen(false);
           setSelectedOrderForAction(null);
+        }}
+        onSuccess={() => {
+          fetchOrders({ page: pagination.current });
+        }}
+      />
+
+      <ProcessPaymentModal
+        open={isProcessPaymentOpen}
+        order={selectedOrderForPayment}
+        onClose={() => {
+          setIsProcessPaymentOpen(false);
+          setSelectedOrderForPayment(null);
         }}
         onSuccess={() => {
           fetchOrders({ page: pagination.current });

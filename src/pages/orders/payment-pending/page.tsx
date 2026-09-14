@@ -11,16 +11,18 @@ import {
   IconCircleX,
   IconDotsVertical,
   IconCoin,
+  IconShieldX,
 } from "@tabler/icons-react";
 import PageContainer from "@/pages/components/container/PageContainer";
 import toast from "react-hot-toast";
 import api from "@/lib/api";
 import { Order } from "@/model/Order";
-import { Table, Input, Select, Button, Dropdown, MenuProps } from "antd";
+import { Table, Input, Select, Button, Dropdown, MenuProps, Tag } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { formatSLDateTime } from "@/utils/dateUtils";
 import Spinner from "@/pages/components/shared/Spinner";
 import { InvoicePreviewModal } from "../[orderId]/components/InvoicePreviewModal";
+import { ProcessPaymentModal } from "../components/ProcessPaymentModal";
 import { ProcessOrderModal } from "../components/ProcessOrderModal";
 import { ProcessReturnModal } from "../components/ProcessReturnModal";
 import { ProcessCancelModal } from "../components/ProcessCancelModal";
@@ -44,6 +46,8 @@ export const ProcessPaymentsPage = () => {
 
   // Action Modals State
   const [selectedOrderForAction, setSelectedOrderForAction] = useState<Order | null>(null);
+  const [selectedOrderForPayment, setSelectedOrderForPayment] = useState<Order | null>(null);
+  const [isProcessPaymentOpen, setIsProcessPaymentOpen] = useState(false);
   const [isProcessOrderOpen, setIsProcessOrderOpen] = useState(false);
   const [isProcessReturnOpen, setIsProcessReturnOpen] = useState(false);
   const [isProcessCancelOpen, setIsProcessCancelOpen] = useState(false);
@@ -159,6 +163,15 @@ export const ProcessPaymentsPage = () => {
 
         const items: MenuProps["items"] = [
           {
+            key: "process-payment",
+            icon: <IconCreditCard size={14} className="text-blue-600 dark:text-blue-400" />,
+            label: <span className="font-bold text-blue-600 dark:text-blue-400">Process Payment</span>,
+            onClick: () => {
+              setSelectedOrderForPayment(order);
+              setIsProcessPaymentOpen(true);
+            },
+          },
+          {
             key: "view",
             icon: <IconEye size={14} />,
             label: "View Details",
@@ -177,7 +190,7 @@ export const ProcessPaymentsPage = () => {
           {
             key: "process-order",
             icon: <IconTruck size={14} className="text-emerald-600 dark:text-emerald-400" />,
-            label: <span className="font-bold text-emerald-600 dark:text-emerald-400">Process Order</span>,
+            label: <span className="font-bold text-emerald-600 dark:text-emerald-400">Process Fulfillment</span>,
             onClick: () => {
               setSelectedOrderForAction(order);
               setIsProcessOrderOpen(true);
@@ -196,20 +209,18 @@ export const ProcessPaymentsPage = () => {
 
         return (
           <div className="flex items-center justify-end gap-2">
-            {isWebsiteOrder && (
-              <Button
-                type="primary"
-                size="small"
-                icon={<IconTruck size={14} />}
-                onClick={() => {
-                  setSelectedOrderForAction(order);
-                  setIsProcessOrderOpen(true);
-                }}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-lg border-none shadow-2xs h-8 px-3 cursor-pointer"
-              >
-                Process
-              </Button>
-            )}
+            <Button
+              type="primary"
+              size="small"
+              icon={<IconCreditCard size={14} />}
+              onClick={() => {
+                setSelectedOrderForPayment(order);
+                setIsProcessPaymentOpen(true);
+              }}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-lg border-none shadow-2xs h-8 px-3 cursor-pointer"
+            >
+              Process Payment
+            </Button>
             <Dropdown menu={{ items }} trigger={["click"]} placement="bottomRight">
               <button
                 type="button"
@@ -313,6 +324,16 @@ export const ProcessPaymentsPage = () => {
         open={isInvoiceModalOpen}
         onClose={() => setIsInvoiceModalOpen(false)}
         order={previewOrderForInvoice}
+      />
+
+      <ProcessPaymentModal
+        open={isProcessPaymentOpen}
+        order={selectedOrderForPayment}
+        onClose={() => {
+          setIsProcessPaymentOpen(false);
+          setSelectedOrderForPayment(null);
+        }}
+        onSuccess={() => fetchPendingPaymentOrders(pagination.current)}
       />
 
       <BulkProcessPaymentsModal

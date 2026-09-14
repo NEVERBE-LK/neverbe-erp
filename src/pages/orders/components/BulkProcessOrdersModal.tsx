@@ -32,7 +32,6 @@ export const BulkProcessOrdersModal: React.FC<BulkProcessOrdersModalProps> = ({
     if (open) {
       form.setFieldsValue({
         status: "Completed",
-        paymentStatus: "Paid",
         courier: "Domex",
         estimatedDelivery: dayjs().add(3, "day"),
         sendNotification: true,
@@ -63,7 +62,6 @@ export const BulkProcessOrdersModal: React.FC<BulkProcessOrdersModalProps> = ({
       for (const order of selectedOrders) {
         const payload = {
           status: values.status,
-          paymentStatus: values.paymentStatus,
           courier: values.courier,
           trackingNumber: waybillMap[order.orderId]?.trim() || order.trackingNumber || "",
           estimatedDelivery: values.estimatedDelivery ? values.estimatedDelivery.format("YYYY-MM-DD") : null,
@@ -174,7 +172,7 @@ export const BulkProcessOrdersModal: React.FC<BulkProcessOrdersModalProps> = ({
 
         {/* Batch Logistics Common Controls */}
         <Form form={form} layout="vertical" disabled={processing}>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <Form.Item label={<span className="text-xs font-bold text-text-sub">Courier Partner</span>} name="courier" rules={[{ required: true }]}>
               <Select className="h-10 rounded-xl">
                 <Select.Option value="Domex">Domex</Select.Option>
@@ -191,13 +189,6 @@ export const BulkProcessOrdersModal: React.FC<BulkProcessOrdersModalProps> = ({
               <Select className="h-10 rounded-xl">
                 <Select.Option value="Completed">Completed / Dispatched</Select.Option>
                 <Select.Option value="Processing">Keep as Processing</Select.Option>
-              </Select>
-            </Form.Item>
-
-            <Form.Item label={<span className="text-xs font-bold text-text-sub">Payment Status</span>} name="paymentStatus" rules={[{ required: true }]}>
-              <Select className="h-10 rounded-xl">
-                <Select.Option value="Paid">Paid</Select.Option>
-                <Select.Option value="Pending">Pending</Select.Option>
               </Select>
             </Form.Item>
           </div>
