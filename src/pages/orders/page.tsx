@@ -24,7 +24,6 @@ import {
   IconCamera,
   IconDotsVertical,
   IconPrinter,
-  IconPackage,
   IconTruck,
   IconRotate,
   IconCircleX,
@@ -594,9 +593,8 @@ const OrdersPage = () => {
       width: 80,
       align: "right",
       render: (_, order) => {
-        const isWebsiteOrder = (order.from || "").toLowerCase() === "website";
         const statusLower = (order.status || "").toLowerCase();
-        const isEditable = isWebsiteOrder && ["pending", "processing"].includes(statusLower);
+        const isEditable = ["pending", "processing"].includes(statusLower);
 
         const items: MenuProps["items"] = [
           {
@@ -692,26 +690,13 @@ const OrdersPage = () => {
             ? [
                 { type: "divider" as const },
                 {
-                  key: "edit-customer",
-                  icon: <IconUser size={14} className="text-slate-600 dark:text-slate-300" />,
-                  label: <span className="font-semibold text-slate-700 dark:text-slate-200">Edit Customer Profile</span>,
-                  onClick: () => navigate(`/orders/${order.orderId}/customer`),
-                },
-                {
-                  key: "edit-items",
-                  icon: <IconPackage size={14} className="text-slate-600 dark:text-slate-300" />,
-                  label: <span className="font-semibold text-slate-700 dark:text-slate-200">Edit Order Items</span>,
-                  onClick: () => navigate(`/orders/${order.orderId}/items`),
+                  key: "edit-order",
+                  icon: <IconEdit size={14} className="text-blue-600 dark:text-blue-400" />,
+                  label: <span className="font-semibold text-slate-700 dark:text-slate-200">Edit Order</span>,
+                  onClick: () => navigate(`/orders/${order.orderId}`),
                 },
               ]
             : []),
-          { type: "divider" as const },
-          {
-            key: "view-tracking",
-            icon: <IconTruck size={14} className="text-slate-500" />,
-            label: <span className="font-medium text-slate-600 dark:text-slate-400">View Status & Tracking</span>,
-            onClick: () => navigate(`/orders/${order.orderId}/tracking`),
-          },
         ];
 
         return (

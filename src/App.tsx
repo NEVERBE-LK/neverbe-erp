@@ -1,5 +1,5 @@
 import { lazy, Suspense } from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useParams } from "react-router-dom";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Spinner from "@/pages/components/shared/Spinner";
 
@@ -15,9 +15,14 @@ const ProcessOrders = lazy(() => import("@/pages/orders/processing/page"));
 const ProcessPayments = lazy(() => import("@/pages/orders/payment-pending/page"));
 const OrderDetail = lazy(() => import("@/pages/orders/[orderId]/page"));
 const OrderView = lazy(() => import("@/pages/orders/[orderId]/view/page"));
-const OrderCustomerEdit = lazy(() => import("@/pages/orders/[orderId]/customer/page"));
-const OrderItemsEdit = lazy(() => import("@/pages/orders/[orderId]/items/page"));
-const OrderTrackingEdit = lazy(() => import("@/pages/orders/[orderId]/tracking/page"));
+const OrderLegacyRedirect = () => {
+  const { orderId } = useParams();
+  return <Navigate to={`/orders/${orderId}`} replace />;
+};
+const OrderTrackingLegacyRedirect = () => {
+  const { orderId } = useParams();
+  return <Navigate to={`/orders/${orderId}/view`} replace />;
+};
 const OrderInvoice = lazy(
   () => import("@/pages/orders/[orderId]/invoice/page"),
 );
@@ -198,9 +203,9 @@ export default function App() {
           <Route path="orders/payment-pending" element={<ProtectedRoute permission="view_orders"><ProcessPayments /></ProtectedRoute>} />
           <Route path="orders/:orderId" element={<ProtectedRoute permission="view_orders"><OrderDetail /></ProtectedRoute>} />
           <Route path="orders/:orderId/view" element={<ProtectedRoute permission="view_orders"><OrderView /></ProtectedRoute>} />
-          <Route path="orders/:orderId/customer" element={<ProtectedRoute permission="view_orders"><OrderCustomerEdit /></ProtectedRoute>} />
-          <Route path="orders/:orderId/items" element={<ProtectedRoute permission="view_orders"><OrderItemsEdit /></ProtectedRoute>} />
-          <Route path="orders/:orderId/tracking" element={<ProtectedRoute permission="view_orders"><OrderTrackingEdit /></ProtectedRoute>} />
+          <Route path="orders/:orderId/customer" element={<ProtectedRoute permission="view_orders"><OrderLegacyRedirect /></ProtectedRoute>} />
+          <Route path="orders/:orderId/items" element={<ProtectedRoute permission="view_orders"><OrderLegacyRedirect /></ProtectedRoute>} />
+          <Route path="orders/:orderId/tracking" element={<ProtectedRoute permission="view_orders"><OrderTrackingLegacyRedirect /></ProtectedRoute>} />
           <Route path="orders/:orderId/invoice" element={<ProtectedRoute permission="view_orders"><OrderInvoice /></ProtectedRoute>} />
 
           {/* Master Data */}
