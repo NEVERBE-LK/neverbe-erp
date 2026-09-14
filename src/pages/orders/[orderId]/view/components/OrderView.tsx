@@ -196,9 +196,21 @@ const OrderView = ({ orderId }: { orderId: string }) => {
   const subtotal =
     order?.items?.reduce((acc, item) => acc + (item.price || 0) * (item.quantity || 1), 0) || 0;
 
-  const manualOrItemDiscount = Math.max(
+  const itemDiscountTotal =
+    order?.items?.reduce((acc, item) => acc + (item.discount || 0) * (item.quantity || 1), 0) || 0;
+
+  const couponDiscount = order?.couponDiscount || 0;
+  const promotionDiscount = order?.promotionDiscount || 0;
+
+  const manualDiscount = Math.max(
     0,
-    (order?.discount || 0) - (order?.couponDiscount || 0) - (order?.promotionDiscount || 0)
+    (order?.discount || 0) - couponDiscount - promotionDiscount - itemDiscountTotal
+  );
+
+  const accountedDiscounts = itemDiscountTotal + couponDiscount + promotionDiscount + manualDiscount;
+  const fallbackDiscount = Math.max(
+    0,
+    subtotal + (order?.shippingFee || 0) + (order?.fee || 0) - (order?.total || 0) - accountedDiscounts
   );
 
   const fee = order?.fee || 0;
@@ -740,24 +752,40 @@ const OrderView = ({ orderId }: { orderId: string }) => {
               </span>
             </div>
 
-            {manualOrItemDiscount > 0 && (
+            {itemDiscountTotal > 0 && (
+              <div className="flex justify-between items-center text-rose-500">
+                <span className="font-semibold uppercase">Item Level Discounts</span>
+                <span className="font-bold">-Rs {itemDiscountTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+              </div>
+            )}
+
+            {promotionDiscount > 0 && (
+              <div className="flex justify-between items-center text-emerald-600 dark:text-emerald-400">
+                <span className="font-semibold uppercase">Promotion Discount</span>
+                <span className="font-bold">-Rs {promotionDiscount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+              </div>
+            )}
+
+            {couponDiscount > 0 && (
+              <div className="flex justify-between items-center text-emerald-600 dark:text-emerald-400">
+                <span className="font-semibold uppercase">
+                  Coupon Discount {order?.couponCode ? `(${order.couponCode})` : ""}
+                </span>
+                <span className="font-bold">-Rs {couponDiscount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+              </div>
+            )}
+
+            {manualDiscount > 0 && (
+              <div className="flex justify-between items-center text-rose-500">
+                <span className="font-semibold uppercase">Manual Discount</span>
+                <span className="font-bold">-Rs {manualDiscount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+              </div>
+            )}
+
+            {fallbackDiscount > 0 && (
               <div className="flex justify-between items-center text-rose-500">
                 <span className="font-semibold uppercase">Discounts Applied</span>
-                <span className="font-bold">-Rs {manualOrItemDiscount.toLocaleString()}</span>
-              </div>
-            )}
-
-            {order?.couponCode && (order?.couponDiscount || 0) > 0 && (
-              <div className="flex justify-between items-center text-emerald-600">
-                <span className="font-semibold uppercase">Coupon ({order.couponCode})</span>
-                <span className="font-bold">-Rs {(order.couponDiscount || 0).toLocaleString()}</span>
-              </div>
-            )}
-
-            {(order?.promotionDiscount || 0) > 0 && (
-              <div className="flex justify-between items-center text-emerald-600">
-                <span className="font-semibold uppercase">Auto Promotion</span>
-                <span className="font-bold">-Rs {(order.promotionDiscount || 0).toLocaleString()}</span>
+                <span className="font-bold">-Rs {fallbackDiscount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
               </div>
             )}
 

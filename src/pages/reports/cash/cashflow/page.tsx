@@ -548,7 +548,7 @@ const CashFlowPage = () => {
             )}
 
             {/* Table */}
-            {false && report.length > 0 && (
+            {report.length > 0 && (
               <div className="bg-card dark:bg-card-dark border border-card-border dark:border-card-border-dark rounded-xl overflow-hidden shadow-sm">
                 <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
                   <div>
