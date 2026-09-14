@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { Drawer, List, Badge, Button, Space, Typography, Tag, Empty, Tooltip } from "antd";
 import { IconBell, IconCheck, IconExternalLink, IconTrash } from "@tabler/icons-react";
-import { useNotifications, Notification, isOrderAlertTarget } from "@/hooks/useNotifications";
-import { dayjs } from "@/utils/dateUtils";
+import { useNotifications, Notification } from "@/hooks/useNotifications";
+import { dayjs, parseToDayjs } from "@/utils/dateUtils";
 import { useNavigate } from "react-router-dom";
 import api from "@/lib/api";
 import toast from "react-hot-toast";
@@ -56,6 +56,7 @@ export default function NotificationPanel({ open, onClose }: Props) {
   };
 
     const [expandedIds, setExpandedIds] = useState<string[]>([]);
+    const [filter, setFilter] = useState<string>("ALL");
   
     const toggleExpand = (e: React.MouseEvent, id: string) => {
       e.stopPropagation();
@@ -64,7 +65,10 @@ export default function NotificationPanel({ open, onClose }: Props) {
       );
     };
 
-    const filteredNotifications = notifications.filter(isOrderAlertTarget);
+    const filteredNotifications = notifications.filter((n) => {
+      if (filter === "ALL") return true;
+      return n.type === filter;
+    });
 
     return (
       <Drawer
@@ -91,6 +95,20 @@ export default function NotificationPanel({ open, onClose }: Props) {
                   Mark all
                 </Button>
               )}
+            </div>
+
+            <div className="flex items-center gap-1 bg-gray-50 dark:bg-slate-900/50 p-1 rounded-xl">
+               {["ALL", "ORDER", "STOCK", "SYSTEM"].map((t) => (
+                 <Button 
+                   key={t}
+                   type={filter === t ? 'primary' : 'text'}
+                   size="small"
+                   onClick={() => setFilter(t)}
+                   className={`flex-1 text-[9px] font-black uppercase tracking-widest h-8 rounded-lg border-none shadow-none ${filter === t ? 'bg-white text-blue-900! dark:bg-slate-800 dark:text-blue-400! shadow-sm' : 'text-gray-400'}`}
+                 >
+                   {t}
+                 </Button>
+               ))}
             </div>
           </div>
         }
@@ -129,7 +147,7 @@ export default function NotificationPanel({ open, onClose }: Props) {
                         {!item.read && <Badge status="processing" color="#3b82f6" />}
                       </div>
                       <Text type="secondary" className="text-[9px] font-black uppercase tracking-widest opacity-40">
-                        {dayjs(item.createdAt?.toDate ? item.createdAt.toDate() : item.createdAt).fromNow()}
+                        {parseToDayjs(item.createdAt)?.fromNow() || "recently"}
                       </Text>
                     </div>
                     
@@ -149,6 +167,30 @@ export default function NotificationPanel({ open, onClose }: Props) {
                          <div className="mt-4 p-4 bg-blue-50/50 rounded-2xl border border-blue-100/50 animate-in fade-in slide-in-from-top-2 duration-300">
                             <span className="text-[9px] font-black text-blue-800 uppercase tracking-widest mb-3 block opacity-60">Technical Details</span>
                             <div className="grid grid-cols-2 gap-4">
+                               {item.metadata.orderId && (
+                                  <div className="flex flex-col">
+                                     <span className="text-[7px] font-black text-gray-400 uppercase tracking-widest">Order ID</span>
+                                     <span className="text-[10px] font-black text-gray-700 font-mono">#{item.metadata.orderId}</span>
+                                  </div>
+                               )}
+                               {item.metadata.customerName && (
+                                  <div className="flex flex-col">
+                                     <span className="text-[7px] font-black text-gray-400 uppercase tracking-widest">Customer</span>
+                                     <span className="text-[10px] font-black text-gray-700">{item.metadata.customerName}</span>
+                                  </div>
+                               )}
+                               {item.metadata.paymentMethod && (
+                                  <div className="flex flex-col">
+                                     <span className="text-[7px] font-black text-gray-400 uppercase tracking-widest">Payment</span>
+                                     <span className="text-[10px] font-black text-gray-700">{item.metadata.paymentMethod} {item.metadata.paymentStatus ? `(${item.metadata.paymentStatus})` : ""}</span>
+                                  </div>
+                               )}
+                               {item.metadata.total !== undefined && (
+                                  <div className="flex flex-col">
+                                     <span className="text-[7px] font-black text-gray-400 uppercase tracking-widest">Total</span>
+                                     <span className="text-[10px] font-black text-blue-950">Rs. {Number(item.metadata.total).toLocaleString()}</span>
+                                  </div>
+                               )}
                                {item.metadata.sku && (
                                   <div className="flex flex-col">
                                      <span className="text-[7px] font-black text-gray-400 uppercase tracking-widest">SKU Trace</span>

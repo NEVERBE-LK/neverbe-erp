@@ -100,7 +100,7 @@ export default function AppLayout() {
           </div>
         )}
 
-        <header className="sticky top-0 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800/80 h-16 flex items-center justify-between px-4 z-40">
+        <header className="sticky top-0 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800/80 h-16 flex items-center justify-between px-4 sm:px-6 z-40">
           <div className="flex items-center gap-4">
             <div className="lg:hidden">
               <Button
@@ -111,27 +111,29 @@ export default function AppLayout() {
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-1 sm:gap-2">
             {/* Theme Toggle Button */}
             <Tooltip title={theme === "light" ? "Switch to Dark Mode" : "Switch to Light Mode"}>
-              <div 
-                className="p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-full cursor-pointer transition-colors text-slate-600 dark:text-slate-300"
+              <button 
+                type="button"
+                className="w-10 h-10 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full cursor-pointer transition-colors text-slate-600 dark:text-slate-300 border-none bg-transparent p-0"
                 onClick={toggleTheme}
               >
                 {theme === "light" ? <IconMoon size={20} /> : <IconSun size={20} />}
-              </div>
+              </button>
             </Tooltip>
 
             {/* Notifications Button */}
             <Tooltip title="Notifications">
-              <div 
-                className="p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-full cursor-pointer transition-colors"
+              <button 
+                type="button"
+                className="w-10 h-10 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full cursor-pointer transition-colors border-none bg-transparent p-0"
                 onClick={() => setNotificationOpen(true)}
               >
-                <Badge count={unreadCount} size="small" offset={[2, 0]}>
+                <Badge count={unreadCount} size="small" offset={[2, 0]} className="flex items-center justify-center">
                   <IconBell size={20} className="text-slate-600 dark:text-slate-300" />
                 </Badge>
-              </div>
+              </button>
             </Tooltip>
           </div>
         </header>

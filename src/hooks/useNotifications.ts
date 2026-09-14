@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { messaging, fcmGetToken, onMessage, db, auth } from "@/firebase/firebaseClient";
 import { doc, updateDoc, arrayUnion, onSnapshot, collection, query, orderBy, limit } from "firebase/firestore";
 import toast from "react-hot-toast";
+import api from "@/lib/api";
 
 export interface Notification {
   id: string;
@@ -19,29 +20,59 @@ export const isOrderAlertTarget = (n: Partial<Notification>) => {
   const title = (n.title || "").toLowerCase();
   const body = (n.message || "").toLowerCase();
 
-  // 1. Paid Online Orders
-  const isPaid =
-    meta.paymentStatus === "Paid" ||
-    meta.paymentStatus === "Completed" ||
-    title.includes("paid") ||
-    body.includes("paid");
+  const paymentStatus = (meta.paymentStatus || "").toLowerCase();
+  const paymentMethod = (meta.paymentMethod || "").toLowerCase();
+  const paymentMethodId = (meta.paymentMethodId || "").toUpperCase();
 
-  // 2. COD Payment Pending Orders
+  // 1. Suppress explicitly failed payments
+  if (paymentStatus === "failed" || title.includes("failed") || body.includes("failed")) {
+    return false;
+  }
+
+  // 2. Identify COD orders
   const isCod =
-    meta.paymentMethod === "COD" ||
-    meta.paymentMethodId === "PM-001" ||
+    paymentMethod === "cod" ||
+    paymentMethodId === "PM-001" ||
     title.includes("cod") ||
     body.includes("cash on delivery");
 
-  const isPending =
-    meta.paymentStatus === "Pending" ||
-    meta.status === "Pending Approval" ||
-    title.includes("pending") ||
-    body.includes("pending");
+  // 3. Identify Paid orders
+  const isPaid =
+    paymentStatus === "paid" ||
+    paymentStatus === "completed" ||
+    title.includes("paid") ||
+    body.includes("paid");
 
-  const isCodPending = isCod && isPending;
+  // 4. PayHere / Online Gateway order that is UNPAID / Pending: Suppress from confirmed alerts
+  const isOnlinePayment =
+    paymentMethod.includes("payhere") ||
+    paymentMethod.includes("card") ||
+    paymentMethod.includes("online") ||
+    paymentMethod.includes("koko") ||
+    paymentMethodId === "PM-002" ||
+    paymentMethodId === "PM-003" ||
+    paymentMethodId === "PM-006";
 
-  return isPaid || isCodPending;
+  if (isOnlinePayment && !isPaid) {
+    return false;
+  }
+
+  // 5. If paymentStatus is explicitly Pending and not COD: Suppress
+  if (paymentStatus === "pending" && !isCod) {
+    return false;
+  }
+
+  // 6. Confirmed targets: Paid online orders, COD orders
+  if (isPaid || isCod) {
+    return true;
+  }
+
+  // 7. Orders matching orderId or general order creation (for legacy docs without payment metadata)
+  if (meta.orderId || title.includes("order") || body.includes("placed by")) {
+    return true;
+  }
+
+  return false;
 };
 
 export const useNotifications = () => {
@@ -168,6 +199,18 @@ export const useNotifications = () => {
     return () => unsubscribe();
   }, []);
 
+  const fetchFromApi = useCallback(async () => {
+    try {
+      const res = await api.get("/api/v1/erp/notifications");
+      const list = Array.isArray(res.data) ? res.data : [];
+      const valid = list.filter(isOrderAlertTarget);
+      setNotifications(valid);
+      setUnreadCount(valid.filter((n: any) => !n.read).length);
+    } catch (err) {
+      console.error("[useNotifications] Failed to fetch notifications via API:", err);
+    }
+  }, []);
+
   // 4. Live Firestore Notifications Listener
   useEffect(() => {
     const unsubscribeAuth = auth.onAuthStateChanged((user) => {
@@ -182,31 +225,35 @@ export const useNotifications = () => {
         limit(20)
       );
 
-      const unsubscribeSnapshot = onSnapshot(q, (snapshot) => {
-        const docs = snapshot.docs.map((d) => ({
-          id: d.id,
-          ...d.data(),
-        })) as Notification[];
+      const unsubscribeSnapshot = onSnapshot(
+        q,
+        (snapshot) => {
+          const docs = snapshot.docs.map((d) => ({
+            id: d.id,
+            ...d.data(),
+          })) as Notification[];
 
-        const validAlerts = docs.filter(isOrderAlertTarget);
-        setNotifications(validAlerts);
-        setUnreadCount(validAlerts.filter(n => !n.read).length);
-      }, (error) => {
-        if (error.code === 'permission-denied') {
-          console.warn("[useNotifications] Firestore permission denied.");
+          const validAlerts = docs.filter(isOrderAlertTarget);
+          setNotifications(validAlerts);
+          setUnreadCount(validAlerts.filter((n) => !n.read).length);
+        },
+        (error) => {
+          console.warn("[useNotifications] Firestore onSnapshot issue, falling back to API:", error.message || error);
+          fetchFromApi();
         }
-      });
+      );
 
       return () => unsubscribeSnapshot();
     });
 
     return () => unsubscribeAuth();
-  }, []);
+  }, [fetchFromApi]);
 
   return {
     notifications,
     unreadCount,
     fcmToken,
     requestPermission,
+    refreshNotifications: fetchFromApi,
   };
 };
