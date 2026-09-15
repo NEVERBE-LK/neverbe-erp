@@ -17,7 +17,7 @@ const OrderDetail = lazy(() => import("@/pages/orders/[orderId]/page"));
 const OrderView = lazy(() => import("@/pages/orders/[orderId]/view/page"));
 const OrderLegacyRedirect = () => {
   const { orderId } = useParams();
-  return <Navigate to={`/orders/${orderId}`} replace />;
+  return <Navigate to={`/orders/${orderId}/view`} replace />;
 };
 const OrderTrackingLegacyRedirect = () => {
   const { orderId } = useParams();

@@ -380,7 +380,7 @@ export default function PettyCashList() {
             <div className="w-1 h-8 bg-slate-900 dark:bg-slate-100 rounded-full" />
             <div>
               <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-text-sub dark:text-slate-500 leading-none mb-1 font-mono block">
-                Finance / Cash Control
+                Cash Control
               </span>
               <div className="flex items-center gap-2 font-mono">
                 <h2 className="text-2xl font-bold text-text-main dark:text-text-main-dark tracking-tight leading-none">

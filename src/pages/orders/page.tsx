@@ -24,6 +24,7 @@ import {
   IconCamera,
   IconDotsVertical,
   IconPrinter,
+  IconPackage,
   IconTruck,
   IconRotate,
   IconCircleX,
@@ -59,6 +60,8 @@ import { ProcessOrderModal } from "./components/ProcessOrderModal";
 import { ProcessPaymentModal } from "./components/ProcessPaymentModal";
 import { ProcessReturnModal } from "./components/ProcessReturnModal";
 import { ProcessCancelModal } from "./components/ProcessCancelModal";
+import { EditCustomerModal } from "./components/EditCustomerModal";
+import { EditOrderItemsModal } from "./components/EditOrderItemsModal";
 
 const { Option } = Select;
 const { RangePicker } = DatePicker;
@@ -114,6 +117,10 @@ const OrdersPage = () => {
   const [isProcessOrderOpen, setIsProcessOrderOpen] = useState(false);
   const [isProcessReturnOpen, setIsProcessReturnOpen] = useState(false);
   const [isProcessCancelOpen, setIsProcessCancelOpen] = useState(false);
+  const [selectedOrderForEditCustomer, setSelectedOrderForEditCustomer] = useState<Order | null>(null);
+  const [isEditCustomerOpen, setIsEditCustomerOpen] = useState(false);
+  const [selectedOrderForEditItems, setSelectedOrderForEditItems] = useState<Order | null>(null);
+  const [isEditItemsOpen, setIsEditItemsOpen] = useState(false);
 
   const startScanner = (orderId: string) => {
     setScanningOrderId(orderId);
@@ -690,10 +697,22 @@ const OrdersPage = () => {
             ? [
                 { type: "divider" as const },
                 {
-                  key: "edit-order",
-                  icon: <IconEdit size={14} className="text-blue-600 dark:text-blue-400" />,
-                  label: <span className="font-semibold text-slate-700 dark:text-slate-200">Edit Order</span>,
-                  onClick: () => navigate(`/orders/${order.orderId}`),
+                  key: "edit-customer",
+                  icon: <IconUser size={14} className="text-blue-600 dark:text-blue-400" />,
+                  label: <span className="font-semibold text-slate-700 dark:text-slate-200">Edit Customer</span>,
+                  onClick: () => {
+                    setSelectedOrderForEditCustomer(order);
+                    setIsEditCustomerOpen(true);
+                  },
+                },
+                {
+                  key: "edit-items",
+                  icon: <IconPackage size={14} className="text-indigo-600 dark:text-indigo-400" />,
+                  label: <span className="font-semibold text-slate-700 dark:text-slate-200">Edit Items</span>,
+                  onClick: () => {
+                    setSelectedOrderForEditItems(order);
+                    setIsEditItemsOpen(true);
+                  },
                 },
               ]
             : []),
@@ -725,9 +744,6 @@ const OrdersPage = () => {
           <div className="flex items-center gap-3">
             <div className="w-1 h-8 bg-brand dark:bg-brand-dark rounded-full" />
             <div className="flex flex-col">
-              <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-text-sub dark:text-slate-500 leading-none mb-1 font-mono">
-                Dashboard / Orders / {viewTitle}
-              </span>
               <div className="flex items-center gap-2.5">
                 <h2 className="text-2xl font-bold text-text-main dark:text-text-main-dark tracking-tight leading-none font-mono">
                   {viewTitle}
@@ -972,6 +988,30 @@ const OrdersPage = () => {
         onClose={() => {
           setIsProcessCancelOpen(false);
           setSelectedOrderForAction(null);
+        }}
+        onSuccess={() => {
+          fetchOrders({ page: pagination.current });
+        }}
+      />
+
+      <EditCustomerModal
+        open={isEditCustomerOpen}
+        order={selectedOrderForEditCustomer}
+        onClose={() => {
+          setIsEditCustomerOpen(false);
+          setSelectedOrderForEditCustomer(null);
+        }}
+        onSuccess={() => {
+          fetchOrders({ page: pagination.current });
+        }}
+      />
+
+      <EditOrderItemsModal
+        open={isEditItemsOpen}
+        order={selectedOrderForEditItems}
+        onClose={() => {
+          setIsEditItemsOpen(false);
+          setSelectedOrderForEditItems(null);
         }}
         onSuccess={() => {
           fetchOrders({ page: pagination.current });

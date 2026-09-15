@@ -36,6 +36,8 @@ import { ProcessOrderModal } from "@/pages/orders/components/ProcessOrderModal";
 import { ProcessPaymentModal } from "@/pages/orders/components/ProcessPaymentModal";
 import { ProcessReturnModal } from "@/pages/orders/components/ProcessReturnModal";
 import { ProcessCancelModal } from "@/pages/orders/components/ProcessCancelModal";
+import { EditCustomerModal } from "@/pages/orders/components/EditCustomerModal";
+import { EditOrderItemsModal } from "@/pages/orders/components/EditOrderItemsModal";
 
 const OrderView = ({ orderId }: { orderId: string }) => {
   const [order, setOrder] = useState<Order | null>(null);
@@ -52,6 +54,8 @@ const OrderView = ({ orderId }: { orderId: string }) => {
   const [isProcessOrderOpen, setIsProcessOrderOpen] = useState(false);
   const [isProcessReturnOpen, setIsProcessReturnOpen] = useState(false);
   const [isProcessCancelOpen, setIsProcessCancelOpen] = useState(false);
+  const [isEditCustomerOpen, setIsEditCustomerOpen] = useState(false);
+  const [isEditItemsOpen, setIsEditItemsOpen] = useState(false);
 
   const { currentUser } = useAppSelector((state: any) => state.authSlice);
   const navigate = useNavigate();
@@ -531,16 +535,26 @@ const OrderView = ({ orderId }: { orderId: string }) => {
                     </AntButton>
                   )}
 
-                  {/* Configure / Edit button (ONLY for Website orders in Processing/Pending status) */}
+                  {/* Separate Edit Dialog Triggers (Customer & Items) */}
                   {["pending", "processing"].includes((order?.status || "").toLowerCase()) ? (
-                    <AntButton
-                      type="primary"
-                      icon={<IconEdit size={16} />}
-                      onClick={() => navigate(`/orders/${orderId}`)}
-                      className="h-10 rounded-xl bg-slate-900 dark:bg-slate-100 dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-200 border-none font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs cursor-pointer"
-                    >
-                      Configure / Edit
-                    </AntButton>
+                    <>
+                      <AntButton
+                        type="default"
+                        icon={<IconUser size={15} />}
+                        onClick={() => setIsEditCustomerOpen(true)}
+                        className="h-10 rounded-xl border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/40 font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs cursor-pointer"
+                      >
+                        Edit Customer
+                      </AntButton>
+                      <AntButton
+                        type="default"
+                        icon={<IconPackage size={15} />}
+                        onClick={() => setIsEditItemsOpen(true)}
+                        className="h-10 rounded-xl border-indigo-200 dark:border-indigo-800 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs cursor-pointer"
+                      >
+                        Edit Items
+                      </AntButton>
+                    </>
                   ) : (
                     <div className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-xs font-bold font-mono border border-slate-200 dark:border-slate-700">
                       <IconLock size={15} />
@@ -658,11 +672,24 @@ const OrderView = ({ orderId }: { orderId: string }) => {
           {/* Customer Profile & Address Info */}
           {order?.customer && (
             <div className="pt-6 border-t border-card-border dark:border-card-border-dark space-y-4">
-              <div className="flex items-center gap-2">
-                <IconUser size={16} className="text-brand dark:text-brand-dark" />
-                <span className="text-xs font-bold text-text-main dark:text-text-main-dark uppercase font-mono tracking-wider">
-                  Customer Profile & Delivery Info
-                </span>
+              <div className="flex items-center justify-between pb-1 border-b border-card-border/60 dark:border-card-border-dark/60">
+                <div className="flex items-center gap-2">
+                  <IconUser size={16} className="text-brand dark:text-brand-dark" />
+                  <span className="text-xs font-bold text-text-main dark:text-text-main-dark uppercase font-mono tracking-wider">
+                    Customer Profile & Delivery Info
+                  </span>
+                </div>
+                {["pending", "processing"].includes((order?.status || "").toLowerCase()) && (
+                  <AntButton
+                    type="text"
+                    size="small"
+                    icon={<IconEdit size={14} />}
+                    onClick={() => setIsEditCustomerOpen(true)}
+                    className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 h-7 px-2 cursor-pointer flex items-center gap-1"
+                  >
+                    Edit
+                  </AntButton>
+                )}
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-xs">
@@ -735,6 +762,17 @@ const OrderView = ({ orderId }: { orderId: string }) => {
                 Order Items ({order?.items?.length || 0})
               </h3>
             </div>
+            {["pending", "processing"].includes((order?.status || "").toLowerCase()) && (
+              <AntButton
+                type="text"
+                size="small"
+                icon={<IconEdit size={14} />}
+                onClick={() => setIsEditItemsOpen(true)}
+                className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 h-7 px-2 cursor-pointer flex items-center gap-1"
+              >
+                Edit Items
+              </AntButton>
+            )}
           </div>
 
           <div className="[&_.ant-table]:!bg-transparent [&_.ant-table-thead>tr>th]:!bg-slate-50/80 [&_.ant-table-thead>tr>th]:dark:!bg-slate-800/60 [&_.ant-table-thead>tr>th]:!text-text-sub [&_.ant-table-thead>tr>th]:!font-bold [&_.ant-table-thead>tr>th]:!text-[11px] [&_.ant-table-thead>tr>th]:!uppercase [&_.ant-table-thead>tr>th]:!tracking-wider [&_.ant-table-thead>tr>th]:!border-b [&_.ant-table-thead>tr>th]:!border-card-border [&_.ant-table-thead>tr>th]:dark:!border-card-border-dark [&_.ant-table-tbody>tr]:hover:!bg-slate-50/60 [&_.ant-table-tbody>tr]:dark:hover:!bg-slate-800/40 [&_.ant-table-tbody>tr>td]:!border-b [&_.ant-table-tbody>tr>td]:!border-card-border [&_.ant-table-tbody>tr>td]:dark:!border-card-border-dark [&_.ant-table-tbody>tr>td]:!py-3.5">
@@ -938,6 +976,24 @@ const OrderView = ({ orderId }: { orderId: string }) => {
         onClose={() => setIsProcessCancelOpen(false)}
         onSuccess={() => {
           window.location.reload();
+        }}
+      />
+
+      <EditCustomerModal
+        open={isEditCustomerOpen}
+        order={order}
+        onClose={() => setIsEditCustomerOpen(false)}
+        onSuccess={() => {
+          fetchOrderAndStocks();
+        }}
+      />
+
+      <EditOrderItemsModal
+        open={isEditItemsOpen}
+        order={order}
+        onClose={() => setIsEditItemsOpen(false)}
+        onSuccess={() => {
+          fetchOrderAndStocks();
         }}
       />
     </div>

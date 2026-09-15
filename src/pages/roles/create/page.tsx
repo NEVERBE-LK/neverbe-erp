@@ -160,7 +160,7 @@ const CreateRolePage = () => {
             <div className="w-1 h-10 bg-slate-900 dark:bg-slate-100 rounded-full shrink-0" />
             <div className="space-y-1 flex-1 min-w-0">
               <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-text-sub dark:text-slate-500 block font-mono">
-                Security Administration / Create Role
+                Security Administration
               </span>
 
               <div className="flex flex-wrap items-center gap-3">
