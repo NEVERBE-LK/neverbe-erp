@@ -1,8 +1,9 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { messaging, fcmGetToken, onMessage, db, auth } from "@/firebase/firebaseClient";
 import { doc, updateDoc, arrayUnion, onSnapshot, collection, query, orderBy, limit } from "firebase/firestore";
 import toast from "react-hot-toast";
 import api from "@/lib/api";
+import { playNotificationChime } from "@/utils/audioChime";
 
 export interface Notification {
   id: string;
@@ -24,15 +25,22 @@ export const isOrderAlertTarget = (n: Partial<Notification>) => {
   const paymentMethod = (meta.paymentMethod || "").toLowerCase();
   const paymentMethodId = (meta.paymentMethodId || "").toUpperCase();
 
-  // 1. Suppress explicitly failed payments
-  if (paymentStatus === "failed" || title.includes("failed") || body.includes("failed")) {
+  // 1. Explicitly failed payments or cancellations are NEVER eligible
+  if (
+    paymentStatus === "failed" ||
+    title.includes("failed") ||
+    body.includes("failed") ||
+    paymentStatus === "cancelled" ||
+    title.includes("cancelled")
+  ) {
     return false;
   }
 
-  // 2. Identify COD orders
+  // 2. Identify COD orders (Cash On Delivery)
   const isCod =
     paymentMethod === "cod" ||
     paymentMethodId === "PM-001" ||
+    paymentMethod.includes("cash on delivery") ||
     title.includes("cod") ||
     body.includes("cash on delivery");
 
@@ -43,18 +51,22 @@ export const isOrderAlertTarget = (n: Partial<Notification>) => {
     title.includes("paid") ||
     body.includes("paid");
 
-  // 4. PayHere / Online Gateway order that is UNPAID / Pending: Suppress from confirmed alerts
-  const isOnlinePayment =
+  // 4. Online Gateways (PayHere, Koko, Card, etc.) MUST be Paid. Non-paid are strictly suppressed!
+  const isOnlineGateway =
     paymentMethod.includes("payhere") ||
+    paymentMethod.includes("koko") ||
     paymentMethod.includes("card") ||
     paymentMethod.includes("online") ||
-    paymentMethod.includes("koko") ||
     paymentMethodId === "PM-002" ||
     paymentMethodId === "PM-003" ||
-    paymentMethodId === "PM-006";
+    paymentMethodId === "PM-006" ||
+    title.includes("payhere") ||
+    title.includes("koko") ||
+    body.includes("payhere") ||
+    body.includes("koko");
 
-  if (isOnlinePayment && !isPaid) {
-    return false;
+  if (isOnlineGateway) {
+    return isPaid;
   }
 
   // 5. If paymentStatus is explicitly Pending and not COD: Suppress
@@ -62,17 +74,8 @@ export const isOrderAlertTarget = (n: Partial<Notification>) => {
     return false;
   }
 
-  // 6. Confirmed targets: Paid online orders, COD orders
-  if (isPaid || isCod) {
-    return true;
-  }
-
-  // 7. Orders matching orderId or general order creation (for legacy docs without payment metadata)
-  if (meta.orderId || title.includes("order") || body.includes("placed by")) {
-    return true;
-  }
-
-  return false;
+  // 6. Confirmed targets: COD orders OR Paid online orders
+  return isCod || isPaid;
 };
 
 export const useNotifications = () => {
@@ -80,8 +83,8 @@ export const useNotifications = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isRegistering, setIsRegistering] = useState(false);
+  const initialLoadRef = useRef(true);
 
-  // ... (rest of code)
   const registerAndGetToken = async (vapidKey: string, isRetry = false): Promise<string | null> => {
     if (!('serviceWorker' in navigator) || isRegistering) return null;
     
@@ -178,7 +181,7 @@ export const useNotifications = () => {
     }
   };
 
-  // 3. Listen for Background/Foreground Messages (Targeted Alert Filter)
+  // 3. Listen for Background/Foreground Messages (Targeted Alert Filter + Chime)
   useEffect(() => {
     if (!messaging) return;
 
@@ -189,6 +192,7 @@ export const useNotifications = () => {
 
       const isTarget = isOrderAlertTarget({ title, message: body, metadata: meta, type: "ORDER" });
       if (isTarget) {
+        playNotificationChime();
         toast.success(`${title}: ${body}`, {
           icon: "🔔",
           duration: 6000,
@@ -228,6 +232,24 @@ export const useNotifications = () => {
       const unsubscribeSnapshot = onSnapshot(
         q,
         (snapshot) => {
+          // Play chime & show toast for newly arrived order/system alerts (excluding initial batch)
+          if (!initialLoadRef.current) {
+            snapshot.docChanges().forEach((change) => {
+              if (change.type === "added") {
+                const item = { id: change.doc.id, ...change.doc.data() } as Notification;
+                if (isOrderAlertTarget(item)) {
+                  playNotificationChime();
+                  toast.success(`${item.title}: ${item.message}`, {
+                    icon: "🔔",
+                    duration: 6000,
+                  });
+                }
+              }
+            });
+          } else {
+            initialLoadRef.current = false;
+          }
+
           const docs = snapshot.docs.map((d) => ({
             id: d.id,
             ...d.data(),

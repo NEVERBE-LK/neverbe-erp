@@ -46,9 +46,24 @@ export default function NotificationPanel({ open, onClose }: Props) {
     }
   };
 
-  const getTypeTag = (type: string) => {
+  const getTypeTag = (type: string, meta?: any) => {
     switch (type) {
-      case "ORDER": return <Tag bordered={false} className="m-0 text-[8px] font-bold uppercase px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-mono">Order</Tag>;
+      case "ORDER": {
+        const isCod =
+          (meta?.paymentMethod || "").toLowerCase().includes("cod") ||
+          (meta?.paymentMethodId || "") === "PM-001" ||
+          (meta?.paymentMethod || "").toLowerCase().includes("cash on delivery");
+        return (
+          <Space size={4}>
+            <Tag bordered={false} className="m-0 text-[8px] font-bold uppercase px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-mono">Order</Tag>
+            {isCod ? (
+              <Tag bordered={false} className="m-0 text-[8px] font-bold uppercase px-1.5 py-0.5 rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400 font-mono">COD</Tag>
+            ) : (
+              <Tag bordered={false} className="m-0 text-[8px] font-bold uppercase px-1.5 py-0.5 rounded-md bg-blue-500/10 text-blue-600 dark:text-blue-400 font-mono">Paid</Tag>
+            )}
+          </Space>
+        );
+      }
       case "STOCK": return <Tag bordered={false} className="m-0 text-[8px] font-bold uppercase px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400 font-mono">Inventory</Tag>;
       case "SYSTEM": return <Tag bordered={false} className="m-0 text-[8px] font-bold uppercase px-2 py-0.5 rounded-md bg-zinc-500/10 text-zinc-600 dark:text-zinc-400 font-mono">System</Tag>;
       default: return <Tag bordered={false} className="m-0 text-[8px] font-bold uppercase px-2 py-0.5 rounded-md bg-zinc-500/10 text-zinc-600 dark:text-zinc-400 font-mono">System</Tag>;
@@ -142,7 +157,7 @@ export default function NotificationPanel({ open, onClose }: Props) {
                   <div className="flex flex-col gap-2.5 w-full">
                     <div className="flex justify-between items-center">
                       <div className="flex items-center gap-2">
-                        {getTypeTag(item.type)}
+                        {getTypeTag(item.type, item.metadata)}
                         {!item.read && <Badge status="processing" color="#10b981" />}
                       </div>
                       <Text type="secondary" className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 font-mono">
