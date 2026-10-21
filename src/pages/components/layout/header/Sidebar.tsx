@@ -13,6 +13,7 @@ import { logoutUserAction } from "@/actions/authActions";
 import toast from "react-hot-toast";
 import Menuitems from "./MenuItems";
 import { useTheme } from "@/contexts/ThemeContext";
+import BrandLogo from "@/components/BrandLogo";
 
 interface SidebarProps {
   isMobile?: boolean;
@@ -131,25 +132,26 @@ const Sidebar = ({
 
   return (
     <aside
-      className={`${sidebarWidth} ${isMobile ? "h-full" : "fixed h-screen z-50 left-0 top-0"} flex flex-col bg-white dark:bg-slate-950 border-r border-slate-100 dark:border-slate-800/80 transition-all duration-300 select-none`}
+      className={`${sidebarWidth} ${isMobile ? "h-full" : "fixed h-screen z-50 left-0 top-0"} flex flex-col bg-white dark:bg-[#0a0a0a] border-r border-zinc-200/80 dark:border-zinc-800/80 transition-all duration-300 select-none`}
     >
       {/* ── Logo ── */}
-      <div className="h-16 flex items-center px-5 border-b border-slate-100 dark:border-slate-800/80 flex-shrink-0 overflow-hidden">
+      <div className="h-16 flex items-center px-5 border-b border-zinc-200/80 dark:border-zinc-800/80 flex-shrink-0 overflow-hidden">
         {collapsed && !isMobile ? (
-          <Link to="/dashboard" className="flex items-center justify-center w-full">
-            <img
-              src="/logo.png"
-              alt="NeverBe"
-              className="w-9 h-9 object-contain dark:brightness-120 dark:contrast-120"
+          <Link to="/dashboard" className="flex items-center justify-center w-full" title="NEVERBE Dashboard">
+            <BrandLogo
+              variant="short"
+              className="h-6 w-auto text-black dark:text-white"
             />
           </Link>
         ) : (
-          <Link to="/dashboard" className="flex items-center">
-            <img
-              src="/logo.png"
-              alt="NeverBe Logo"
-              className="h-8 w-auto object-contain dark:brightness-120 dark:contrast-120"
+          <Link to="/dashboard" className="flex items-center gap-2.5">
+            <BrandLogo
+              variant="full"
+              className="h-4.5 w-auto text-black dark:text-white"
             />
+            <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-widest bg-black text-white dark:bg-white dark:text-black font-mono">
+              ERP
+            </span>
           </Link>
         )}
       </div>
@@ -163,7 +165,7 @@ const Sidebar = ({
             return (
               <p
                 key={`header-${idx}`}
-                className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-slate-600 mt-6 mb-2 px-3 font-mono first:mt-2"
+                className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-400 dark:text-zinc-500 mt-6 mb-2 px-3 font-mono first:mt-2"
               >
                 {item.subHeader}
               </p>
@@ -202,8 +204,8 @@ const Sidebar = ({
                     w-full flex items-center gap-3 h-9 rounded-lg px-3 text-[13px] font-medium transition-colors duration-150 cursor-pointer
                     ${
                       hasActive
-                        ? "text-slate-900 dark:text-slate-100 bg-slate-50 dark:bg-slate-800/50"
-                        : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/30"
+                        ? "text-black dark:text-white bg-zinc-100 dark:bg-zinc-900/80 font-bold"
+                        : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100/60 dark:hover:bg-zinc-900/40"
                     }
                     ${collapsed && !isMobile ? "justify-center" : ""}
                   `}
@@ -214,8 +216,8 @@ const Sidebar = ({
                       stroke={1.8}
                       className={`flex-shrink-0 ${
                         hasActive
-                          ? "text-brand dark:text-brand-dark"
-                          : "text-slate-400 dark:text-slate-500"
+                          ? "text-black dark:text-white"
+                          : "text-zinc-400 dark:text-zinc-500"
                       }`}
                     />
                   )}
@@ -227,7 +229,7 @@ const Sidebar = ({
                       <IconChevronRight
                         size={14}
                         stroke={2}
-                        className={`flex-shrink-0 text-slate-300 dark:text-slate-600 transition-transform duration-200 ${
+                        className={`flex-shrink-0 text-zinc-300 dark:text-zinc-600 transition-transform duration-200 ${
                           isOpen ? "rotate-90" : ""
                         }`}
                       />
@@ -247,7 +249,7 @@ const Sidebar = ({
                         : "0px",
                     }}
                   >
-                    <div className="ml-[18px] pl-4 border-l border-slate-100 dark:border-slate-800/80 mt-1 mb-1 space-y-0.5">
+                    <div className="ml-[18px] pl-4 border-l border-zinc-200 dark:border-zinc-800/80 mt-1 mb-1 space-y-0.5">
                       {permittedChildren.map((child: any) => {
                         const active = isActive(child.href);
                         return (
@@ -258,8 +260,8 @@ const Sidebar = ({
                               w-full flex items-center h-[32px] rounded-md px-3 text-[12px] font-medium transition-colors duration-150 cursor-pointer
                               ${
                                 active
-                                  ? "text-brand dark:text-brand-dark bg-brand/5 dark:bg-brand-dark/5"
-                                  : "text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/30"
+                                  ? "text-black dark:text-white bg-black/5 dark:bg-white/10 font-bold"
+                                  : "text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100/50 dark:hover:bg-zinc-900/30"
                               }
                             `}
                           >
@@ -285,14 +287,14 @@ const Sidebar = ({
                 w-full flex items-center gap-3 h-9 rounded-lg px-3 text-[13px] font-medium transition-colors duration-150 mb-0.5 cursor-pointer relative
                 ${
                   active
-                    ? "text-slate-900 dark:text-slate-100 bg-slate-100 dark:bg-slate-800/60"
-                    : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/30"
+                    ? "text-black dark:text-white bg-zinc-100 dark:bg-zinc-900/80 font-bold"
+                    : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100/60 dark:hover:bg-zinc-900/40"
                 }
                 ${collapsed && !isMobile ? "justify-center" : ""}
               `}
             >
               {active && (
-                <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 rounded-r-full bg-brand dark:bg-brand-dark" />
+                <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 rounded-r-full bg-black dark:bg-white" />
               )}
               {item.icon && (
                 <item.icon
@@ -300,8 +302,8 @@ const Sidebar = ({
                   stroke={1.8}
                   className={`flex-shrink-0 ${
                     active
-                      ? "text-brand dark:text-brand-dark"
-                      : "text-slate-400 dark:text-slate-500"
+                      ? "text-black dark:text-white"
+                      : "text-zinc-400 dark:text-zinc-500"
                   }`}
                 />
               )}
@@ -314,11 +316,11 @@ const Sidebar = ({
       </nav>
 
       {/* ── User Profile Footer ── */}
-      <div className="flex-shrink-0 border-t border-slate-100 dark:border-slate-800/80 p-3">
+      <div className="flex-shrink-0 border-t border-zinc-200/80 dark:border-zinc-800/80 p-3">
         {collapsed && !isMobile ? (
           <Dropdown menu={{ items: userMenuItems }} trigger={["click"]}>
-            <button className="w-full flex items-center justify-center h-10 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors cursor-pointer">
-              <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center text-xs font-bold">
+            <button className="w-full flex items-center justify-center h-10 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-900/60 transition-colors cursor-pointer">
+              <div className="w-8 h-8 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 flex items-center justify-center text-xs font-bold">
                 {currentUser?.photoURL ? (
                   <img
                     src={currentUser.photoURL}
@@ -337,7 +339,7 @@ const Sidebar = ({
           </Dropdown>
         ) : (
           <div className="flex items-center gap-3 px-2 py-1.5 rounded-lg">
-            <div className="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center text-xs font-bold flex-shrink-0 overflow-hidden">
+            <div className="w-9 h-9 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 flex items-center justify-center text-xs font-bold flex-shrink-0 overflow-hidden">
               {currentUser?.photoURL ? (
                 <img
                   src={currentUser.photoURL}
@@ -354,14 +356,14 @@ const Sidebar = ({
             </div>
             <div className="flex flex-col min-w-0 flex-1">
               <p
-                className="text-[12px] font-semibold text-slate-700 dark:text-slate-200 m-0 truncate"
+                className="text-[12px] font-bold text-zinc-900 dark:text-white m-0 truncate"
                 title={currentUser?.username || currentUser?.email}
               >
                 {currentUser?.username ||
                   currentUser?.email?.split("@")[0] ||
                   "User"}
               </p>
-              <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-slate-400 dark:text-slate-500 m-0 truncate font-mono">
+              <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-zinc-400 dark:text-zinc-500 m-0 truncate font-mono">
                 {currentUser?.role || "USER"}
               </p>
             </div>
@@ -369,7 +371,7 @@ const Sidebar = ({
               menu={{ items: userMenuItems }}
               trigger={["click"]}
             >
-              <button className="w-7 h-7 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 transition-colors flex items-center justify-center flex-shrink-0 cursor-pointer">
+              <button className="w-7 h-7 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400 dark:text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors flex items-center justify-center flex-shrink-0 cursor-pointer">
                 <IconDotsVertical size={14} />
               </button>
             </Dropdown>

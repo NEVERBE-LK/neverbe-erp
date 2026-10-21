@@ -249,20 +249,20 @@ export default function AppBreadcrumb() {
   }
 
   return (
-    <div className="flex items-center gap-2 text-gray-500 text-sm mb-6 px-4 sm:px-8 lg:px-12 pt-4">
+    <div className="flex items-center gap-2 text-zinc-500 text-xs mb-6 px-4 sm:px-8 lg:px-12 pt-4 font-mono uppercase tracking-wider">
       {hasPermission("view_dashboard") ? (
         <Link
           to="/dashboard"
-          className="!text-slate-900 dark:!text-slate-100 hover:!text-slate-700 dark:hover:!text-slate-300 font-medium transition-colors"
+          className="!text-zinc-900 dark:!text-zinc-100 hover:!text-zinc-600 dark:hover:!text-zinc-300 font-bold transition-colors"
         >
           Dashboard
         </Link>
       ) : (
-        <span className="text-gray-400 font-medium cursor-not-allowed">
+        <span className="text-zinc-400 font-medium cursor-not-allowed">
           Dashboard
         </span>
       )}
-      <span className="text-gray-300 dark:text-slate-600">/</span>
+      <span className="text-zinc-300 dark:text-zinc-700">/</span>
 
       {items.map((item, index) => {
         const last = index === items.length - 1;
@@ -270,17 +270,17 @@ export default function AppBreadcrumb() {
         if (last || !item.isLinkable) {
           if (last) {
             return (
-              <Text key={item.to} strong className="text-slate-900 dark:text-slate-100">
+              <Text key={item.to} strong className="!text-zinc-900 dark:!text-zinc-100 font-bold">
                 {item.label}
               </Text>
             );
           }
           return (
             <React.Fragment key={item.to}>
-              <span className="text-slate-500 dark:text-slate-400 font-medium">
+              <span className="text-zinc-500 dark:text-zinc-400 font-medium">
                 {item.label}
               </span>
-              <span className="text-gray-300 dark:text-slate-600">/</span>
+              <span className="text-zinc-300 dark:text-zinc-700">/</span>
             </React.Fragment>
           );
         }
@@ -292,12 +292,12 @@ export default function AppBreadcrumb() {
           return (
             <React.Fragment key={item.to}>
               <span
-                className="text-gray-400 font-medium cursor-not-allowed"
+                className="text-zinc-400 font-medium cursor-not-allowed"
                 title="You do not have permission to access this page"
               >
                 {item.label}
               </span>
-              <span className="text-gray-300 dark:text-slate-600">/</span>
+              <span className="text-zinc-300 dark:text-zinc-700">/</span>
             </React.Fragment>
           );
         }
@@ -306,11 +306,11 @@ export default function AppBreadcrumb() {
           <React.Fragment key={item.to}>
             <Link
               to={item.to}
-              className="!text-slate-900 dark:!text-slate-100 hover:!text-slate-700 dark:hover:!text-slate-300 font-medium transition-colors"
+              className="!text-zinc-900 dark:!text-zinc-100 hover:!text-zinc-600 dark:hover:!text-zinc-300 font-bold transition-colors"
             >
               {item.label}
             </Link>
-            <span className="text-gray-300 dark:text-slate-600">/</span>
+            <span className="text-zinc-300 dark:text-zinc-700">/</span>
           </React.Fragment>
         );
       })}

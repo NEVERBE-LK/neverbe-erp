@@ -13,6 +13,7 @@ import {
 import toast from "react-hot-toast";
 import api from "@/lib/api";
 import { Card, Form, Input, Button, Typography, Steps } from "antd";
+import BrandLogo from "@/components/BrandLogo";
 
 const { Title, Text } = Typography;
 
@@ -109,16 +110,16 @@ const ResetPassword = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[#f5f5f5] dark:bg-[#0a0a0a] flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center flex-col items-center">
           <figure className="mb-4">
-            <img src="/logo.png" alt="Logo" className="w-28 h-28" />
+            <BrandLogo variant="full" className="h-8 w-auto text-black dark:text-white" />
           </figure>
-          <h2 className="text-center text-3xl font-extrabold text-gray-900 tracking-tight">
+          <h2 className="text-center text-3xl font-extrabold text-zinc-900 dark:text-white tracking-tight uppercase">
             Reset Access
           </h2>
-          <p className="mt-2 text-center text-sm font-semibold text-gray-500 uppercase tracking-widest">
+          <p className="mt-2 text-center text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-widest font-mono">
             Two-Step Identity Verification
           </p>
         </div>
@@ -126,8 +127,8 @@ const ResetPassword = () => {
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <Card
-          className="bg-white py-10 px-4 shadow-xl shadow-green-900/5 sm:rounded-3xl border border-gray-100"
-          style={{ borderRadius: "1rem" }}
+          className="bg-white dark:bg-[#141414] py-8 px-4 shadow-sm sm:rounded-2xl border border-zinc-200 dark:border-zinc-800"
+          style={{ borderRadius: "1.25rem" }}
         >
           <div className="mb-8">
             <Steps

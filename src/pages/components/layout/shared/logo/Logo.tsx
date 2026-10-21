@@ -1,13 +1,15 @@
+import BrandLogo from "@/components/BrandLogo";
 
+export interface LogoProps {
+  className?: string;
+  variant?: "full" | "short";
+}
 
-const Logo = () => {
+const Logo = ({ className = "h-7 w-auto", variant = "full" }: LogoProps) => {
   return (
-    <img
-      src="/images/logo.png"
-      alt="logo"
-      height={150}
-      width={150}
-      loading="eager"
+    <BrandLogo
+      variant={variant}
+      className={`text-black dark:text-white transition-colors ${className}`.trim()}
     />
   );
 };

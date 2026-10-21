@@ -24,35 +24,36 @@ const AntdAppWrapper = () => {
             ? antdThemeHelper.darkAlgorithm
             : antdThemeHelper.defaultAlgorithm,
         token: {
-          colorPrimary: theme === "dark" ? "#f8fafc" : "#0f172a",
-          colorPrimaryHover: theme === "dark" ? "#cbd5e1" : "#1e293b",
-          colorPrimaryActive: theme === "dark" ? "#ffffff" : "#020617",
+          colorPrimary: theme === "dark" ? "#ffffff" : "#0a0a0a",
+          colorPrimaryHover: theme === "dark" ? "#e5e5e5" : "#262626",
+          colorPrimaryActive: theme === "dark" ? "#d4d4d4" : "#000000",
+          colorSuccess: "#10b981",
           controlOutline:
             theme === "dark"
-              ? "rgba(248, 250, 252, 0.15)"
-              : "rgba(15, 23, 42, 0.08)",
+              ? "rgba(255, 255, 255, 0.12)"
+              : "rgba(10, 10, 10, 0.08)",
           fontFamily:
             "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
           borderRadius: 10,
         },
         components: {
           Input: {
-            activeBorderColor: theme === "dark" ? "#f8fafc" : "#0f172a",
-            hoverBorderColor: theme === "dark" ? "#475569" : "#cbd5e1",
+            activeBorderColor: theme === "dark" ? "#ffffff" : "#0a0a0a",
+            hoverBorderColor: theme === "dark" ? "#525252" : "#a1a1aa",
             activeShadow:
               theme === "dark"
-                ? "0 0 0 2px rgba(248, 250, 252, 0.15)"
-                : "0 0 0 2px rgba(15, 23, 42, 0.08)",
+                ? "0 0 0 2px rgba(255, 255, 255, 0.12)"
+                : "0 0 0 2px rgba(10, 10, 10, 0.08)",
           },
           Select: {
-            colorPrimary: theme === "dark" ? "#f8fafc" : "#0f172a",
-            colorPrimaryHover: theme === "dark" ? "#cbd5e1" : "#1e293b",
-            activeBorderColor: theme === "dark" ? "#f8fafc" : "#0f172a",
-            hoverBorderColor: theme === "dark" ? "#475569" : "#cbd5e1",
+            colorPrimary: theme === "dark" ? "#ffffff" : "#0a0a0a",
+            colorPrimaryHover: theme === "dark" ? "#e5e5e5" : "#262626",
+            activeBorderColor: theme === "dark" ? "#ffffff" : "#0a0a0a",
+            hoverBorderColor: theme === "dark" ? "#525252" : "#a1a1aa",
           },
           Pagination: {
-            itemActiveBg: theme === "dark" ? "#1e293b" : "#0f172a",
-            colorPrimary: theme === "dark" ? "#f8fafc" : "#ffffff",
+            itemActiveBg: theme === "dark" ? "#ffffff" : "#0a0a0a",
+            colorPrimary: theme === "dark" ? "#0a0a0a" : "#ffffff",
           },
         },
       }}

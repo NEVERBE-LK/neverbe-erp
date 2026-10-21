@@ -12,6 +12,7 @@ import api from "@/lib/api";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useSettings } from "@/contexts/SettingsContext";
 import { IconAlertTriangle } from "@tabler/icons-react";
+import BrandLogo from "@/components/BrandLogo";
 
 const { Content } = Layout;
 
@@ -70,7 +71,7 @@ export default function AppLayout() {
 
   return (
     <Layout
-      className="bg-[#f9fafb] dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans selection:bg-black selection:text-white flex flex-row overflow-x-hidden"
+      className="bg-[#f5f5f5] dark:bg-[#0a0a0a] text-zinc-900 dark:text-zinc-100 font-sans selection:bg-black selection:text-white flex flex-row overflow-x-hidden"
       style={{ minHeight: "100vh" }}
     >
       {/* Desktop Fixed Sidebar */}
@@ -86,11 +87,11 @@ export default function AppLayout() {
       {/* Main Content Area */}
       <Layout
         hasSider={false}
-        className={`bg-[#f9fafb] dark:bg-slate-950 transition-all duration-300 flex flex-col flex-1 ${collapsed ? "lg:ml-[80px]" : "lg:ml-[260px]"}`}
+        className={`bg-[#f5f5f5] dark:bg-[#0a0a0a] transition-all duration-300 flex flex-col flex-1 ${collapsed ? "lg:ml-[80px]" : "lg:ml-[260px]"}`}
         style={{ minHeight: "100vh" }}
       >
         {/* Global Brand Accent */}
-        <div className="w-full h-1 bg-black dark:bg-slate-800 fixed top-0 z-[100] left-0"></div>
+        <div className="w-full h-[2px] bg-black dark:bg-white fixed top-0 z-[100] left-0"></div>
 
         {/* System Maintenance Alert Banner */}
         {settings?.maintenanceMode && (
@@ -100,14 +101,15 @@ export default function AppLayout() {
           </div>
         )}
 
-        <header className="sticky top-0 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800/80 h-16 flex items-center justify-between px-4 sm:px-6 z-40">
+        <header className="sticky top-0 bg-white/90 dark:bg-[#0a0a0a]/90 backdrop-blur-md border-b border-zinc-200/80 dark:border-zinc-800/80 h-16 flex items-center justify-between px-4 sm:px-6 z-40">
           <div className="flex items-center gap-4">
-            <div className="lg:hidden">
+            <div className="lg:hidden flex items-center gap-3">
               <Button
                 type="text"
-                icon={<IconMenu2 size={24} className="text-slate-600 dark:text-slate-300" />}
+                icon={<IconMenu2 size={22} className="text-zinc-700 dark:text-zinc-300" />}
                 onClick={() => setMobileMenuOpen(true)}
               />
+              <BrandLogo variant="short" className="h-5 w-auto text-black dark:text-white" />
             </div>
           </div>
 
@@ -116,10 +118,10 @@ export default function AppLayout() {
             <Tooltip title={theme === "light" ? "Switch to Dark Mode" : "Switch to Light Mode"}>
               <button 
                 type="button"
-                className="w-10 h-10 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full cursor-pointer transition-colors text-slate-600 dark:text-slate-300 border-none bg-transparent p-0"
+                className="w-10 h-10 flex items-center justify-center hover:bg-zinc-100 dark:hover:bg-zinc-800/80 rounded-full cursor-pointer transition-colors text-zinc-600 dark:text-zinc-300 border-none bg-transparent p-0"
                 onClick={toggleTheme}
               >
-                {theme === "light" ? <IconMoon size={20} /> : <IconSun size={20} />}
+                {theme === "light" ? <IconMoon size={19} /> : <IconSun size={19} />}
               </button>
             </Tooltip>
 
@@ -127,11 +129,11 @@ export default function AppLayout() {
             <Tooltip title="Notifications">
               <button 
                 type="button"
-                className="w-10 h-10 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full cursor-pointer transition-colors border-none bg-transparent p-0"
+                className="w-10 h-10 flex items-center justify-center hover:bg-zinc-100 dark:hover:bg-zinc-800/80 rounded-full cursor-pointer transition-colors border-none bg-transparent p-0"
                 onClick={() => setNotificationOpen(true)}
               >
                 <Badge count={unreadCount} size="small" offset={[2, 0]} className="flex items-center justify-center">
-                  <IconBell size={20} className="text-slate-600 dark:text-slate-300" />
+                  <IconBell size={19} className="text-zinc-600 dark:text-zinc-300" />
                 </Badge>
               </button>
             </Tooltip>
@@ -173,17 +175,9 @@ export default function AppLayout() {
         </Content>
 
         {/* Footer */}
-        <footer className="w-full py-4 text-center border-t border-slate-100 dark:border-slate-900 mt-auto bg-[#f9fafb] dark:bg-slate-950">
-          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest m-0">
-            &copy; {new Date().getFullYear()} Developed by{" "}
-            <a
-              href="https://vx9studio.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-slate-400 hover:text-slate-300 transition-colors underline"
-            >
-              VX9Studio
-            </a>
+        <footer className="w-full py-4 text-center border-t border-zinc-200/80 dark:border-zinc-800/80 mt-auto bg-[#f5f5f5] dark:bg-[#0a0a0a]">
+          <p className="text-[10px] font-bold text-zinc-400 dark:text-zinc-600 uppercase tracking-widest m-0 font-mono">
+            &copy; {new Date().getFullYear()} NEVERBE &middot; Enterprise Platform
           </p>
         </footer>
       </Layout>

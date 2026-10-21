@@ -48,10 +48,10 @@ export default function NotificationPanel({ open, onClose }: Props) {
 
   const getTypeTag = (type: string) => {
     switch (type) {
-      case "ORDER": return <Tag color="blue" bordered={false} className="m-0 text-[8px] font-black uppercase px-2 rounded-full">Order</Tag>;
-      case "STOCK": return <Tag color="orange" bordered={false} className="m-0 text-[8px] font-black uppercase px-2 rounded-full">Inventory</Tag>;
-      case "SYSTEM": return <Tag color="gray" bordered={false} className="m-0 text-[8px] font-black uppercase px-2 rounded-full">System</Tag>;
-      default: return <Tag color="gray" bordered={false} className="m-0 text-[8px] font-black uppercase px-2 rounded-full">System</Tag>;
+      case "ORDER": return <Tag bordered={false} className="m-0 text-[8px] font-bold uppercase px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-mono">Order</Tag>;
+      case "STOCK": return <Tag bordered={false} className="m-0 text-[8px] font-bold uppercase px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400 font-mono">Inventory</Tag>;
+      case "SYSTEM": return <Tag bordered={false} className="m-0 text-[8px] font-bold uppercase px-2 py-0.5 rounded-md bg-zinc-500/10 text-zinc-600 dark:text-zinc-400 font-mono">System</Tag>;
+      default: return <Tag bordered={false} className="m-0 text-[8px] font-bold uppercase px-2 py-0.5 rounded-md bg-zinc-500/10 text-zinc-600 dark:text-zinc-400 font-mono">System</Tag>;
     }
   };
 
@@ -76,12 +76,12 @@ export default function NotificationPanel({ open, onClose }: Props) {
           <div className="flex flex-col gap-4 w-full py-2">
             <div className="flex items-center justify-between">
               <Space size="middle">
-                <div className="p-3 bg-blue-50 dark:bg-blue-950/40 rounded-2xl">
-                   <IconBell size={22} className="text-blue-600 dark:text-blue-400" />
+                <div className="w-8 h-8 rounded-xl bg-black dark:bg-white text-white dark:text-black flex items-center justify-center font-bold">
+                   <IconBell size={18} />
                 </div>
                 <div className="flex flex-col">
-                   <Title level={5} style={{ margin: 0 }} className="font-black tracking-tight uppercase text-[12px] text-text-main dark:text-text-main-dark">Notifications</Title>
-                   <Text className="text-[9px] font-bold text-text-sub dark:text-slate-500 uppercase tracking-widest">{unreadCount} UNREAD UPDATES</Text>
+                   <Title level={5} style={{ margin: 0 }} className="font-extrabold tracking-tight uppercase text-xs text-zinc-900 dark:text-white">Notifications</Title>
+                   <Text className="text-[9px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest font-mono">{unreadCount} UNREAD UPDATES</Text>
                 </div>
               </Space>
               {unreadCount > 0 && (
@@ -90,21 +90,21 @@ export default function NotificationPanel({ open, onClose }: Props) {
                   size="small" 
                   icon={<IconCheck size={14} />} 
                   onClick={handleMarkAllAsRead}
-                  className="text-blue-600 dark:text-blue-400 font-black text-[9px] uppercase tracking-widest hover:bg-blue-50 dark:hover:bg-blue-950/40 rounded-lg px-3"
+                  className="text-zinc-900 dark:text-zinc-100 font-bold text-[9px] uppercase tracking-widest hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg px-2.5 font-mono"
                 >
                   Mark all
                 </Button>
               )}
             </div>
 
-            <div className="flex items-center gap-1 bg-gray-50 dark:bg-slate-900/50 p-1 rounded-xl">
+            <div className="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-900 p-1 rounded-xl">
                {["ALL", "ORDER", "STOCK", "SYSTEM"].map((t) => (
                  <Button 
                    key={t}
-                   type={filter === t ? 'primary' : 'text'}
+                   type="text"
                    size="small"
                    onClick={() => setFilter(t)}
-                   className={`flex-1 text-[9px] font-black uppercase tracking-widest h-8 rounded-lg border-none shadow-none ${filter === t ? 'bg-white text-blue-900! dark:bg-slate-800 dark:text-blue-400! shadow-sm' : 'text-gray-400'}`}
+                   className={`flex-1 text-[9px] font-bold uppercase tracking-widest h-8 rounded-lg border-none transition-all font-mono ${filter === t ? 'bg-black text-white dark:bg-white dark:text-black shadow-xs' : 'text-zinc-500 hover:text-black dark:hover:text-white'}`}
                  >
                    {t}
                  </Button>
@@ -117,7 +117,6 @@ export default function NotificationPanel({ open, onClose }: Props) {
         open={open}
         width={window.innerWidth < 640 ? '90%' : 460}
         styles={{ body: { padding: 0 } }}
-        headerStyle={{ borderBottom: '1px solid #f1f5f9', paddingBottom: '20px' }}
       >
         {filteredNotifications.length === 0 ? (
           <Empty 
@@ -135,78 +134,78 @@ export default function NotificationPanel({ open, onClose }: Props) {
               return (
                 <div 
                   key={item.id}
-                  className={`p-6 cursor-pointer transition-all hover:bg-gray-50 border border-gray-100 rounded-[2.5rem] relative overflow-hidden group mb-4 ${item.read ? 'bg-white opacity-60' : 'bg-white shadow-xl shadow-gray-100/50'}`}
+                  className={`p-4 sm:p-5 cursor-pointer transition-all hover:border-zinc-400 dark:hover:border-zinc-600 border border-zinc-200 dark:border-zinc-800 rounded-2xl relative overflow-hidden group mb-3 ${item.read ? 'bg-white/60 dark:bg-[#141414]/60 opacity-60' : 'bg-white dark:bg-[#141414] shadow-xs'}`}
                   onClick={() => handleNotificationClick(item)}
                 >
-                  {!item.read && <div className="absolute top-0 left-0 w-1.5 h-full bg-blue-500" />}
+                  {!item.read && <div className="absolute top-0 left-0 w-1 h-full bg-black dark:bg-white" />}
                   
-                  <div className="flex flex-col gap-3 w-full">
+                  <div className="flex flex-col gap-2.5 w-full">
                     <div className="flex justify-between items-center">
                       <div className="flex items-center gap-2">
                         {getTypeTag(item.type)}
-                        {!item.read && <Badge status="processing" color="#3b82f6" />}
+                        {!item.read && <Badge status="processing" color="#10b981" />}
                       </div>
-                      <Text type="secondary" className="text-[9px] font-black uppercase tracking-widest opacity-40">
+                      <Text type="secondary" className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 font-mono">
                         {parseToDayjs(item.createdAt)?.fromNow() || "recently"}
                       </Text>
                     </div>
                     
-                    <Title level={5} className="m-0 font-black tracking-tight leading-tight text-gray-900 group-hover:text-blue-700 transition-colors">
+                    <Title level={5} className="m-0 font-extrabold tracking-tight leading-tight text-zinc-900 dark:text-white transition-colors">
                       {item.title}
                     </Title>
                     
                     <div className="relative">
                       <Text 
-                        className={`text-xs text-gray-500 block leading-relaxed transition-all duration-300 ${!isExpanded && isLong ? 'line-clamp-2 max-h-12' : 'max-h-none'}`}
+                        className={`text-xs text-zinc-500 dark:text-zinc-400 block leading-relaxed transition-all duration-300 ${!isExpanded && isLong ? 'line-clamp-2 max-h-12' : 'max-h-none'}`}
                         style={{ wordBreak: 'break-word' }}
                       >
                         {item.message}
                       </Text>
                       
                       {isExpanded && item.metadata && (
-                         <div className="mt-4 p-4 bg-blue-50/50 rounded-2xl border border-blue-100/50 animate-in fade-in slide-in-from-top-2 duration-300">
-                            <span className="text-[9px] font-black text-blue-800 uppercase tracking-widest mb-3 block opacity-60">Technical Details</span>
-                            <div className="grid grid-cols-2 gap-4">
+                         <div className="mt-3 p-3.5 bg-zinc-50 dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800">
+                            <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest mb-2.5 block font-mono">Technical Details</span>
+                            <div className="grid grid-cols-2 gap-3">
                                {item.metadata.orderId && (
                                   <div className="flex flex-col">
-                                     <span className="text-[7px] font-black text-gray-400 uppercase tracking-widest">Order ID</span>
-                                     <span className="text-[10px] font-black text-gray-700 font-mono">#{item.metadata.orderId}</span>
+                                     <span className="text-[8px] font-bold text-zinc-400 uppercase tracking-widest font-mono">Order ID</span>
+                                     <span className="text-[11px] font-bold text-zinc-800 dark:text-zinc-200 font-mono">#{item.metadata.orderId}</span>
                                   </div>
                                )}
                                {item.metadata.customerName && (
                                   <div className="flex flex-col">
-                                     <span className="text-[7px] font-black text-gray-400 uppercase tracking-widest">Customer</span>
-                                     <span className="text-[10px] font-black text-gray-700">{item.metadata.customerName}</span>
+                                     <span className="text-[8px] font-bold text-zinc-400 uppercase tracking-widest font-mono">Customer</span>
+                                     <span className="text-[11px] font-bold text-zinc-800 dark:text-zinc-200">{item.metadata.customerName}</span>
                                   </div>
                                )}
                                {item.metadata.paymentMethod && (
                                   <div className="flex flex-col">
-                                     <span className="text-[7px] font-black text-gray-400 uppercase tracking-widest">Payment</span>
-                                     <span className="text-[10px] font-black text-gray-700">{item.metadata.paymentMethod} {item.metadata.paymentStatus ? `(${item.metadata.paymentStatus})` : ""}</span>
+                                     <span className="text-[8px] font-bold text-zinc-400 uppercase tracking-widest font-mono">Payment</span>
+                                     <span className="text-[11px] font-bold text-zinc-800 dark:text-zinc-200">{item.metadata.paymentMethod} {item.metadata.paymentStatus ? `(${item.metadata.paymentStatus})` : ""}</span>
                                   </div>
                                )}
                                {item.metadata.total !== undefined && (
                                   <div className="flex flex-col">
-                                     <span className="text-[7px] font-black text-gray-400 uppercase tracking-widest">Total</span>
-                                     <span className="text-[10px] font-black text-blue-950">Rs. {Number(item.metadata.total).toLocaleString()}</span>
+                                     <span className="text-[8px] font-bold text-zinc-400 uppercase tracking-widest font-mono">Total</span>
+                                     <span className="text-[11px] font-bold text-zinc-900 dark:text-white font-mono">Rs. {Number(item.metadata.total).toLocaleString()}</span>
                                   </div>
                                )}
                                {item.metadata.sku && (
                                   <div className="flex flex-col">
-                                     <span className="text-[7px] font-black text-gray-400 uppercase tracking-widest">SKU Trace</span>
-                                     <span className="text-[10px] font-black text-gray-700 font-mono">{item.metadata.sku}</span>
+                                     <span className="text-[8px] font-bold text-zinc-400 uppercase tracking-widest font-mono">SKU Trace</span>
+                                     <span className="text-[11px] font-bold text-zinc-800 dark:text-zinc-200 font-mono">{item.metadata.sku}</span>
                                   </div>
                                )}
                                {item.metadata.daysRemaining !== undefined && (
                                   <div className="flex flex-col">
-                                     <span className="text-[7px] font-black text-gray-400 uppercase tracking-widest">Est. Depletion</span>
-                                     <span className="text-[10px] font-black text-red-600 italic">{item.metadata.daysRemaining} Days</span>
+                                     <span className="text-[8px] font-bold text-zinc-400 uppercase tracking-widest font-mono">Est. Depletion</span>
+                                     <span className="text-[11px] font-bold text-red-500 font-mono">{item.metadata.daysRemaining} Days</span>
                                   </div>
                                )}
                                {item.metadata.revenueRisk && (
                                   <div className="flex flex-col">
-                                     <span className="text-[7px] font-black text-gray-400 uppercase tracking-widest">Value at Risk</span>
-                                     <span className="text-[10px] font-black text-blue-950">Rs. {Number(item.metadata.revenueRisk).toLocaleString()}</span>
+                                     <span className="text-[8px] font-bold text-zinc-400 uppercase tracking-widest font-mono">Value at Risk</span>
+                                     <span className="text-[11px] font-bold text-zinc-900 dark:text-white font-mono">Rs. {Number(item.metadata.revenueRisk).toLocaleString()}</span>
                                   </div>
                                 )}
                             </div>
@@ -217,7 +216,7 @@ export default function NotificationPanel({ open, onClose }: Props) {
                         <Button 
                           type="link" 
                           size="small" 
-                          className="p-0 h-auto text-[10px] font-black uppercase mt-3 text-blue-600 hover:text-blue-700 tracking-widest flex items-center gap-1"
+                          className="p-0 h-auto text-[10px] font-bold uppercase mt-2.5 text-zinc-900 dark:text-zinc-100 hover:text-black dark:hover:text-white tracking-widest flex items-center gap-1 font-mono"
                           onClick={(e) => toggleExpand(e, item.id)}
                         >
                           View Details
@@ -228,7 +227,7 @@ export default function NotificationPanel({ open, onClose }: Props) {
                          <Button 
                            type="link" 
                            size="small" 
-                           className="p-0 h-auto text-[10px] font-black uppercase mt-3 text-gray-400 hover:text-gray-600 tracking-widest flex items-center gap-1"
+                           className="p-0 h-auto text-[10px] font-bold uppercase mt-2.5 text-zinc-400 hover:text-zinc-600 tracking-widest flex items-center gap-1 font-mono"
                            onClick={(e) => toggleExpand(e, item.id)}
                          >
                            Show Less
@@ -236,13 +235,13 @@ export default function NotificationPanel({ open, onClose }: Props) {
                       )}
                     </div>
                     
-                    <div className="mt-2 pt-4 border-t border-gray-50 flex items-center justify-between">
+                    <div className="mt-1 pt-3 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
                         <Button 
                           type="primary" 
                           size="small" 
                           icon={<IconExternalLink size={14} />}
                           onClick={(e) => { e.stopPropagation(); handleNotificationClick(item); }}
-                          className="bg-blue-600 hover:bg-blue-700 border-none rounded-xl text-[9px] font-black uppercase tracking-widest h-9 px-4 shadow-lg shadow-blue-100"
+                          className="bg-black hover:bg-neutral-800 text-white dark:bg-white dark:text-black dark:hover:bg-neutral-200 border-none rounded-xl text-[9px] font-bold uppercase tracking-wider h-8 px-3.5"
                         >
                           View Details
                         </Button>
@@ -251,7 +250,7 @@ export default function NotificationPanel({ open, onClose }: Props) {
                             type="text" 
                             size="small" 
                             onClick={(e) => { e.stopPropagation(); navigate("/inventory/purchase-orders"); onClose(); }}
-                            className="text-orange-600 font-black text-[9px] uppercase tracking-widest"
+                            className="text-amber-500 font-bold text-[9px] uppercase tracking-wider font-mono"
                           >
                             New Reorder
                           </Button>
