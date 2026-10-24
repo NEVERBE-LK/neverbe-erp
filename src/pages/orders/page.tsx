@@ -93,6 +93,32 @@ const OrdersPage = () => {
   const [paymentMethods, setPaymentMethods] = useState<any[]>([]);
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
 
+  // --- Date filter period preset state (Default to Current Month for general order list) ---
+  const isGeneralOrderList = !isPaymentPendingView && !isProcessingView;
+  const [selectedPeriod, setSelectedPeriod] = useState<
+    "today" | "week" | "month" | "last_month" | "all" | "custom"
+  >(isGeneralOrderList ? "month" : "all");
+
+  const rangePresets: { label: string; value: [dayjs.Dayjs, dayjs.Dayjs] }[] = useMemo(
+    () => [
+      { label: "Today", value: [dayjs().startOf("day"), dayjs().endOf("day")] },
+      { label: "This Week", value: [dayjs().startOf("week"), dayjs().endOf("day")] },
+      { label: "This Month", value: [dayjs().startOf("month"), dayjs().endOf("day")] },
+      {
+        label: "Last Month",
+        value: [
+          dayjs().subtract(1, "month").startOf("month"),
+          dayjs().subtract(1, "month").endOf("month"),
+        ],
+      },
+      {
+        label: "Last 90 Days",
+        value: [dayjs().subtract(90, "day").startOf("day"), dayjs().endOf("day")],
+      },
+    ],
+    []
+  );
+
   // --- Bulk Action State ---
   const [isBulkLoading, setIsBulkLoading] = useState(false);
 
@@ -214,12 +240,19 @@ const OrdersPage = () => {
 
   // --- Initialize view-based filters ---
   useEffect(() => {
+    const isGeneral = !isPaymentPendingView && !isProcessingView;
+    const initialPeriod = isGeneral ? "month" : "all";
+    setSelectedPeriod(initialPeriod);
+
     const defaultFilters: any = {
       payment: isPaymentPendingView ? "Pending" : "all",
       status: isProcessingView ? "Processing" : "all",
       from: "all",
       stockId: "all",
       paymentMethod: "all",
+      dateRange: isGeneral
+        ? [dayjs().startOf("month"), dayjs().endOf("day")]
+        : undefined,
     };
     form.setFieldsValue(defaultFilters);
     fetchOrders(defaultFilters);
@@ -233,7 +266,8 @@ const OrdersPage = () => {
       params.append("page", String(pagination.current));
       params.append("size", String(pagination.pageSize));
 
-      const filters = values || form.getFieldsValue();
+      const formValues = form.getFieldsValue();
+      const filters = values ? { ...formValues, ...values } : formValues;
       
       // Enforce view-specific filters (even if form fields are hidden)
       const effectivePayment = isPaymentPendingView ? "Pending" : (filters.payment || "all");
@@ -243,9 +277,14 @@ const OrdersPage = () => {
         params.append("payment", effectivePayment as string);
       if (effectiveStatus !== "all")
         params.append("status", effectiveStatus as string);
-      if (filters.search)
+
+      const hasSearch = Boolean(filters.search && (filters.search as string).trim());
+      if (hasSearch)
         params.append("search", (filters.search as string).trim());
-      if (filters.dateRange) {
+
+      // Smart ERP search: if searching by Order ID / customer, search across all time.
+      // Otherwise apply active date range filter.
+      if (filters.dateRange && !hasSearch) {
         const range = filters.dateRange as [
           { format: (f: string) => string },
           { format: (f: string) => string },
@@ -297,9 +336,29 @@ const OrdersPage = () => {
     }
   };
 
+  const handleQuickDateFilter = (
+    period: "today" | "week" | "month" | "last_month" | "all",
+    range?: [dayjs.Dayjs, dayjs.Dayjs]
+  ) => {
+    setSelectedPeriod(period);
+    form.setFieldsValue({ dateRange: range });
+    handleFilterSubmit({ ...form.getFieldsValue(), dateRange: range });
+  };
+
   const handleClearFilters = () => {
     form.resetFields();
-    handleFilterSubmit({});
+    setSelectedPeriod("all");
+    const cleared = {
+      payment: isPaymentPendingView ? "Pending" : "all",
+      status: isProcessingView ? "Processing" : "all",
+      from: "all",
+      stockId: "all",
+      paymentMethod: "all",
+      dateRange: undefined,
+      search: undefined,
+    };
+    form.setFieldsValue(cleared);
+    handleFilterSubmit(cleared);
   };
 
   const handleInlineUpdate = async (orderId: string, field: "status" | "paymentStatus", value: string) => {
@@ -750,6 +809,17 @@ const OrdersPage = () => {
                 </h2>
                 <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-card-border dark:border-card-border-dark font-mono">
                   {pagination.total} Orders
+                  {selectedPeriod === "month"
+                    ? " · This Month"
+                    : selectedPeriod === "today"
+                    ? " · Today"
+                    : selectedPeriod === "week"
+                    ? " · This Week"
+                    : selectedPeriod === "last_month"
+                    ? " · Last Month"
+                    : selectedPeriod === "all"
+                    ? " · All Time"
+                    : " · Custom Range"}
                 </span>
               </div>
             </div>
@@ -803,7 +873,14 @@ const OrdersPage = () => {
               </Select>
             </Form.Item>
             <Form.Item name="dateRange" className="!mb-0 w-64">
-              <RangePicker className="w-full h-10 rounded-xl border-card-border dark:border-card-border-dark" />
+              <RangePicker
+                presets={rangePresets}
+                onChange={(val) => {
+                  if (!val) setSelectedPeriod("all");
+                  else setSelectedPeriod("custom");
+                }}
+                className="w-full h-10 rounded-xl border-card-border dark:border-card-border-dark"
+              />
             </Form.Item>
             <Form.Item className="!mb-0">
               <Space>
@@ -825,6 +902,72 @@ const OrdersPage = () => {
               </Space>
             </Form.Item>
           </Form>
+
+          {/* Quick Period Presets */}
+          <div className="flex flex-wrap items-center gap-2 pt-3 mt-3 border-t border-card-border/60 dark:border-card-border-dark/60 text-xs">
+            <span className="font-bold text-[10px] uppercase tracking-wider text-text-sub flex items-center gap-1.5 mr-1">
+              <IconCalendar size={13} />
+              Period:
+            </span>
+            <button
+              type="button"
+              onClick={() => handleQuickDateFilter("today", [dayjs().startOf("day"), dayjs().endOf("day")])}
+              className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all border-none cursor-pointer ${
+                selectedPeriod === "today"
+                  ? "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 shadow-xs"
+                  : "bg-slate-100 dark:bg-slate-800/80 text-text-sub hover:bg-slate-200 dark:hover:bg-slate-700"
+              }`}
+            >
+              Today
+            </button>
+            <button
+              type="button"
+              onClick={() => handleQuickDateFilter("week", [dayjs().startOf("week"), dayjs().endOf("day")])}
+              className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all border-none cursor-pointer ${
+                selectedPeriod === "week"
+                  ? "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 shadow-xs"
+                  : "bg-slate-100 dark:bg-slate-800/80 text-text-sub hover:bg-slate-200 dark:hover:bg-slate-700"
+              }`}
+            >
+              This Week
+            </button>
+            <button
+              type="button"
+              onClick={() => handleQuickDateFilter("month", [dayjs().startOf("month"), dayjs().endOf("day")])}
+              className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all border-none cursor-pointer ${
+                selectedPeriod === "month"
+                  ? "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 shadow-xs"
+                  : "bg-slate-100 dark:bg-slate-800/80 text-text-sub hover:bg-slate-200 dark:hover:bg-slate-700"
+              }`}
+            >
+              This Month
+            </button>
+            <button
+              type="button"
+              onClick={() => handleQuickDateFilter("last_month", [dayjs().subtract(1, "month").startOf("month"), dayjs().subtract(1, "month").endOf("month")])}
+              className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all border-none cursor-pointer ${
+                selectedPeriod === "last_month"
+                  ? "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 shadow-xs"
+                  : "bg-slate-100 dark:bg-slate-800/80 text-text-sub hover:bg-slate-200 dark:hover:bg-slate-700"
+              }`}
+            >
+              Last Month
+            </button>
+            <button
+              type="button"
+              onClick={() => handleQuickDateFilter("all", undefined)}
+              className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all border-none cursor-pointer ${
+                selectedPeriod === "all"
+                  ? "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 shadow-xs"
+                  : "bg-slate-100 dark:bg-slate-800/80 text-text-sub hover:bg-slate-200 dark:hover:bg-slate-700"
+              }`}
+            >
+              All Time
+            </button>
+            <span className="text-[11px] text-text-sub/70 italic ml-auto hidden sm:inline">
+              Tip: Searching an Order ID searches across all lifetime records
+            </span>
+          </div>
         </div>
 
         {/* Bulk Action Alert Panel */}
