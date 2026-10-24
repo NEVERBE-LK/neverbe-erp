@@ -7,6 +7,7 @@ import {
   IconEdit,
   IconSearch,
   IconFilter,
+  IconAdjustmentsHorizontal,
   IconX,
   IconCreditCard,
   IconPackageExport,
@@ -118,6 +119,26 @@ const OrdersPage = () => {
     ],
     []
   );
+
+  // --- Active Filter Watchers ---
+  const searchVal = Form.useWatch("search", form);
+  const paymentVal = Form.useWatch("payment", form);
+  const statusVal = Form.useWatch("status", form);
+  const fromVal = Form.useWatch("from", form);
+
+  const isSearchActive = Boolean(searchVal && String(searchVal).trim());
+  const isPaymentActive = !isPaymentPendingView && paymentVal && paymentVal !== "all";
+  const isStatusActive = !isProcessingView && statusVal && statusVal !== "all";
+  const isFromActive = fromVal && fromVal !== "all";
+  const isDateCustom = selectedPeriod !== (isGeneralOrderList ? "month" : "all");
+
+  const activeFiltersCount = [
+    isSearchActive,
+    isPaymentActive,
+    isStatusActive,
+    isFromActive,
+    isDateCustom,
+  ].filter(Boolean).length;
 
   // --- Bulk Action State ---
   const [isBulkLoading, setIsBulkLoading] = useState(false);
@@ -347,14 +368,18 @@ const OrdersPage = () => {
 
   const handleClearFilters = () => {
     form.resetFields();
-    setSelectedPeriod("all");
+    const defaultPeriod = isGeneralOrderList ? "month" : "all";
+    const defaultRange = isGeneralOrderList
+      ? [dayjs().startOf("month"), dayjs().endOf("day")]
+      : undefined;
+    setSelectedPeriod(defaultPeriod);
     const cleared = {
       payment: isPaymentPendingView ? "Pending" : "all",
       status: isProcessingView ? "Processing" : "all",
       from: "all",
       stockId: "all",
       paymentMethod: "all",
-      dateRange: undefined,
+      dateRange: defaultRange,
       search: undefined,
     };
     form.setFieldsValue(cleared);
@@ -827,147 +852,188 @@ const OrdersPage = () => {
         </div>
 
         {/* Filter Panel */}
-        <div className="bg-card dark:bg-card-dark border border-card-border dark:border-card-border-dark rounded-2xl p-4 shadow-xs">
+        <div className="bg-card dark:bg-card-dark border border-card-border dark:border-card-border-dark rounded-2xl p-4 shadow-xs space-y-3.5">
           <Form
             form={form}
-            layout="inline"
             onFinish={handleFilterSubmit}
-            className="flex flex-wrap gap-3 w-full"
+            className="w-full space-y-3.5"
           >
-            <Form.Item name="search" className="!mb-0 flex-grow min-w-[240px]">
-              <Input
-                prefix={<IconSearch size={15} className="text-text-sub" />}
-                placeholder="Search order number, customer name, email..."
-                allowClear
-                className="rounded-xl h-10 border-card-border dark:border-card-border-dark"
-              />
-            </Form.Item>
-            {!isPaymentPendingView && (
-              <Form.Item name="payment" className="!mb-0 w-40">
-                <Select className="h-10 rounded-xl overflow-hidden border-card-border dark:border-card-border-dark">
-                  <Option value="all">All Payments</Option>
-                  <Option value="Paid">Paid</Option>
-                  <Option value="Pending">Pending</Option>
-                  <Option value="Failed">Failed</Option>
-                  <Option value="Refunded">Refunded</Option>
-                </Select>
-              </Form.Item>
-            )}
-            {!isProcessingView && (
-              <Form.Item name="status" className="!mb-0 w-36">
-                <Select className="h-10 rounded-xl overflow-hidden border-card-border dark:border-card-border-dark">
-                  <Option value="all">All Statuses</Option>
-                  <Option value="Pending">Pending</Option>
-                  <Option value="Processing">Processing</Option>
-                  <Option value="Completed">Completed</Option>
-                  <Option value="Cancelled">Cancelled</Option>
-                </Select>
-              </Form.Item>
-            )}
-            <Form.Item name="from" className="!mb-0 w-32">
-              <Select className="h-10 rounded-xl overflow-hidden border-card-border dark:border-card-border-dark" placeholder="Source">
-                <Option value="all">All Sources</Option>
-                <Option value="website">Website</Option>
-                <Option value="store">Store</Option>
-                <Option value="admin">Admin</Option>
-              </Select>
-            </Form.Item>
-            <Form.Item name="dateRange" className="!mb-0 w-64">
-              <RangePicker
-                presets={rangePresets}
-                onChange={(val) => {
-                  if (!val) setSelectedPeriod("all");
-                  else setSelectedPeriod("custom");
-                }}
-                className="w-full h-10 rounded-xl border-card-border dark:border-card-border-dark"
-              />
-            </Form.Item>
-            <Form.Item className="!mb-0">
-              <Space>
-                <Button
-                  type="default"
-                  htmlType="submit"
-                  icon={<IconFilter size={15} />}
-                  className="bg-slate-900 dark:bg-slate-100 dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-200 border-none text-white text-xs font-bold h-10 px-5 rounded-xl cursor-pointer"
-                >
-                  Filter
-                </Button>
-                <Button
-                  icon={<IconX size={15} />}
-                  onClick={handleClearFilters}
-                  className="border-card-border dark:border-card-border-dark text-text-sub text-xs font-medium h-10 px-5 rounded-xl cursor-pointer"
-                >
-                  Clear
-                </Button>
-              </Space>
-            </Form.Item>
-          </Form>
+            {/* Tier 1: Search & Date Range Toolbar */}
+            <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-3">
+              {/* Search Bar */}
+              <div className="flex-1 min-w-[260px] max-w-2xl">
+                <Form.Item name="search" className="!mb-0">
+                  <Input
+                    prefix={<IconSearch size={16} className="text-text-sub shrink-0" />}
+                    placeholder="Search order number, customer name, email, phone..."
+                    allowClear
+                    onPressEnter={() => handleFilterSubmit(form.getFieldsValue())}
+                    onChange={(e) => {
+                      if (!e.target.value) {
+                        handleFilterSubmit({ ...form.getFieldsValue(), search: "" });
+                      }
+                    }}
+                    className="rounded-xl h-10 border-card-border dark:border-card-border-dark bg-background dark:bg-background-dark text-xs"
+                  />
+                </Form.Item>
+              </div>
 
-          {/* Quick Period Presets */}
-          <div className="flex flex-wrap items-center gap-2 pt-3 mt-3 border-t border-card-border/60 dark:border-card-border-dark/60 text-xs">
-            <span className="font-bold text-[10px] uppercase tracking-wider text-text-sub flex items-center gap-1.5 mr-1">
-              <IconCalendar size={13} />
-              Period:
-            </span>
-            <button
-              type="button"
-              onClick={() => handleQuickDateFilter("today", [dayjs().startOf("day"), dayjs().endOf("day")])}
-              className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all border-none cursor-pointer ${
-                selectedPeriod === "today"
-                  ? "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 shadow-xs"
-                  : "bg-slate-100 dark:bg-slate-800/80 text-text-sub hover:bg-slate-200 dark:hover:bg-slate-700"
-              }`}
-            >
-              Today
-            </button>
-            <button
-              type="button"
-              onClick={() => handleQuickDateFilter("week", [dayjs().startOf("week"), dayjs().endOf("day")])}
-              className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all border-none cursor-pointer ${
-                selectedPeriod === "week"
-                  ? "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 shadow-xs"
-                  : "bg-slate-100 dark:bg-slate-800/80 text-text-sub hover:bg-slate-200 dark:hover:bg-slate-700"
-              }`}
-            >
-              This Week
-            </button>
-            <button
-              type="button"
-              onClick={() => handleQuickDateFilter("month", [dayjs().startOf("month"), dayjs().endOf("day")])}
-              className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all border-none cursor-pointer ${
-                selectedPeriod === "month"
-                  ? "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 shadow-xs"
-                  : "bg-slate-100 dark:bg-slate-800/80 text-text-sub hover:bg-slate-200 dark:hover:bg-slate-700"
-              }`}
-            >
-              This Month
-            </button>
-            <button
-              type="button"
-              onClick={() => handleQuickDateFilter("last_month", [dayjs().subtract(1, "month").startOf("month"), dayjs().subtract(1, "month").endOf("month")])}
-              className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all border-none cursor-pointer ${
-                selectedPeriod === "last_month"
-                  ? "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 shadow-xs"
-                  : "bg-slate-100 dark:bg-slate-800/80 text-text-sub hover:bg-slate-200 dark:hover:bg-slate-700"
-              }`}
-            >
-              Last Month
-            </button>
-            <button
-              type="button"
-              onClick={() => handleQuickDateFilter("all", undefined)}
-              className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all border-none cursor-pointer ${
-                selectedPeriod === "all"
-                  ? "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 shadow-xs"
-                  : "bg-slate-100 dark:bg-slate-800/80 text-text-sub hover:bg-slate-200 dark:hover:bg-slate-700"
-              }`}
-            >
-              All Time
-            </button>
-            <span className="text-[11px] text-text-sub/70 italic ml-auto hidden sm:inline">
-              Tip: Searching an Order ID searches across all lifetime records
-            </span>
-          </div>
+              {/* Unified Date Controls: Quick Period Segment + Custom RangePicker */}
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="inline-flex items-center p-1 bg-slate-100 dark:bg-slate-800/80 rounded-xl border border-card-border/60 dark:border-card-border-dark/60 gap-0.5">
+                  {([
+                    {
+                      key: "today",
+                      label: "Today",
+                      getRange: () => [dayjs().startOf("day"), dayjs().endOf("day")] as [dayjs.Dayjs, dayjs.Dayjs],
+                    },
+                    {
+                      key: "week",
+                      label: "This Week",
+                      getRange: () => [dayjs().startOf("week"), dayjs().endOf("day")] as [dayjs.Dayjs, dayjs.Dayjs],
+                    },
+                    {
+                      key: "month",
+                      label: "This Month",
+                      getRange: () => [dayjs().startOf("month"), dayjs().endOf("day")] as [dayjs.Dayjs, dayjs.Dayjs],
+                    },
+                    {
+                      key: "last_month",
+                      label: "Last Month",
+                      getRange: () => [
+                        dayjs().subtract(1, "month").startOf("month"),
+                        dayjs().subtract(1, "month").endOf("month"),
+                      ] as [dayjs.Dayjs, dayjs.Dayjs],
+                    },
+                    {
+                      key: "all",
+                      label: "All Time",
+                      getRange: () => undefined,
+                    },
+                  ] as const).map((p) => {
+                    const isActive = selectedPeriod === p.key;
+                    return (
+                      <button
+                        key={p.key}
+                        type="button"
+                        onClick={() => handleQuickDateFilter(p.key, p.getRange())}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border-none cursor-pointer ${
+                          isActive
+                            ? "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 shadow-xs"
+                            : "text-text-sub hover:text-text-main dark:hover:text-text-main-dark hover:bg-slate-200/60 dark:hover:bg-slate-700/60 bg-transparent"
+                        }`}
+                      >
+                        {p.label}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Custom Date Range Picker */}
+                <Form.Item name="dateRange" className="!mb-0">
+                  <RangePicker
+                    presets={rangePresets}
+                    placeholder={["Start Date", "End Date"]}
+                    onChange={(val) => {
+                      if (!val) {
+                        setSelectedPeriod("all");
+                        handleQuickDateFilter("all", undefined);
+                      } else {
+                        setSelectedPeriod("custom");
+                        handleFilterSubmit({ ...form.getFieldsValue(), dateRange: val });
+                      }
+                    }}
+                    className="h-10 w-56 sm:w-60 rounded-xl border-card-border dark:border-card-border-dark text-xs"
+                  />
+                </Form.Item>
+              </div>
+            </div>
+
+            {/* Tier 2: Attribute Filters & Actions */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-card-border/60 dark:border-card-border-dark/60">
+              <div className="flex flex-wrap items-center gap-2.5">
+                <div className="flex items-center gap-1.5 text-text-sub text-[11px] font-bold uppercase tracking-wider mr-1">
+                  <IconAdjustmentsHorizontal size={15} />
+                  <span>Filters</span>
+                  {activeFiltersCount > 0 && (
+                    <span className="inline-flex items-center justify-center min-w-4.5 h-4.5 px-1 text-[10px] font-bold rounded-full bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900">
+                      {activeFiltersCount}
+                    </span>
+                  )}
+                </div>
+
+                {!isPaymentPendingView && (
+                  <Form.Item name="payment" className="!mb-0">
+                    <Select
+                      className="h-9 min-w-[145px] rounded-xl text-xs"
+                      onChange={() => handleFilterSubmit(form.getFieldsValue())}
+                      popupMatchSelectWidth={false}
+                    >
+                      <Option value="all">Payment: All</Option>
+                      <Option value="Paid">Payment: Paid</Option>
+                      <Option value="Pending">Payment: Pending</Option>
+                      <Option value="Failed">Payment: Failed</Option>
+                      <Option value="Refunded">Payment: Refunded</Option>
+                    </Select>
+                  </Form.Item>
+                )}
+
+                {!isProcessingView && (
+                  <Form.Item name="status" className="!mb-0">
+                    <Select
+                      className="h-9 min-w-[145px] rounded-xl text-xs"
+                      onChange={() => handleFilterSubmit(form.getFieldsValue())}
+                      popupMatchSelectWidth={false}
+                    >
+                      <Option value="all">Status: All</Option>
+                      <Option value="Pending">Status: Pending</Option>
+                      <Option value="Processing">Status: Processing</Option>
+                      <Option value="Completed">Status: Completed</Option>
+                      <Option value="Cancelled">Status: Cancelled</Option>
+                    </Select>
+                  </Form.Item>
+                )}
+
+                <Form.Item name="from" className="!mb-0">
+                  <Select
+                    className="h-9 min-w-[135px] rounded-xl text-xs"
+                    onChange={() => handleFilterSubmit(form.getFieldsValue())}
+                    popupMatchSelectWidth={false}
+                  >
+                    <Option value="all">Channel: All</Option>
+                    <Option value="website">Channel: Website</Option>
+                    <Option value="store">Channel: Store</Option>
+                    <Option value="admin">Channel: Admin</Option>
+                  </Select>
+                </Form.Item>
+
+                <Space size={8}>
+                  <Button
+                    type="default"
+                    htmlType="submit"
+                    icon={<IconFilter size={14} />}
+                    className="bg-slate-900 dark:bg-slate-100 dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-200 border-none text-white text-xs font-bold h-9 px-3.5 rounded-xl cursor-pointer inline-flex items-center gap-1.5"
+                  >
+                    Apply
+                  </Button>
+
+                  {activeFiltersCount > 0 && (
+                    <Button
+                      icon={<IconX size={14} />}
+                      onClick={handleClearFilters}
+                      className="border border-card-border dark:border-card-border-dark text-text-sub hover:text-rose-600 dark:hover:text-rose-400 text-xs font-semibold h-9 px-3 rounded-xl cursor-pointer inline-flex items-center gap-1 bg-transparent"
+                    >
+                      Reset
+                    </Button>
+                  )}
+                </Space>
+              </div>
+
+              <div className="text-[11px] text-text-sub/70 italic hidden md:flex items-center gap-1">
+                Tip: Order ID search searches across all lifetime records
+              </div>
+            </div>
+          </Form>
         </div>
 
         {/* Bulk Action Alert Panel */}
