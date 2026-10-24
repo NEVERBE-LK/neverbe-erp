@@ -339,11 +339,6 @@ const SalesByCategoryPage = () => {
                 <h2 className="text-2xl font-bold text-text-main dark:text-text-main-dark tracking-tight leading-none font-mono">
                   Sales by Category
                 </h2>
-                {dateRange?.[0] && dateRange?.[1] && (
-                  <span className="whitespace-nowrap flex-shrink-0 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-card-border dark:border-card-border-dark font-mono">
-                    {dateRange[0]} to {dateRange[1]}
-                  </span>
-                )}
               </div>
             </div>
           </div>

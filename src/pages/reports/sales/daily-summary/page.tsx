@@ -320,9 +320,6 @@ const DailySummaryPage = () => {
                 <h2 className="text-2xl font-bold text-text-main dark:text-text-main-dark tracking-tight leading-none">
                   Daily Sales Summary
                 </h2>
-                <span className="whitespace-nowrap flex-shrink-0 px-2 py-0.5 text-[10px] font-bold rounded-full bg-slate-100 dark:bg-slate-800 text-text-sub dark:text-slate-400 border border-card-border dark:border-card-border-dark">
-                  {dateRange[0]} to {dateRange[1]}
-                </span>
               </div>
             </div>
           </div>

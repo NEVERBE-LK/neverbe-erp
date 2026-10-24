@@ -834,17 +834,6 @@ const OrdersPage = () => {
                 </h2>
                 <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-card-border dark:border-card-border-dark font-mono">
                   {pagination.total} Orders
-                  {selectedPeriod === "month"
-                    ? " · This Month"
-                    : selectedPeriod === "today"
-                    ? " · Today"
-                    : selectedPeriod === "week"
-                    ? " · This Week"
-                    : selectedPeriod === "last_month"
-                    ? " · Last Month"
-                    : selectedPeriod === "all"
-                    ? " · All Time"
-                    : " · Custom Range"}
                 </span>
               </div>
             </div>
