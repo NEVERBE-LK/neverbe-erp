@@ -223,10 +223,18 @@ const OrderView = ({ orderId }: { orderId: string }) => {
   const shippingFee = order?.shippingFee || 0;
   const isPaidWebsiteOrder =
     order?.from?.toLowerCase() === "website" && order?.paymentStatus?.toLowerCase() === "paid";
+  const isCOD =
+    (order?.paymentMethod || "").toLowerCase().includes("cod") ||
+    (order?.paymentMethod || "").toLowerCase().includes("cash on delivery");
+  const prepaidShippingAmount =
+    order?.deliveryFeePrepaid && isCOD ? (order?.shippingFee || 450) : 0;
   const totalPaid = isPaidWebsiteOrder
     ? order?.total || 0
-    : order?.paymentReceived?.reduce((sum, p) => sum + p.amount, 0) || 0;
-  const balanceDue = isPaidWebsiteOrder ? 0 : (order?.total || 0) - totalPaid;
+    : (order?.paymentReceived?.reduce((sum, p) => sum + p.amount, 0) || 0) +
+      prepaidShippingAmount;
+  const balanceDue = isPaidWebsiteOrder
+    ? 0
+    : Math.max(0, (order?.total || 0) - totalPaid);
 
   if (loadingOrder) {
     return (
@@ -460,9 +468,19 @@ const OrderView = ({ orderId }: { orderId: string }) => {
                   </p>
                 </div>
               </div>
-              {order.deliveryFeePrepaid && (
+              {isCOD && order.deliveryFeePrepaid && (
                 <div className="px-3 py-1.5 rounded-lg bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 text-xs font-bold font-mono shrink-0">
-                  ✓ Delivery Fee Prepaid (Rs. 450)
+                  ✓ Delivery Fee Prepaid (Rs. {(order.shippingFee || 450).toLocaleString()})
+                </div>
+              )}
+              {isCOD && !order.deliveryFeePrepaid && (
+                <div className="px-3 py-1.5 rounded-lg bg-rose-100 dark:bg-rose-900/50 text-rose-700 dark:text-rose-300 text-xs font-bold font-mono shrink-0">
+                  ⚠️ Delivery Fee Pending (Rs. {(order.shippingFee || 450).toLocaleString()})
+                </div>
+              )}
+              {!isCOD && (
+                <div className="px-3 py-1.5 rounded-lg bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 text-xs font-bold font-mono shrink-0">
+                  Online Payment ({order.paymentMethod || "Prepaid"})
                 </div>
               )}
             </div>
@@ -856,27 +874,43 @@ const OrderView = ({ orderId }: { orderId: string }) => {
               </span>
             </div>
 
+            {prepaidShippingAmount > 0 && (
+              <div className="flex justify-between items-center text-emerald-600 dark:text-emerald-400">
+                <span className="font-semibold uppercase">Prepaid Delivery Fee (Online)</span>
+                <span className="font-bold font-mono">-Rs {prepaidShippingAmount.toLocaleString()}</span>
+              </div>
+            )}
+
             <Divider className="my-2 border-card-border dark:border-card-border-dark" />
 
             <div className="bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 p-4 rounded-xl flex justify-between items-center shadow-xs">
               <span className="text-xs font-bold uppercase">Grand Total</span>
-              <span className="text-lg font-bold text-emerald-400 dark:text-emerald-700">
+              <span className="text-lg font-bold text-emerald-400 dark:text-emerald-700 font-mono">
                 Rs {order?.total?.toLocaleString()}
               </span>
             </div>
 
             {/* Payment Tally Summary */}
-            {((order?.paymentReceived && order.paymentReceived.length > 0) || isPaidWebsiteOrder) && (
+            {((order?.paymentReceived && order.paymentReceived.length > 0) ||
+              isPaidWebsiteOrder ||
+              prepaidShippingAmount > 0) && (
               <div className="pt-3 border-t border-dashed border-card-border dark:border-card-border-dark space-y-2">
                 <div className="flex justify-between items-center">
                   <span className="font-semibold text-text-sub uppercase">Total Paid</span>
-                  <span className="font-bold text-blue-600 dark:text-blue-400">
+                  <span className="font-bold text-blue-600 dark:text-blue-400 font-mono">
                     Rs {totalPaid.toLocaleString()}
+                    {prepaidShippingAmount > 0 && !isPaidWebsiteOrder && (
+                      <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-normal ml-1">
+                        (Prepaid Fee)
+                      </span>
+                    )}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="font-semibold text-text-sub uppercase">Balance Due</span>
-                  <span className={`font-bold ${balanceDue <= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600"}`}>
+                  <span className="font-semibold text-text-sub uppercase">
+                    {isCOD ? "COD Balance to Collect" : "Balance Due"}
+                  </span>
+                  <span className={`font-bold font-mono ${balanceDue <= 0 ? "text-emerald-600 dark:text-emerald-400" : isCOD ? "text-amber-700 dark:text-amber-400 text-base" : "text-rose-600"}`}>
                     {balanceDue <= 0 ? "PAID" : `Rs ${balanceDue.toLocaleString()}`}
                   </span>
                 </div>

@@ -61,6 +61,13 @@ export const ProcessPaymentModal: React.FC<ProcessPaymentModalProps> = ({
     }
   };
 
+  const isCOD =
+    (order.paymentMethod || "").toLowerCase().includes("cod") ||
+    (order.paymentMethod || "").toLowerCase().includes("cash on delivery");
+  const isFeePrepaid = isCOD && !!order.deliveryFeePrepaid;
+  const shippingFee = order.shippingFee || 450;
+  const codBalance = Math.max(0, (order.total || 0) - shippingFee);
+
   return (
     <Modal
       open={open}
@@ -94,23 +101,36 @@ export const ProcessPaymentModal: React.FC<ProcessPaymentModalProps> = ({
     >
       <div className="py-2 space-y-4">
         {/* Payment & Amount Summary Card */}
-        <div className="bg-blue-50/60 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-900/50 rounded-2xl p-4 flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300">
-              <IconCoin size={22} />
+        <div className="bg-blue-50/60 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-900/50 rounded-2xl p-4 flex flex-col gap-2">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-xl bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300">
+                <IconCoin size={22} />
+              </div>
+              <div>
+                <span className="text-[10px] font-bold text-blue-900 dark:text-blue-200 uppercase tracking-wider block">
+                  Total Order Amount
+                </span>
+                <span className="text-xs text-blue-600 dark:text-blue-400 font-mono">
+                  {order.paymentMethod || "Cash On Delivery"} (Current: {order.paymentStatus || "Pending"})
+                </span>
+              </div>
             </div>
-            <div>
-              <span className="text-[10px] font-bold text-blue-900 dark:text-blue-200 uppercase tracking-wider block">
-                Total Payable
-              </span>
-              <span className="text-xs text-blue-600 dark:text-blue-400 font-mono">
-                {order.paymentMethod || "Cash On Delivery"} (Current: {order.paymentStatus || "Pending"})
-              </span>
-            </div>
+            <span className="text-xl font-bold font-mono text-blue-700 dark:text-blue-300">
+              Rs. {(order.total || 0).toLocaleString("en-LK", { minimumFractionDigits: 2 })}
+            </span>
           </div>
-          <span className="text-xl font-bold font-mono text-blue-700 dark:text-blue-300">
-            Rs. {(order.total || 0).toLocaleString("en-LK", { minimumFractionDigits: 2 })}
-          </span>
+
+          {isFeePrepaid && (
+            <div className="pt-2 border-t border-blue-200/60 dark:border-blue-900/40 flex justify-between items-center text-xs">
+              <span className="font-bold text-emerald-700 dark:text-emerald-400">
+                Prepaid Delivery Fee Online: -Rs. {shippingFee.toLocaleString()}
+              </span>
+              <span className="font-mono font-bold text-emerald-700 dark:text-emerald-300">
+                COD Balance Due: Rs. {codBalance.toLocaleString("en-LK", { minimumFractionDigits: 2 })}
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Customer Coordinates */}

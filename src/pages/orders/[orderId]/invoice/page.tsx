@@ -405,17 +405,62 @@ const OrderInvoice = () => {
                   </div>
                 )}
 
-                <div className="border-t-2 border-gray-200 pt-4 mt-4 flex justify-between items-end">
-                  <span className="text-sm font-bold  tracking-tight">
-                    Total Due
-                  </span>
-                  <span className="text-xl font-bold font-mono tracking-tighter">
-                    {Number(order.total).toFixed(2)}{" "}
-                    <span className="text-xs text-gray-400 font-bold align-top">
-                      LKR
-                    </span>
-                  </span>
-                </div>
+                {(() => {
+                  const isCOD =
+                    (order.paymentMethod || "").toLowerCase().includes("cod") ||
+                    (order.paymentMethod || "").toLowerCase().includes("cash on delivery");
+                  const isFeePrepaid = isCOD && !!order.deliveryFeePrepaid;
+                  const prepaidShipping = isFeePrepaid ? (Number(order.shippingFee) || 450) : 0;
+                  const codBalance = Math.max(0, (Number(order.total) || 0) - prepaidShipping);
+
+                  if (!isFeePrepaid) {
+                    return (
+                      <div className="border-t-2 border-gray-200 pt-4 mt-4 flex justify-between items-end">
+                        <span className="text-sm font-bold tracking-tight">
+                          Total Due
+                        </span>
+                        <span className="text-xl font-bold font-mono tracking-tighter">
+                          {Number(order.total).toFixed(2)}{" "}
+                          <span className="text-xs text-gray-400 font-bold align-top">
+                            LKR
+                          </span>
+                        </span>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <>
+                      <div className="flex justify-between text-xs font-bold text-emerald-600">
+                        <span>Prepaid Delivery Fee</span>
+                        <span className="font-mono text-emerald-600">
+                          - {prepaidShipping.toFixed(2)}
+                        </span>
+                      </div>
+                      <div className="border-t-2 border-gray-200 pt-4 mt-4 flex justify-between items-end">
+                        <div>
+                          <span className="text-sm font-bold tracking-tight block">
+                            Total Order Value
+                          </span>
+                          <span className="text-xs font-bold text-emerald-700 block mt-0.5">
+                            COD Balance to Collect
+                          </span>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-xs line-through text-gray-400 font-mono block">
+                            {Number(order.total).toFixed(2)} LKR
+                          </span>
+                          <span className="text-xl font-bold font-mono tracking-tighter text-emerald-700">
+                            {codBalance.toFixed(2)}{" "}
+                            <span className="text-xs text-gray-400 font-bold align-top">
+                              LKR
+                            </span>
+                          </span>
+                        </div>
+                      </div>
+                    </>
+                  );
+                })()}
               </div>
             </div>
 

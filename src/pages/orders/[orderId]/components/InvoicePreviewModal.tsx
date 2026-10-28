@@ -33,7 +33,7 @@ export const InvoicePreviewModal: React.FC<InvoicePreviewModalProps> = ({
 
   const handlePrint = async () => {
     setDownloading(true);
-    const { orderId, createdAt, status, items, customer, paymentMethod, paymentStatus, shippingFee, fee, discount, couponDiscount, promotionDiscount, total: backendTotal } = order;
+    const { orderId, createdAt, status, items, customer, paymentMethod, paymentStatus, shippingFee, fee, discount, couponDiscount, promotionDiscount, total: backendTotal, deliveryFeePrepaid } = order;
 
     try {
       const doc = new jsPDF();
@@ -314,6 +314,22 @@ export const InvoicePreviewModal: React.FC<InvoicePreviewModalProps> = ({
         doc.text(`Rs ${fee.toLocaleString()}`, valueX, currentY, { align: "right" });
       }
 
+      const isCOD =
+        (paymentMethod || "").toLowerCase().includes("cod") ||
+        (paymentMethod || "").toLowerCase().includes("cash on delivery");
+      const isFeePrepaid = isCOD && !!deliveryFeePrepaid;
+      const prepaidShipping = isFeePrepaid ? (shippingFee || 450) : 0;
+      const codBalance = Math.max(0, grandTotal - prepaidShipping);
+
+      if (isFeePrepaid) {
+        currentY += 6;
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(4, 120, 87); 
+        doc.text("Prepaid Delivery Fee", summaryX, currentY);
+        doc.setFont("helvetica", "bold");
+        doc.text(`-Rs ${prepaidShipping.toLocaleString()}`, valueX, currentY, { align: "right" });
+      }
+
       currentY += 8;
       doc.setDrawColor(15, 23, 42); 
       doc.line(summaryX, currentY - 4, valueX, currentY - 4);
@@ -323,6 +339,15 @@ export const InvoicePreviewModal: React.FC<InvoicePreviewModalProps> = ({
       doc.text("GRAND TOTAL", summaryX, currentY);
       doc.setTextColor(4, 120, 87); 
       doc.text(`Rs ${grandTotal.toLocaleString()}`, valueX, currentY, { align: "right" });
+
+      if (isFeePrepaid) {
+        currentY += 6;
+        doc.setFontSize(9);
+        doc.setTextColor(180, 83, 9);
+        doc.text("COD BALANCE DUE", summaryX, currentY);
+        doc.setFont("helvetica", "bold");
+        doc.text(`Rs ${codBalance.toLocaleString()}`, valueX, currentY, { align: "right" });
+      }
 
       // 5. FOOTER
       doc.setFontSize(7);
@@ -354,6 +379,13 @@ export const InvoicePreviewModal: React.FC<InvoicePreviewModalProps> = ({
     0,
     (order.discount || 0) - (order.couponDiscount || 0) - (order.promotionDiscount || 0) - itemDiscountTotal
   );
+
+  const isCOD =
+    (order.paymentMethod || "").toLowerCase().includes("cod") ||
+    (order.paymentMethod || "").toLowerCase().includes("cash on delivery");
+  const isFeePrepaid = isCOD && !!order.deliveryFeePrepaid;
+  const prepaidShipping = isFeePrepaid ? (order.shippingFee || 450) : 0;
+  const codBalance = Math.max(0, (order.total || 0) - prepaidShipping);
 
   return (
     <Modal
@@ -559,10 +591,24 @@ export const InvoicePreviewModal: React.FC<InvoicePreviewModalProps> = ({
               </div>
             )}
 
+            {isFeePrepaid && (
+              <div className="flex justify-between text-emerald-600">
+                <span>Prepaid Delivery Fee (Online)</span>
+                <span className="font-bold">-Rs {prepaidShipping.toLocaleString()}</span>
+              </div>
+            )}
+
             <div className="pt-2 border-t-2 border-slate-900 flex justify-between text-sm font-bold text-slate-900">
               <span className="uppercase">Grand Total</span>
               <span className="text-emerald-700">Rs {(order.total || 0).toLocaleString()}</span>
             </div>
+
+            {isFeePrepaid && (
+              <div className="pt-1 flex justify-between text-sm font-black text-amber-700">
+                <span className="uppercase">COD Balance to Collect</span>
+                <span>Rs {codBalance.toLocaleString()}</span>
+              </div>
+            )}
           </div>
         </div>
 

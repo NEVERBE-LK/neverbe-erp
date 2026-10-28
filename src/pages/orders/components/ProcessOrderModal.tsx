@@ -63,7 +63,13 @@ export const ProcessOrderModal: React.FC<ProcessOrderModalProps> = ({
     }
   };
 
-  const isHighRisk = order.riskStatus === "HIGH_RISK" || order.ipqsRiskLevel === "CRITICAL";
+  const isCOD =
+    (order.paymentMethod || "").toLowerCase().includes("cod") ||
+    (order.paymentMethod || "").toLowerCase().includes("cash on delivery");
+  const isHighRisk = (order.riskStatus === "HIGH_RISK" || order.ipqsRiskLevel === "CRITICAL") && isCOD;
+  const isFeePrepaid = isCOD && !!order.deliveryFeePrepaid;
+  const shippingFee = order.shippingFee || 450;
+  const codBalance = Math.max(0, (order.total || 0) - shippingFee);
 
   return (
     <Modal
@@ -108,7 +114,7 @@ export const ProcessOrderModal: React.FC<ProcessOrderModalProps> = ({
               <div className="flex items-center gap-2 mb-1">
                 {isHighRisk ? (
                   <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800">
-                    <IconShieldX size={12} /> HIGH RISK / SPAM
+                    <IconShieldX size={12} /> HIGH RISK / SPAM {isFeePrepaid ? "(Prepaid Fee Paid)" : "(Prepaid Fee Pending)"}
                   </span>
                 ) : (
                   <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
@@ -119,6 +125,14 @@ export const ProcessOrderModal: React.FC<ProcessOrderModalProps> = ({
               <div className="text-xs font-mono font-bold text-slate-900 dark:text-white">
                 Total: Rs. {(order.total || 0).toLocaleString("en-LK", { minimumFractionDigits: 2 })}
               </div>
+              {isFeePrepaid && (
+                <div className="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                  COD Collect Amount: Rs. {codBalance.toLocaleString("en-LK", { minimumFractionDigits: 2 })}
+                  <span className="block text-[9px] text-emerald-700 dark:text-emerald-300 font-normal">
+                    (Delivery fee Rs. {shippingFee.toLocaleString()} prepaid online)
+                  </span>
+                </div>
+              )}
               <div className="text-[11px] text-slate-500">
                 Payment: <span className="font-semibold text-slate-700 dark:text-slate-300">{order.paymentMethod || "COD"} ({order.paymentStatus || "Pending"})</span>
                 <span className="block text-[9px] text-slate-400 mt-0.5 font-normal">

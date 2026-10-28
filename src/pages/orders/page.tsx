@@ -574,15 +574,22 @@ const OrdersPage = () => {
         <div className="flex flex-col gap-1 py-1">
           <div className="flex items-center gap-1.5">
             <span className="font-mono font-bold text-gray-900 text-xs">#{order.orderId}</span>
-            {order.riskStatus === "HIGH_RISK" && (
-              <span className={`inline-flex items-center gap-1 text-[9px] font-black rounded-full px-2 py-0.5 uppercase tracking-wider border ${
-                order.deliveryFeePrepaid 
-                  ? "text-emerald-700 bg-emerald-50 border-emerald-200" 
-                  : "text-rose-700 bg-rose-50 border-rose-200/80"
-              }`}>
-                ⚠️ HIGH RISK {order.deliveryFeePrepaid ? "• PREPAID FEE PAID (LKR 450)" : "• PREPAID FEE PENDING (LKR 450)"}
-              </span>
-            )}
+            {(() => {
+              const isCOD =
+                (order.paymentMethod || "").toLowerCase().includes("cod") ||
+                (order.paymentMethod || "").toLowerCase().includes("cash on delivery");
+              if (!isCOD || order.riskStatus !== "HIGH_RISK") return null;
+              const shippingFee = order.shippingFee || 450;
+              return (
+                <span className={`inline-flex items-center gap-1 text-[9px] font-black rounded-full px-2 py-0.5 uppercase tracking-wider border ${
+                  order.deliveryFeePrepaid 
+                    ? "text-emerald-700 bg-emerald-50 border-emerald-200" 
+                    : "text-rose-700 bg-rose-50 border-rose-200/80"
+                }`}>
+                  ⚠️ HIGH RISK {order.deliveryFeePrepaid ? `• PREPAID FEE PAID (LKR ${shippingFee})` : `• PREPAID FEE PENDING (LKR ${shippingFee})`}
+                </span>
+              );
+            })()}
           </div>
           <span className="text-[10px] text-gray-400 font-bold flex items-center gap-1">
             <IconCalendar size={12} /> {formatDate(order.createdAt)}
@@ -642,11 +649,27 @@ const OrdersPage = () => {
       title: "Order Total",
       key: "total",
       align: "right" as const,
-      render: (_: any, order: Order) => (
-        <span className="font-black text-xs text-emerald-700 font-mono">
-          Rs {(order.total || 0).toLocaleString()}
-        </span>
-      ),
+      render: (_: any, order: Order) => {
+        const isCOD =
+          (order.paymentMethod || "").toLowerCase().includes("cod") ||
+          (order.paymentMethod || "").toLowerCase().includes("cash on delivery");
+        const isFeePrepaid = isCOD && order.deliveryFeePrepaid;
+        const shippingFee = order.shippingFee || 450;
+        const codBalance = Math.max(0, (order.total || 0) - shippingFee);
+
+        return (
+          <div className="flex flex-col items-end py-1">
+            <span className="font-black text-xs text-emerald-700 font-mono">
+              Rs {(order.total || 0).toLocaleString()}
+            </span>
+            {isFeePrepaid && (
+              <span className="text-[10px] font-extrabold text-amber-700 font-mono">
+                COD Due: Rs {codBalance.toLocaleString()}
+              </span>
+            )}
+          </div>
+        );
+      },
     },
     {
       title: "Fullfilment Status",
@@ -703,7 +726,10 @@ const OrdersPage = () => {
               setIsInvoiceModalOpen(true);
             },
           },
-          ...(order.riskStatus === "HIGH_RISK" && !order.deliveryFeePrepaid && order.paymentMethod?.toLowerCase() === "cod"
+          ...(order.riskStatus === "HIGH_RISK" &&
+          !order.deliveryFeePrepaid &&
+          ((order.paymentMethod || "").toLowerCase().includes("cod") ||
+            (order.paymentMethod || "").toLowerCase().includes("cash on delivery"))
             ? [
                 {
                   key: "mark-fee-paid",
