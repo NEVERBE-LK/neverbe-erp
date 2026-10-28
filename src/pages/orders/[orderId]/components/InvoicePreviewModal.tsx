@@ -532,7 +532,7 @@ export const InvoicePreviewModal: React.FC<InvoicePreviewModalProps> = ({
             )}
 
             {order.promotionDiscount !== undefined && order.promotionDiscount > 0 && (
-              <div className="flex justify-between text-rose-600">
+              <div className="flex justify-between text-amber-600">
                 <span>Promotion Discount</span>
                 <span className="font-bold">-Rs {order.promotionDiscount.toLocaleString()}</span>
               </div>

@@ -375,11 +375,11 @@ const OrderInvoice = () => {
                   <div className="flex justify-between text-xs font-bold text-gray-500 ">
                     <div className="flex items-center gap-2">
                       <span>Promotion</span>
-                      <span className="bg-green-100 text-green-700 px-1 py-0.5 text-[8px] font-bold">
+                      <span className="bg-amber-100 text-amber-700 px-1 py-0.5 text-[8px] font-bold">
                         AUTO
                       </span>
                     </div>
-                    <span className="font-mono text-green-600">
+                    <span className="font-mono text-amber-600">
                       - {Number(order.promotionDiscount).toFixed(2)}
                     </span>
                   </div>

@@ -813,7 +813,7 @@ const OrderView = ({ orderId }: { orderId: string }) => {
             )}
 
             {promotionDiscount > 0 && (
-              <div className="flex justify-between items-center text-emerald-600 dark:text-emerald-400">
+              <div className="flex justify-between items-center text-amber-500 dark:text-amber-400">
                 <span className="font-semibold uppercase">Promotion Discount</span>
                 <span className="font-bold">-Rs {promotionDiscount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
               </div>
